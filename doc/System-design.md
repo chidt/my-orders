@@ -4,7 +4,7 @@
 ---
 config:
   theme: mc
-  layout: elk
+  layout: dagre
 ---
 erDiagram
 	direction TB
@@ -70,37 +70,12 @@ erDiagram
 		json extra_attributes  ""  
 	}
 
-	Products {
-		bigint id PK ""  
-		string name  "required"  
-		string code UK "required"  
-		string supplier_code  ""  
-		string supplier_image  ""  
-		tinyInt product_type FK "required"  
-		text description  ""  
-		string product_image  ""  
-		json product_images_slider  ""  
-		int qty_in_stock  "required"  
-		decimal weight  ""  
-		decimal price  "required"  
-		decimal partner_price  ""  
-		decimal purchase_price  "required"  
-		bigint supplier_id FK "required"  
-		bigint unit_id FK "required"  
-		bigint category_id FK "required"  
-		datetime order_closing_date  ""  
-		bigint default_location_id FK "required"  
-		json extra_attributes  ""  
-	}
-
 	ProductItems {
 		bigint id PK "required"  
 		string name  "required"  
 		string sku UK "required"  
-		string product_image  ""  
 		boolean is_parent_image  "required"  
 		boolean is_parent_slider_image  "required"  
-		json image_slider_value  ""  
 		int qty_in_stock  "required"  
 		decimal price  "required"  
 		decimal partner_price  ""  
@@ -137,7 +112,6 @@ erDiagram
 		string name  "required"  
 		text description  ""  
 		int order  ""  
-		string category_image  ""  
 		bigint parent_id FK ""  
 	}
 
@@ -166,6 +140,7 @@ erDiagram
 		tinyInt sale_channel  "required"  
 		bigint shipping_address_id FK ""  
 		bigint customer_id FK "required"  
+		bigint site_id FK ""  
 	}
 
 	PaymentRequests {
@@ -173,7 +148,6 @@ erDiagram
 		bigint customer_id FK "required"  
 		decimal total  "required"  
 		tinyInt payment_status  "required"  
-		string invoice_image  ""  
 		text note  ""  
 	}
 
@@ -214,6 +188,7 @@ erDiagram
 		string code  "required"  
 		string name  "required"  
 		string address  "required"  
+		bigint site_id FK ""  
 	}
 
 	ShoppingCarts {
@@ -285,9 +260,94 @@ erDiagram
 		text note  ""  
 	}
 
+	Products {
+		bigint id PK ""  
+		string name  "required"  
+		string code UK "required"  
+		string supplier_code  ""  
+		tinyInt product_type FK "required"  
+		text description  ""  
+		int qty_in_stock  "required"  
+		decimal weight  ""  
+		decimal price  "required"  
+		decimal partner_price  ""  
+		decimal purchase_price  "required"  
+		bigint supplier_id FK "required"  
+		bigint unit_id FK "required"  
+		bigint category_id FK "required"  
+		datetime order_closing_date  ""  
+		bigint default_location_id FK "required"  
+		bigint site_id FK ""  
+		json extra_attributes  ""  
+	}
+
+	Media {
+        bigint id PK "required"
+        bigint model_id "required"
+        string model_type "required"
+        uuid uuid
+        string collection_name "required"
+        string name "required"
+        string file_name "required"
+        string mime_type
+        string disk "required"
+        string conversions_disk
+        int size "required"
+        json manipulations "required"
+        json custom_properties "required"
+        json generated_conversions "required"
+        json responsive_images "required"
+        int order_column
+	}
+
+	Permissions {
+        bigint id PK "required"
+        string name "required"
+        string guard_name "required"
+    }
+
+	Roles {
+        bigint id PK "required"
+        string name "required"
+        string guard_name "required"
+    }
+
+	RolesHasPermissions {
+        int permission_id FK "required"
+        int role_id FK "required"
+    }
+
+	ModelHasRoles {
+        int role_id FK "required"
+        string model_type "required"
+        int model_id "required"
+    }
+
+	ModelHasPermissions {
+        int permission_id FK "required"
+        string model_type "required"
+        int model_id "required"
+    }
+
+	ActivityLog {
+        bigint id PK "required"
+        string log_name
+        text description "required"
+        string subject_type
+        bigint subject_id
+        string event
+        string causer_type
+        bigint causer_id
+        json properties
+        uuid batch_uuid
+    }
+
 	Customers||--o{Orders:"  "
 	Orders||--|{OrderDetails:"includes"
 	Customers}|--||Sites:"  "
+	Products}|--||Sites:"  "
+	Warehouses}|--||Sites:"  "
+	Orders}|--||Sites:"  "
 	Customers||--o{Addresses:"  "
 	Addresses}|--||Wards:"  "
 	Wards}|--||Provinces:"  "
@@ -324,4 +384,23 @@ erDiagram
 	WarehouseReceiptDetails||--||ProductItems:"  "
 	WarehouseReceiptDetails||--||Locations:"  "
 	WarehouseReceiptDetails||--||OrderDetails:"  "
+	Products||--|{Media: ""
+	ProductItems||--|{Media: ""
+	Categories||--|{Media: ""
+	PaymentRequests||--|{Media: ""
+	Permissions ||--o{ RolesHasPermissions : ""
+	Roles ||--o{ RolesHasPermissions : ""
+	Roles ||--o{ ModelHasRoles : ""
+	Permissions ||--o{ ModelHasPermissions : ""
+	Users ||--o{ ModelHasRoles : ""
+	Users ||--o{ ModelHasPermissions : ""
+	ActivityLog }o--|| Users : causer
+	ActivityLog }o--|| Products : subject
+	ActivityLog }o--|| ProductItems : subject
+	ActivityLog }o--|| Orders : subject
+	ActivityLog }o--|| OrderDetails : subject
+	ActivityLog }o--|| WarehouseOuts : subject
+	ActivityLog }o--|| WarehouseOutDetails : subject
+	ActivityLog }o--|| WarehouseReceipts : subject
+	ActivityLog }o--|| WarehouseReceiptDetails : subject
 ```
