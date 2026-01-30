@@ -1,14 +1,23 @@
 {
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "shadcnVue": {
-      "type": "local",
-      "enabled": true,
-      "command": [
-        "npx",
-        "shadcn-vue@latest",
-        "mcp"
-      ]
+    "$schema": "https://opencode.ai/config.json",
+    "mcp": {
+        "shadcnVue": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "npx",
+                "shadcn-vue@latest",
+                "mcp"
+            ]
+        },
+        "laravel-boost": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "vendor/bin/sail",
+                "artisan",
+                "boost:mcp"
+            ]
+        }
     }
-  }
 }
