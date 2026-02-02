@@ -15,6 +15,7 @@ class Site extends Model
         'slug',
         'description',
         'settings',
+        'user_id',
     ];
 
     protected function casts(): array
@@ -22,5 +23,10 @@ class Site extends Model
         return [
             'settings' => 'array',
         ];
+    }
+
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

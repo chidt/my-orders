@@ -45,8 +45,12 @@ test('user registration succeeds with unique email and phone number', function (
     ];
 
     $user = app(CreateNewUser::class)->create($userData);
-
-    expect($user)->toBeInstanceOf(User::class)
+    $site = $user->sites()->first();
+    expect($site)->not()->toBeNull()
+        ->and($site->name)->toBe('My Awesome Site')
+        ->and($user)->toBeInstanceOf(User::class)
         ->and($user->email)->toBe('unique@example.com')
-        ->and($user->phone_number)->toBe('+1234567890');
+        ->and($user->phone_number)->toBe('+1234567890')
+        ->and($user->site_id)->not()->toBeNull()
+        ->and($user->site->name)->toBe('My Awesome Site');
 });
