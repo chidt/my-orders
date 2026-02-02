@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'phone_number',
         'site_id',
+        'customer_id',
         'password',
     ];
 
@@ -63,5 +64,10 @@ class User extends Authenticatable
     public function site(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Site::class);
+    }
+
+    public function customer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 }
