@@ -40,6 +40,7 @@ Implement user registration flow that creates both a user account and their asso
 - Add SiteValidationRules trait usage
 - Implement database transaction for safety
 - Create site first, then user with site_id
+- Assign default SiteAdmin role to newly created user
 - Link site back to user
 
 **2. Create SiteValidationRules Trait** (`app/Concerns/SiteValidationRules.php`):
@@ -98,12 +99,15 @@ Implement user registration flow that creates both a user account and their asso
 - Add phone_number field to existing registration test
 - Test unique phone number validation
 - Test complete registration with site data
+- Test default SiteAdmin role assignment after registration
 
 **2. Create CombinedRegistrationTest.php**:
 - Test user + site creation in transaction
 - Test rollback on validation failures
 - Test slug generation and uniqueness
 - Test site-user relationship creation
+- Test user role assignment within transaction
+- Test user can access site dashboard after registration
 
 **3. Update SiteValidationTest.php**:
 - Test site validation rules work correctly
@@ -140,6 +144,9 @@ DB::transaction(function () use ($input) {
         'site_id' => $site->id,
         'password' => $input['password'],
     ]);
+    
+    // Assign default SiteAdmin role to newly registered user
+    $user->assignRole('SiteAdmin');
     
     $site->update(['user_id' => $user->id]);
     return $user;
@@ -231,12 +238,14 @@ const generateSlug = (): void => {
 ✅ User registration with unique email and phone number
 ✅ Site creation with unique slug during registration
 ✅ Auto-generated slug from site name with manual override
+✅ Default SiteAdmin role assignment for new users
 ✅ Database transaction safety
 ✅ Comprehensive validation and error handling
 
 ### Technical Requirements  
 ✅ All existing tests pass
 ✅ New tests for combined registration flow
+✅ Tests verify default SiteAdmin role assignment
 ✅ Code follows project conventions (Pest, Pint, TypeScript)
 ✅ No database constraint violations
 ✅ Frontend form validates correctly

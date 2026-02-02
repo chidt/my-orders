@@ -17,7 +17,7 @@
 | Loại | Mô tả |
 |------|------|
 | Pre-condition | Người dùng chưa đăng nhập |
-| Post-condition | Tài khoản được tạo thành công |
+| Post-condition | Tài khoản được tạo thành công và được gán mặc định vai trò SiteAdmin |
 
 ---
 
@@ -31,7 +31,8 @@
 | 4 | Người dùng | Nhấn nút **Đăng ký** |
 | 5 | Hệ thống | Kiểm tra dữ liệu |
 | 6 | Hệ thống | Tạo tài khoản |
-| 7 | Hệ thống | Thông báo thành công |
+| 7 | Hệ thống | Gán mặc định vai trò **SiteAdmin** cho tài khoản mới |
+| 8 | Hệ thống | Thông báo thành công |
 
 ---
 
@@ -65,6 +66,7 @@
 ## Quy tắc nghiệp vụ
 
 - Tạo và sử dụng HasAddress trait ở backend để gán địa chỉ cho model
+- Sau khi đăng ký, tài khoản mới sẽ được gán mặc định vai trò **SiteAdmin**
 
 | ID    | Quy tắc                                                                               |
 |-------|---------------------------------------------------------------------------------------|
@@ -75,3 +77,5 @@
 | BR-05 | Đúng định dạng của SĐT                                                                |
 | BR-06 | Site slug phải là duy nhất                                                            |
 | BR-07 | Site slug định dạng của slug (là ký tự la tinh, tiếng việt không dấu, cách nhau bởi - |
+| BR-08 | Tài khoản mới đăng ký sẽ được gán mặc định vai trò SiteAdmin                          |
+

@@ -29,4 +29,9 @@ class Site extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function users(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(User::class);
+    }
 }

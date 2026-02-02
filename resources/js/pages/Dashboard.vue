@@ -1,14 +1,26 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import PlaceholderPattern from '../components/PlaceholderPattern.vue';
+
+const page = usePage();
+
+const getDashboardUrl = () => {
+    const user = page.props.auth.user;
+    if (user && user.roles && user.roles.includes('admin')) {
+        return '/admin/dashboard';
+    }
+    if (user && user.site && user.roles && user.roles.includes('SiteAdmin')) {
+        return `/${user.site.slug}/dashboard`;
+    }
+    return '/';
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard().url,
+        href: getDashboardUrl(),
     },
 ];
 </script>

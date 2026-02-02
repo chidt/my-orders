@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -31,6 +33,8 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configureLoginResponse();
+        $this->configureRegistrationResponse();
     }
 
     /**
@@ -86,6 +90,62 @@ class FortifyServiceProvider extends ServiceProvider
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
+        });
+    }
+
+    /**
+     * Configure custom login response for role-based redirection.
+     */
+    private function configureLoginResponse(): void
+    {
+        $this->app->instance(LoginResponse::class, new class implements LoginResponse
+        {
+            public function toResponse($request)
+            {
+                $user = auth()->user();
+
+                if ($user->hasRole('admin')) {
+                    return redirect()->intended(route('admin.dashboard', absolute: false));
+                }
+
+                if ($user->hasRole('SiteAdmin')) {
+                    $site = $user->site;
+                    if ($site) {
+                        return redirect()->intended(route('site.dashboard', ['site' => $site->slug], false));
+                    }
+                }
+
+                // Fallback for other roles or users without site
+                return redirect()->intended('/');
+            }
+        });
+    }
+
+    /**
+     * Configure custom registration response for role-based redirection.
+     */
+    private function configureRegistrationResponse(): void
+    {
+        $this->app->instance(RegisterResponse::class, new class implements RegisterResponse
+        {
+            public function toResponse($request)
+            {
+                $user = auth()->user();
+
+                if ($user->hasRole('admin')) {
+                    return redirect()->intended(route('admin.dashboard', absolute: false));
+                }
+
+                if ($user->hasRole('SiteAdmin')) {
+                    $site = $user->site;
+                    if ($site) {
+                        return redirect()->intended(route('site.dashboard', ['site' => $site->slug], false));
+                    }
+                }
+
+                // Fallback for other roles or users without site
+                return redirect()->intended('/');
+            }
         });
     }
 }

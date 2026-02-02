@@ -22,7 +22,7 @@ defineProps<Props>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Cài đặt hồ sơ',
+        title: 'Cài đặt tài khoản',
         href: edit().url,
     },
 ];
@@ -33,9 +33,9 @@ const user = page.props.auth.user;
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Cài đặt hồ sơ" />
+        <Head title="Cài đặt tài khoản" />
 
-        <h1 class="sr-only">Cài đặt hồ sơ</h1>
+        <h1 class="sr-only">Cài đặt tài khoản</h1>
 
         <SettingsLayout>
             <div class="flex flex-col space-y-6">

@@ -1,6 +1,12 @@
 <?php
 
+use App\Models\User;
+
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+});
 
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
@@ -20,5 +26,11 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+
+    // New users get SiteAdmin role and should be redirected to their site dashboard
+    $user = User::where('email', 'test@example.com')->first();
+    $response->assertRedirect('/'.$user->site->slug.'/dashboard');
 });
+
+// Replace all '/dashboard' with '/admin/dashboard' for admin dashboard access
+// and keep '{site}/dashboard' for site dashboards.

@@ -1,11 +1,20 @@
 <?php
+
 use App\Models\User;
+
+beforeEach(function () {
+    $this->seed(\Database\Seeders\RoleSeeder::class);
+});
+
 it('user can login', function () {
-    User::factory()->create([ // assumes RefreshDatabase trait is used on Pest.php...
+    $user = User::factory()->create([
         'email' => 'chidt@test.com',
         'password' => 'password',
     ]);
+    $user->assignRole('admin'); // Assign admin role for dashboard access
+
     $page = visit('/');
+
     $page->assertSee('Chào mừng bạn đến với My Orders');
     $page->click('Đăng nhập')
         ->assertPathEndsWith('/login')
@@ -13,7 +22,5 @@ it('user can login', function () {
         ->fill('password', 'password')
         ->click('Đăng nhập')
         ->assertSee('Dashboard');
-    ;
-
 
 });

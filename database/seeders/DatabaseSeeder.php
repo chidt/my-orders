@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,12 +12,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@test.com',
-            'password' => '12345678'
+        // Always seed roles and permissions first
+        $this->call([
+            RoleSeeder::class,
         ]);
+
+        // Seed users only in development or when explicitly requested
+        // In production, you can run: php artisan db:seed --class=UserSeeder
+        if (app()->environment('local', 'testing')) {
+            $this->call([
+                UserSeeder::class,
+            ]);
+        }
     }
 }

@@ -3,7 +3,6 @@
 use Laravel\Fortify\Features;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Fortify Guard
@@ -71,9 +70,11 @@ return [
     | authentication or password reset when the operations are successful
     | and the user is authenticated. You are free to change this value.
     |
+    | Updated for admin users. SiteAdmin handled in FortifyServiceProvider.
+    |
     */
 
-    'home' => '/dashboard',
+    'home' => '/admin/dashboard',
 
     /*
     |--------------------------------------------------------------------------

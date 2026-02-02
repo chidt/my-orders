@@ -18,7 +18,8 @@ class CreateNewUser implements CreatesNewUsers
     /**
      * Validate and create a newly registered user.
      *
-     * @param array<string, string> $input
+     * @param  array<string, string>  $input
+     *
      * @throws \Throwable
      */
     public function create(array $input): User
@@ -44,7 +45,11 @@ class CreateNewUser implements CreatesNewUsers
                 'site_id' => $site->id,
             ]);
 
+            // Assign default SiteAdmin role to newly registered user
+            $user->assignRole('SiteAdmin');
+
             $site->update(['user_id' => $user->id]);
+
             return $user;
         });
     }

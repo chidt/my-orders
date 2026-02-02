@@ -32,7 +32,6 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
@@ -56,7 +55,7 @@ const activeItemStyles =
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: '/admin/dashboard',
         icon: LayoutGrid,
     },
 ];
@@ -73,6 +72,17 @@ const rightNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+
+const getDashboardUrl = () => {
+    const user = $page.props.auth.user;
+    if (user && user.roles && user.roles.includes('admin')) {
+        return '/admin/dashboard';
+    }
+    if (user && user.site && user.roles && user.roles.includes('SiteAdmin')) {
+        return `/${user.site.slug}/dashboard`;
+    }
+    return '/';
+};
 </script>
 
 <template>
@@ -146,7 +156,7 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <Link :href="dashboard()" class="flex items-center gap-x-2">
+                <Link :href="getDashboardUrl()" class="flex items-center gap-x-2">
                     <AppLogo />
                 </Link>
 

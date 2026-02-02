@@ -75,6 +75,36 @@ This file contains guidelines and commands for agentic coding agents working in 
 - **Spacing**: Use gap utilities for lists, not margins
 - **Imports**: Use `@import "tailwindcss";` not `@tailwind` directives
 
+## Project Structure & Implementation Workflow
+
+### Documentation Directory Structure
+- `doc/` - Contains system documentation and use cases that define requirements
+  - `doc/UserCase/` - Detailed use case specifications (UC-XXX-XXX.md)
+  - `doc/UserCase.md` - Index of all use cases with links
+  - `doc/ER-diagram.md` - Entity relationship documentation
+  - **ALWAYS READ** existing documentation in `doc/` to understand system requirements before implementing
+
+### Implementation Planning
+- `plan/` - Contains detailed implementation plans for each feature
+  - Each use case should have a corresponding plan file (e.g., `plan/UC-001-REG.md`)
+  - Plans must include: technical requirements, file modifications, testing strategy, timeline
+  - **ALWAYS CREATE** or update plan documents BEFORE implementing features
+  - Plans serve as implementation blueprints and progress tracking
+
+### Implementation Summaries
+- When completing a feature implementation, **CREATE** a summary document in the root directory
+  - Format: `[FEATURE-NAME]-IMPLEMENTATION-SUMMARY.md` 
+  - Include: completion status, features implemented, files modified, test results, production readiness
+  - Summaries provide quick reference for completed work and deployment guidance
+
+### Implementation Workflow
+1. **Read Documentation**: Study `doc/` directory to understand requirements and system context
+2. **Create/Update Plan**: Develop detailed implementation plan in `plan/` directory  
+3. **Implement Features**: Follow plan and create/modify code files as specified
+4. **Test Thoroughly**: Ensure all tests pass and functionality works as expected
+5. **Create Summary**: Document completion status and results in implementation summary
+6. **Update Documentation**: Keep use cases and plans current with any changes made
+
 ## Architecture Patterns
 
 ### Laravel
