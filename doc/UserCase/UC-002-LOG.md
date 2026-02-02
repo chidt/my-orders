@@ -32,7 +32,7 @@
 | 5    | Hệ thống   | Kiểm tra thông tin đăng nhập |
 | 6    | Hệ thống   | Xác thực người dùng |
 | 7    | Hệ thống   | Kiểm tra vai trò người dùng |
-| 8    | Hệ thống   | Nếu vai trò là **admin**: chuyển hướng đến /dashboard |
+| 8    | Hệ thống   | Nếu vai trò là **admin**: chuyển hướng đến /admin/dashboard |
 | 9    | Hệ thống   | Nếu vai trò là **SiteAdmin**: chuyển hướng đến /site-slug/dashboard |
 | 10   | Hệ thống   | Thông báo đăng nhập thành công |
 
@@ -65,6 +65,6 @@
 |-------|---------------------------------------------------------------------------------------|
 | BR-01 | Email phải tồn tại trong hệ thống                                                     |
 | BR-02 | Mật khẩu phải đúng với email đã nhập                                                  |
-| BR-03 | Nếu vai trò là admin, chuyển hướng đến /dashboard                                     |
+| BR-03 | Nếu vai trò là admin, chuyển hướng đến /admin/dashboard                               |
 | BR-04 | Nếu vai trò là SiteAdmin, chuyển hướng đến /site-slug/dashboard                       |
 | BR-05 | Nếu tài khoản bị khóa, không cho phép đăng nhập                                      |

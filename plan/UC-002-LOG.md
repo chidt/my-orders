@@ -1,7 +1,7 @@
 # UC002 Implementation Plan - User Login with Role-Based Redirection
 
 ## 🎯 Objective
-Implement user login flow with role-based authentication and automatic redirection. After successful login, users are redirected based on their role: Admin users go to `/dashboard`, SiteAdmin users go to `/site-slug/dashboard`.
+Implement user login flow with role-based authentication and automatic redirection. After successful login, users are redirected based on their role: Admin users go to `/admin/dashboard`, SiteAdmin users go to `/site-slug/dashboard`.
 
 ## 📋 Current State Analysis
 
@@ -92,7 +92,7 @@ Implement user login flow with role-based authentication and automatic redirecti
 - Test user role checking methods
 
 **2. Create LoginRedirectionTest.php**:
-- Test admin login redirects to `/dashboard`
+- Test admin login redirects to `/admin/dashboard`
 - Test SiteAdmin login redirects to `/site-slug/dashboard`
 - Test unauthorized access handling
 - Test role-based middleware
@@ -264,7 +264,7 @@ $this->app->instance(LoginResponse::class, new class implements LoginResponse {
         $user = auth()->user();
         
         if ($user->hasRole('admin')) {
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/admin/dashboard');
         }
         
         if ($user->hasRole('SiteAdmin')) {
@@ -369,7 +369,7 @@ use App\Http\Controllers\SiteDashboardController;
 
 // Admin routes
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
         ->name('admin.dashboard');
 });
 
@@ -384,7 +384,7 @@ Route::middleware(['auth', 'role:SiteAdmin'])->group(function () {
 
 ### Role-Based Redirection
 - Automatic redirection after login based on user role
-- Admin users: immediate access to system dashboard
+- Admin users: immediate access to system dashboard (`/admin/dashboard`)
 - Site admins: direct access to their site's management dashboard
 - Proper error handling for unauthorized access
 
@@ -431,7 +431,7 @@ Route::middleware(['auth', 'role:SiteAdmin'])->group(function () {
 ### Functional Requirements
 ✅ User login with email/password authentication
 ✅ Role-based redirection after successful login
-✅ Admin users redirect to `/dashboard`
+✅ Admin users redirect to `/admin/dashboard`
 ✅ SiteAdmin users redirect to `/site-slug/dashboard`
 ✅ Proper access control for dashboard routes
 ✅ Role and permission management system

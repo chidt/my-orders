@@ -1,4 +1,4 @@
 # Usercase
 
-### [User Registration - UC-001-REG](../plan/UC001.md)
-### [Login - UC-002-LOG](../plan/UC-002-LOG.md)
+### [User Registration - UC-001-REG](UserCase/UC-001-REG.md)
+### [Login - UC-002-LOG](UserCase/UC-002-LOG.md)
