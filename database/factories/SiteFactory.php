@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,7 +21,6 @@ class SiteFactory extends Factory
             'slug' => fake()->unique()->slug(),
             'description' => fake()->sentence(10),
             'settings' => null,
-            'user_id' => User::factory(),
         ];
     }
 }

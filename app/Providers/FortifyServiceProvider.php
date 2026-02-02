@@ -93,6 +93,34 @@ class FortifyServiceProvider extends ServiceProvider
         });
     }
 
+
+    /**
+     * Get role-based redirect response for authenticated user.
+     */
+    public static function getRoleBasedRedirect(bool $refreshUser = false): \Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+
+        if ($refreshUser) {
+            // Refresh the user model to ensure relationships are loaded
+            $user->refresh();
+        }
+
+        if ($user->hasRole('admin')) {
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+
+        if ($user->hasRole('SiteAdmin')) {
+            $site = $user->site;
+            if ($site) {
+                return redirect()->intended(route('site.dashboard', ['site' => $site->slug], false));
+            }
+        }
+
+        // Fallback for other roles or users without site
+        return redirect()->intended('/');
+    }
+
     /**
      * Configure custom login response for role-based redirection.
      */
@@ -100,23 +128,9 @@ class FortifyServiceProvider extends ServiceProvider
     {
         $this->app->instance(LoginResponse::class, new class implements LoginResponse
         {
-            public function toResponse($request)
+            public function toResponse($request): \Illuminate\Http\RedirectResponse
             {
-                $user = auth()->user();
-
-                if ($user->hasRole('admin')) {
-                    return redirect()->intended(route('admin.dashboard', absolute: false));
-                }
-
-                if ($user->hasRole('SiteAdmin')) {
-                    $site = $user->site;
-                    if ($site) {
-                        return redirect()->intended(route('site.dashboard', ['site' => $site->slug], false));
-                    }
-                }
-
-                // Fallback for other roles or users without site
-                return redirect()->intended('/');
+                return FortifyServiceProvider::getRoleBasedRedirect();
             }
         });
     }
@@ -126,26 +140,14 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureRegistrationResponse(): void
     {
-        $this->app->instance(RegisterResponse::class, new class implements RegisterResponse
-        {
-            public function toResponse($request)
+        $this->app->singleton(RegisterResponse::class, function ($app) {
+            return new class implements RegisterResponse
             {
-                $user = auth()->user();
-
-                if ($user->hasRole('admin')) {
-                    return redirect()->intended(route('admin.dashboard', absolute: false));
+                public function toResponse($request): \Illuminate\Http\RedirectResponse
+                {
+                    return FortifyServiceProvider::getRoleBasedRedirect(true);
                 }
-
-                if ($user->hasRole('SiteAdmin')) {
-                    $site = $user->site;
-                    if ($site) {
-                        return redirect()->intended(route('site.dashboard', ['site' => $site->slug], false));
-                    }
-                }
-
-                // Fallback for other roles or users without site
-                return redirect()->intended('/');
-            }
+            };
         });
     }
 }
