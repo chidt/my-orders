@@ -101,6 +101,10 @@ This file contains guidelines and commands for agentic coding agents working in 
 
 ## File Structure Conventions
 
+### System desgin
+
+- **ER Diagram**: `doc/ER-diagram.md/`
+
 ### PHP
 
 - **Models**: `app/Models/`
@@ -150,6 +154,8 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
 - phpunit/phpunit (PHPUNIT) - v12
+- spatie/laravel-medialibrary (MEDIALIBRARY) - v11
+- spatie/laravel-permission (PERMISSION) - v6
 - @inertiajs/vue3 (INERTIA) - v2
 - tailwindcss (TAILWINDCSS) - v4
 - vue (VUE) - v3
@@ -241,7 +247,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 ## Constructors
 
 - Use PHP 8 constructor property promotion in `__construct()`.
-    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
+    - <code-snippet>public function \_\_construct(public GitHub $github) { }</code-snippet>
 - Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
 
 ## Type Declarations
@@ -420,6 +426,7 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 # Inertia + Vue
 
 Vue components must have a single root element.
+
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 === tailwindcss/core rules ===
@@ -456,8 +463,73 @@ Fortify is a headless authentication backend that provides authentication routes
 - `Features::registration()` for user registration.
 - `Features::emailVerification()` to verify new user emails.
 - `Features::twoFactorAuthentication()` for 2FA with QR codes and recovery codes.
-  - Add options: `['confirmPassword' => true, 'confirm' => true]` to require password confirmation and OTP confirmation before enabling 2FA.
+    - Add options: `['confirmPassword' => true, 'confirm' => true]` to require password confirmation and OTP confirmation before enabling 2FA.
 - `Features::updateProfileInformation()` to let users update their profile.
 - `Features::updatePasswords()` to let users change their passwords.
 - `Features::resetPasswords()` for password reset via email.
+
+=== spatie/laravel-medialibrary rules ===
+
+## Laravel MediaLibrary
+
+MediaLibrary provides a fluent API to associate files with Eloquent models.
+
+### Model Setup
+
+- Use the `HasMedia` trait on models that need media attachments
+- Define media collections using the `registerMediaCollections()` method
+- Specify conversions for thumbnails, resized images, etc. in `registerMediaConversions()`
+
+### Basic Usage
+
+- Add media: `$model->addMedia($file)->toMediaCollection('images')`
+- Get media URL: `$model->getFirstMediaUrl('images')`
+- Get all media: `$model->getMedia('images')`
+- Use `getFirstMedia()` to get the media object for additional metadata
+
+### Conversions
+
+- Define conversions in `registerMediaConversions()` method
+- Available manipulations: resize, crop, greyscale, optimize, etc.
+- Conversions are automatically generated when media is added
+
+### File Storage
+
+- Media files are stored in configurable disk paths
+- Use `->withResponsiveImages()` for responsive image generation
+- Support for various file types beyond just images
+
+=== spatie/laravel-permission rules ===
+
+## Laravel Permission
+
+Permission provides role-based permissions for Laravel applications.
+
+### Model Setup
+
+- Use the `HasRoles` trait on your User model
+- Create permissions and roles using the provided models or Artisan commands
+- Gate integration available for automatic authorization checks
+
+### Permission Management
+
+- Create permissions: `Permission::create(['name' => 'edit articles'])`
+- Create roles: `Role::create(['name' => 'admin'])`
+- Assign permissions to roles: `$role->givePermissionTo('edit articles')`
+- Assign roles to users: `$user->assignRole('admin')`
+
+### Authorization Checks
+
+- Use Gates: `Gate::allows('edit articles')` or `Gate::denies('edit articles')`
+- Use middleware: `->middleware('permission:edit articles')`
+- Use blade directives: `@can('edit articles')` or `@role('admin')`
+- Direct method calls: `$user->hasPermissionTo('edit articles')` or `$user->hasRole('admin')`
+
+### Best Practices
+
+- Use descriptive permission names following pattern: `action resource` (e.g., `create users`, `edit posts`)
+- Group related permissions into logical roles
+- Cache permissions automatically for performance
+- Use wildcard permissions for dynamic access control (`posts.*`)
+
 </laravel-boost-guidelines>

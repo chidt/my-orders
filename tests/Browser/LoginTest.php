@@ -11,7 +11,7 @@ it('user can login', function () {
         ->assertPathEndsWith('/login')
         ->fill('email', 'chidt@test.com')
         ->fill('password', 'password')
-        ->click('Log in')
+        ->click('Đăng nhập')
         ->assertSee('Dashboard');
     ;
 

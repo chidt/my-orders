@@ -13,7 +13,7 @@ import { Form, Head } from '@inertiajs/vue3';
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Password settings',
+        title: 'Cài đặt mật khẩu',
         href: edit().url,
     },
 ];
@@ -21,69 +21,61 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Password settings" />
+        <Head title="Cài đặt mật khẩu" />
 
-        <h1 class="sr-only">Password Settings</h1>
+        <h1 class="sr-only">Cài đặt mật khẩu</h1>
 
         <SettingsLayout>
             <div class="space-y-6">
                 <Heading
                     variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    title="Cập nhật mật khẩu"
+                    description="Đảm bảo tài khoản của bạn sử dụng mật khẩu dài, ngẫu nhiên để bảo mật tối đa"
                 />
 
                 <Form
                     v-bind="PasswordController.update.form()"
-                    :options="{
-                        preserveScroll: true,
-                    }"
+                    :options="{ preserveScroll: true }"
                     reset-on-success
-                    :reset-on-error="[
-                        'password',
-                        'password_confirmation',
-                        'current_password',
-                    ]"
+                    :reset-on-error="['password', 'password_confirmation', 'current_password']"
                     class="space-y-6"
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="current_password">Current password</Label>
+                        <Label for="current_password">Mật khẩu hiện tại</Label>
                         <Input
                             id="current_password"
                             name="current_password"
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="current-password"
-                            placeholder="Current password"
+                            placeholder="Mật khẩu hiện tại"
                         />
                         <InputError :message="errors.current_password" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password">New password</Label>
+                        <Label for="password">Mật khẩu mới</Label>
                         <Input
                             id="password"
                             name="password"
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="New password"
+                            placeholder="Mật khẩu mới"
                         />
                         <InputError :message="errors.password" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password_confirmation"
-                            >Confirm password</Label
-                        >
+                        <Label for="password_confirmation">Xác nhận mật khẩu</Label>
                         <Input
                             id="password_confirmation"
                             name="password_confirmation"
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="Confirm password"
+                            placeholder="Xác nhận mật khẩu"
                         />
                         <InputError :message="errors.password_confirmation" />
                     </div>
@@ -92,7 +84,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         <Button
                             :disabled="processing"
                             data-test="update-password-button"
-                            >Save password</Button
+                            >Lưu mật khẩu</Button
                         >
 
                         <Transition
@@ -105,7 +97,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                Saved.
+                                Đã lưu.
                             </p>
                         </Transition>
                     </div>

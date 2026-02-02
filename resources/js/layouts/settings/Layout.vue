@@ -13,19 +13,19 @@ import { Link } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'Hồ sơ',
         href: editProfile(),
     },
     {
-        title: 'Password',
+        title: 'Mật khẩu',
         href: editPassword(),
     },
     {
-        title: 'Two-Factor Auth',
+        title: 'Xác thực hai lớp',
         href: show(),
     },
     {
-        title: 'Appearance',
+        title: 'Giao diện',
         href: editAppearance(),
     },
 ];
@@ -36,8 +36,8 @@ const { isCurrentUrl } = useCurrentUrl();
 <template>
     <div class="px-4 py-6">
         <Heading
-            title="Settings"
-            description="Manage your profile and account settings"
+            title="Cài đặt"
+            description="Quản lý hồ sơ và các thiết lập tài khoản"
         />
 
         <div class="flex flex-col lg:flex-row lg:space-x-12">
