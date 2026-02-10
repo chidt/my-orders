@@ -1,18 +1,12 @@
 <template>
-    <Head :title="`${page.props.site.name} Dashboard`" />
+    <Head :title="`Bảng điều khiển ${page.props.site.name}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-screen bg-gray-50">
             <nav class="bg-white shadow-sm">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
                         <div class="flex items-center">
-                            <h1 class="text-xl font-semibold text-gray-900">{{ page.props.site.name }} Dashboard</h1>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-gray-600 mr-4">Welcome, {{ page.props.auth.user.name }}</span>
-                            <Link href="/logout" method="post" class="text-red-600 hover:text-red-800">
-                                Logout
-                            </Link>
+                            <h1 class="text-xl font-semibold text-gray-900">Bảng điều khiển {{ page.props.site.name }}</h1>
                         </div>
                     </div>
                 </div>
@@ -54,7 +48,7 @@
                                     </div>
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
-                                            <dt class="text-sm font-medium text-gray-500 truncate">Site Users</dt>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Số lượng tài khoản</dt>
                                             <dd class="text-lg font-medium text-gray-900">{{ stats.site_users }}</dd>
                                         </dl>
                                     </div>
@@ -74,7 +68,7 @@
                                     </div>
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
-                                            <dt class="text-sm font-medium text-gray-500 truncate">Created</dt>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Ngày tạo</dt>
                                             <dd class="text-lg font-medium text-gray-900">{{ formatDate(stats.created_at) }}</dd>
                                         </dl>
                                     </div>
@@ -94,7 +88,7 @@
                                     </div>
                                     <div class="ml-5 w-0 flex-1">
                                         <dl>
-                                            <dt class="text-sm font-medium text-gray-500 truncate">Last Updated</dt>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Lần cập nhật gần nhất</dt>
                                             <dd class="text-lg font-medium text-gray-900">{{ formatDate(stats.last_updated) }}</dd>
                                         </dl>
                                     </div>
@@ -106,7 +100,7 @@
                     <!-- Site Management Actions -->
                     <div class="bg-white shadow rounded-lg">
                         <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Site Management</h3>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quản lý gian hàng</h3>
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 <div class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                                     <div class="flex-shrink-0">
@@ -119,8 +113,8 @@
                                     <div class="flex-1 min-w-0">
                                         <a href="#" class="focus:outline-none">
                                             <span class="absolute inset-0" aria-hidden="true"></span>
-                                            <p class="text-sm font-medium text-gray-900">Site Settings</p>
-                                            <p class="text-sm text-gray-500">Manage site configuration</p>
+                                            <p class="text-sm font-medium text-gray-900">Cài đặt trang</p>
+                                            <p class="text-sm text-gray-500">Quản lý cấu hình trang</p>
                                         </a>
                                     </div>
                                 </div>
@@ -136,8 +130,8 @@
                                     <div class="flex-1 min-w-0">
                                         <a href="#" class="focus:outline-none">
                                             <span class="absolute inset-0" aria-hidden="true"></span>
-                                            <p class="text-sm font-medium text-gray-900">User Management</p>
-                                            <p class="text-sm text-gray-500">Manage site users</p>
+                                            <p class="text-sm font-medium text-gray-900">Quản lý người dùng</p>
+                                            <p class="text-sm text-gray-500">Quản lý người dùng trên trang</p>
                                         </a>
                                     </div>
                                 </div>
@@ -153,8 +147,8 @@
                                     <div class="flex-1 min-w-0">
                                         <a href="#" class="focus:outline-none">
                                             <span class="absolute inset-0" aria-hidden="true"></span>
-                                            <p class="text-sm font-medium text-gray-900">Analytics</p>
-                                            <p class="text-sm text-gray-500">View site analytics</p>
+                                            <p class="text-sm font-medium text-gray-900">Phân tích</p>
+                                            <p class="text-sm text-gray-500">Xem phân tích trang</p>
                                         </a>
                                     </div>
                                 </div>
@@ -170,6 +164,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard as siteDashboard } from '@/routes/site';
 
 defineProps({
     site: Object,
@@ -178,15 +173,15 @@ defineProps({
 
 const page = usePage();
 
+const breadcrumbs = [
+    { title: 'Bảng điều khiển', href: siteDashboard.url(page.props.site.slug) }
+];
+
 const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
     });
 };
-
-const breadcrumbs = [
-    { title: 'Dashboard', href: `/${page.props.site.slug}/dashboard` }
-];
 </script>

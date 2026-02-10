@@ -1,26 +1,16 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard as siteDashboard } from '@/routes/site';
+import { type BreadcrumbItem } from '@/types';
 import PlaceholderPattern from '../components/PlaceholderPattern.vue';
 
 const page = usePage();
 
-const getDashboardUrl = () => {
-    const user = page.props.auth.user;
-    if (user && user.roles && user.roles.includes('admin')) {
-        return '/admin/dashboard';
-    }
-    if (user && user.site && user.roles && user.roles.includes('SiteAdmin')) {
-        return `/${user.site.slug}/dashboard`;
-    }
-    return '/';
-};
-
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
-        href: getDashboardUrl(),
+        title: 'Bảng điều khiển',
+        href: siteDashboard.url(page.props.auth.site.slug),
     },
 ];
 </script>

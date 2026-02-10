@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -45,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                     [
                         'roles' => $user->getRoleNames(),
                         'site' => $user->site,
+                        'can' => $user->getPermissionsViaRoles()->pluck('name')->mapWithKeys(fn ($permission) => [$permission => true])->all(),
                     ]
                 ) : null,
             ],

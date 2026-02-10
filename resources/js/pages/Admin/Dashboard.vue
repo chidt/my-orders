@@ -185,6 +185,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
 
 const page = usePage();
@@ -194,20 +195,10 @@ defineProps({
     recent_users: Array,
     recent_sites: Array
 })
-const getDashboardUrl = () => {
-    const user = page.props.auth.user;
-    if (user && user.roles && user.roles.includes('admin')) {
-        return '/admin/dashboard';
-    }
-    if (user && user.site && user.roles && user.roles.includes('SiteAdmin')) {
-        return `/${user.site.slug}/dashboard`;
-    }
-    return '/';
-};
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
-        href: getDashboardUrl(),
+        title: 'Bảng điều khiển',
+        href: dashboard.url(),
     },
 ];
 </script>

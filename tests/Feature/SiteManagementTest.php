@@ -1,0 +1,129 @@
+<?php
+
+use App\Models\Site;
+use App\Models\User;
+use Spatie\Permission\Models\Permission;
+
+beforeEach(function () {
+    // Create the permission if it doesn't exist
+    Permission::firstOrCreate(['name' => 'manage-own-site']);
+});
+
+test('authorized user can view site edit form', function () {
+    $user = User::factory()->create();
+    $site = Site::factory()->create(['user_id' => $user->id]);
+
+    $user->givePermissionTo('manage-own-site');
+
+    $response = $this->actingAs($user)->get(route('site.edit'));
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($assert) =>
+        $assert->component('settings/Site')
+            ->has('site')
+            ->where('site.id', $site->id)
+            ->where('site.name', $site->name)
+    );
+});
+
+test('user without permission cannot access site edit form', function () {
+    $user = User::factory()->create();
+    Site::factory()->create(['user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get(route('site.edit'));
+
+    $response->assertStatus(403);
+});
+
+test('authorized user can update site information', function () {
+    $user = User::factory()->create();
+    $site = Site::factory()->create(['user_id' => $user->id]);
+
+    $user->givePermissionTo('manage-own-site');
+
+    $updateData = [
+        'name' => 'Updated Site Name',
+        'slug' => 'updated-site-slug',
+        'description' => 'Updated description',
+        'settings' => [
+            'product_prefix' => 'UPD'
+        ]
+    ];
+
+    $response = $this->actingAs($user)->put(route('site.update'), $updateData);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('status', 'Thông tin trang web đã được cập nhật thành công!');
+
+    $site->refresh();
+    expect($site->name)->toBe('Updated Site Name');
+    expect($site->slug)->toBe('updated-site-slug');
+    expect($site->description)->toBe('Updated description');
+    expect($site->settings['product_prefix'])->toBe('UPD');
+});
+
+test('validation works for required fields', function () {
+    $user = User::factory()->create();
+    Site::factory()->create(['user_id' => $user->id]);
+
+    $user->givePermissionTo('manage-own-site');
+
+    $response = $this->actingAs($user)->put(route('site.update'), [
+        'name' => '', // Required field empty
+        'slug' => '',
+    ]);
+
+    $response->assertSessionHasErrors(['name', 'slug']);
+});
+
+test('validation works for slug format', function () {
+    $user = User::factory()->create();
+    Site::factory()->create(['user_id' => $user->id]);
+
+    $user->givePermissionTo('manage-own-site');
+
+    $response = $this->actingAs($user)->put(route('site.update'), [
+        'name' => 'Test Site',
+        'slug' => 'Invalid Slug With Spaces!',
+    ]);
+
+    $response->assertSessionHasErrors(['slug']);
+});
+
+test('validation works for product prefix format', function () {
+    $user = User::factory()->create();
+    Site::factory()->create(['user_id' => $user->id]);
+
+    $user->givePermissionTo('manage-own-site');
+
+    $response = $this->actingAs($user)->put(route('site.update'), [
+        'name' => 'Test Site',
+        'slug' => 'test-site',
+        'settings' => [
+            'product_prefix' => 'invalid_lowercase'
+        ]
+    ]);
+
+    $response->assertSessionHasErrors(['settings.product_prefix']);
+});
+
+test('user without site gets 404', function () {
+    $user = User::factory()->create();
+    $user->givePermissionTo('manage-own-site');
+
+    $response = $this->actingAs($user)->get(route('site.edit'));
+
+    $response->assertStatus(404);
+});
+
+test('user cannot update if they dont own the site', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    Site::factory()->create(['user_id' => $otherUser->id]);
+
+    $user->givePermissionTo('manage-own-site');
+
+    $response = $this->actingAs($user)->get(route('site.edit'));
+
+    $response->assertStatus(404);
+});

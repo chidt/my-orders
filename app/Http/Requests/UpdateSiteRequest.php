@@ -13,7 +13,19 @@ class UpdateSiteRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        $site = Site::where('user_id', $user->id)->first();
+
+        if (! $site) {
+            return false;
+        }
+
+        return $user->can('update', $site);
     }
 
     /**
@@ -23,12 +35,13 @@ class UpdateSiteRequest extends FormRequest
      */
     public function rules(): array
     {
-        $site = $this->route('site');
+        $user = $this->user();
+        $site = $user ? Site::where('user_id', $user->id)->first() : null;
 
         return [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'slug' => [
-                'sometimes',
+                'required',
                 'string',
                 'max:255',
                 'regex:/^[a-z0-9-]+$/',
@@ -36,6 +49,7 @@ class UpdateSiteRequest extends FormRequest
             ],
             'description' => ['nullable', 'string', 'max:2000'],
             'settings' => ['nullable', 'array'],
+            'settings.product_prefix' => ['nullable', 'string', 'max:5', 'regex:/^[A-Z0-9]+$/'],
         ];
     }
 
@@ -47,8 +61,22 @@ class UpdateSiteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'slug.regex' => 'The slug may only contain lowercase letters, numbers, and hyphens.',
-            'slug.unique' => 'The slug must be unique. This slug is already taken.',
+            'name.required' => 'Tên trang web là bắt buộc.',
+            'name.string' => 'Tên trang web phải là chuỗi ký tự.',
+            'name.max' => 'Tên trang web không được vượt quá :max ký tự.',
+
+            'slug.required' => 'Slug trang web là bắt buộc.',
+            'slug.string' => 'Slug trang web phải là chuỗi ký tự.',
+            'slug.max' => 'Slug trang web không được vượt quá :max ký tự.',
+            'slug.regex' => 'Slug chỉ được chứa chữ cái thường, số và dấu gạch ngang.',
+            'slug.unique' => 'Slug này đã được sử dụng. Vui lòng chọn slug khác.',
+
+            'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            'description.max' => 'Mô tả không được vượt quá :max ký tự.',
+
+            'settings.product_prefix.string' => 'Tiền tố mã sản phẩm phải là chuỗi ký tự.',
+            'settings.product_prefix.max' => 'Tiền tố mã sản phẩm không được vượt quá :max ký tự.',
+            'settings.product_prefix.regex' => 'Tiền tố mã sản phẩm chỉ được chứa chữ cái in hoa và số.',
         ];
     }
 }

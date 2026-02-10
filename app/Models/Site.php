@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\SiteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Site extends Model
 {
-    /** @use HasFactory<\Database\Factories\SiteFactory> */
+    /** @use HasFactory<SiteFactory> */
     use HasFactory;
 
+    public mixed $name;
     protected $fillable = [
         'name',
         'slug',
