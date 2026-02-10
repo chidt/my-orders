@@ -42,32 +42,43 @@ test('customer factory type methods work', function () {
     expect($corporate->type)->toBe(CustomerType::CORPORATE->value);
 });
 
-test('address factory creates address with existing ward and customer', function () {
+test('address factory creates address with existing ward and addressable', function () {
     // Ensure we have provinces and wards
     $province = Province::factory()->create();
     $ward = Ward::factory()->create(['province_id' => $province->id]);
     $customer = Customer::factory()->create();
 
-    $address = Address::factory()->create();
+    $address = Address::factory()->forCustomer($customer)->create();
 
     expect($address)->toBeInstanceOf(Address::class);
     expect($address->address)->not->toBeEmpty();
-    expect($address->customer_id)->not->toBeNull();
+    expect($address->addressable_id)->not->toBeNull();
+    expect($address->addressable_type)->toBe(Customer::class);
     expect($address->ward_id)->not->toBeNull();
-    expect($address->customer)->toBeInstanceOf(Customer::class);
+    expect($address->addressable)->toBeInstanceOf(Customer::class);
     expect($address->ward)->toBeInstanceOf(Ward::class);
     expect($address->ward->province->id)->toBe($ward->province_id);
 });
 
-test('address factory creates new customer when none exists', function () {
-    // Delete existing customers but keep wards
+test('address factory creates new addressable when none exists', function () {
+    // Delete existing customers and users but keep wards
     Customer::query()->delete();
+    User::query()->delete();
     $ward = Ward::factory()->create(['province_id' => Province::factory()->create()->id]);
 
     $address = Address::factory()->create();
 
-    expect($address->customer_id)->not->toBeNull();
-    expect(Customer::find($address->customer_id))->not->toBeNull();
+    expect($address->addressable_id)->not->toBeNull();
+    expect($address->addressable_type)->not->toBeNull();
+
+    // Should find either a customer or user
+    $found = false;
+    if ($address->addressable_type === Customer::class) {
+        $found = Customer::find($address->addressable_id) !== null;
+    } else {
+        $found = User::find($address->addressable_id) !== null;
+    }
+    expect($found)->toBeTrue();
 });
 
 test('address factory throws exception when no wards exist', function () {
@@ -84,8 +95,20 @@ test('address factory forCustomer method works', function () {
 
     $address = Address::factory()->forCustomer($customer)->create();
 
-    expect($address->customer_id)->toBe($customer->id);
-    expect($address->customer->id)->toBe($customer->id);
+    expect($address->addressable_id)->toBe($customer->id);
+    expect($address->addressable_type)->toBe(Customer::class);
+    expect($address->addressable->id)->toBe($customer->id);
+});
+
+test('address factory forUser method works', function () {
+    $user = User::factory()->create();
+    $ward = Ward::factory()->create(['province_id' => Province::factory()->create()->id]);
+
+    $address = Address::factory()->forUser($user)->create();
+
+    expect($address->addressable_id)->toBe($user->id);
+    expect($address->addressable_type)->toBe(User::class);
+    expect($address->addressable->id)->toBe($user->id);
 });
 
 test('address factory withWardId validates ward exists', function () {
@@ -168,6 +191,6 @@ test('factory chain relationships work together', function () {
     expect($user->customer->id)->toBe($customer->id);
 
     foreach ($addresses as $address) {
-        expect($address->customer->id)->toBe($customer->id);
+        expect($address->addressable->id)->toBe($customer->id);
     }
 });

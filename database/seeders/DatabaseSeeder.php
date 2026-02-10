@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        Artisan::call('vnzone:import');
         // Always seed roles and permissions first
         $this->call([
             RolePermissionSeeder::class,
@@ -26,6 +27,5 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        Artisan::call('vnzone:import');
     }
 }

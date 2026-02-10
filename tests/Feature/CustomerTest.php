@@ -84,12 +84,13 @@ test('address has relationships', function () {
         ->forWard($ward)
         ->create();
 
-    $address = Address::with(['customer', 'ward.province'])->find($address->id);
+    $address = Address::with(['addressable', 'ward.province'])->find($address->id);
 
-    expect($address->customer)->toBeInstanceOf(Customer::class);
+    expect($address->addressable)->toBeInstanceOf(Customer::class);
     expect($address->ward)->toBeInstanceOf(Ward::class);
     expect($address->ward->province)->toBeInstanceOf(Province::class);
-    expect($address->customer_id)->toBe($customer->id);
+    expect($address->addressable_id)->toBe($customer->id);
+    expect($address->addressable_type)->toBe(Customer::class);
     expect($address->ward_id)->toBe($ward->id);
 });
 

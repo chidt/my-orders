@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Address extends Model
 {
@@ -12,13 +13,14 @@ class Address extends Model
 
     protected $fillable = [
         'address',
-        'customer_id',
+        'addressable_id',
+        'addressable_type',
         'ward_id',
     ];
 
-    public function customer(): BelongsTo
+    public function addressable(): MorphTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->morphTo();
     }
 
     public function ward(): BelongsTo
