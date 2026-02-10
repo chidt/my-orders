@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Concerns\AddressValidationRules;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Concerns\SiteValidationRules;
@@ -13,7 +14,7 @@ use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
 {
-    use PasswordValidationRules, ProfileValidationRules, SiteValidationRules;
+    use AddressValidationRules, PasswordValidationRules, ProfileValidationRules, SiteValidationRules;
 
     /**
      * Validate and create a newly registered user.
@@ -24,9 +25,11 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        \Log::info($input);
         Validator::make($input, [
             ...$this->profileRules(),
             ...$this->siteRules(),
+            ...$this->addressRules($input),
             'password' => $this->passwordRules(),
         ])->validate();
 
@@ -43,6 +46,12 @@ class CreateNewUser implements CreatesNewUsers
                 'phone_number' => $input['phone_number'],
                 'password' => $input['password'],
                 'site_id' => $site->id,
+            ]);
+
+            // Create user address
+            $user->addresses()->create([
+                'address' => $input['address'],
+                'ward_id' => $input['ward_id'],
             ]);
 
             // Assign default SiteAdmin role to newly registered user

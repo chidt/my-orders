@@ -1,18 +1,28 @@
 <script setup lang="ts">
-import { Form, Head, useForm } from '@inertiajs/vue3';
-import { watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
-import { store } from '@/routes/register'   ;
+import { store } from '@/routes/register';
+import { Form, Head, useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+import { onMounted, ref, watch } from 'vue';
 
 const form = useForm(store.form());
+const provinces = ref([]);
+const wards = ref([]);
 
 const generateSlug = (): void => {
     if (!form.site_name) {
@@ -27,6 +37,38 @@ const generateSlug = (): void => {
 
     form.site_slug = slug;
 };
+
+const fetchProvinces = async (): Promise<void> => {
+    try {
+        const response = await axios.get('/api/provinces');
+        provinces.value = response.data;
+    } catch (error) {
+        console.error('Error fetching provinces:', error);
+    }
+};
+
+const fetchWards = async (provinceId: number): Promise<void> => {
+    if (!provinceId) {
+        wards.value = [];
+        form.ward_id = null;
+        return;
+    }
+
+    try {
+        const response = await axios.get(`/api/provinces/${provinceId}/wards`);
+        wards.value = response.data;
+    } catch (error) {
+        console.error('Error fetching wards:', error);
+    }
+};
+
+const onProvinceChange = (provinceId: string): void => {
+    form.ward_id = null;
+    fetchWards(Number(provinceId));
+};
+onMounted(() => {
+    fetchProvinces();
+});
 
 watch(() => form.site_name, generateSlug);
 </script>
@@ -46,7 +88,9 @@ watch(() => form.site_name, generateSlug);
             class="flex flex-col gap-6"
         >
             <div class="space-y-4">
-                <h2 class="text-lg font-semibold text-gray-900">Thông tin cá nhân</h2>
+                <h2 class="text-lg font-semibold text-gray-900">
+                    Thông tin cá nhân
+                </h2>
                 <div class="grid gap-2">
                     <Label for="name">Tên</Label>
                     <Input
@@ -124,8 +168,10 @@ watch(() => form.site_name, generateSlug);
                 </div>
             </div>
 
-            <div class="space-y-4 border-t border-gray-200 pt-6 mt-6">
-                <h2 class="text-lg font-semibold text-gray-900">Thông tin cửa hàng</h2>
+            <div class="mt-6 space-y-4 border-t border-gray-200 pt-6">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    Thông tin cửa hàng
+                </h2>
                 <div class="grid gap-2">
                     <Label for="site_name">Tên cửa hàng</Label>
                     <Input
@@ -167,10 +213,77 @@ watch(() => form.site_name, generateSlug);
                 </div>
             </div>
 
+            <div class="mt-6 space-y-4 border-t border-gray-200 pt-6">
+                <h2 class="text-lg font-semibold text-gray-900">Địa chỉ</h2>
+                <div class="grid gap-2">
+                    <Label for="address">Địa chỉ</Label>
+                    <Input
+                        id="address"
+                        type="text"
+                        required
+                        :tabindex="9"
+                        name="address"
+                        placeholder="Số nhà, tên đường"
+                        v-model="form.address"
+                    />
+                    <InputError :message="errors.address" />
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="grid gap-2">
+                        <Label for="province_id">Tỉnh/Thành phố</Label>
+                        <Select
+                            v-model="form.province_id"
+                            name="province_id"
+                            @update:modelValue="onProvinceChange"
+                        >
+                            <SelectTrigger>
+                                <SelectValue
+                                    placeholder="Chọn tỉnh/thành phố"
+                                />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem
+                                    v-for="province in provinces"
+                                    :key="province.id"
+                                    :value="String(province.id)"
+                                >
+                                    {{ province.name }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <InputError :message="errors.province_id" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="ward_id">Phường/Xã</Label>
+                        <Select
+                            v-model="form.ward_id"
+                            name="ward_id"
+                            :disabled="!form.province_id"
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Chọn phường/xã" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem
+                                    v-for="ward in wards"
+                                    :key="ward.id"
+                                    :value="String(ward.id)"
+                                >
+                                    {{ ward.name }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <InputError :message="errors.ward_id" />
+                    </div>
+                </div>
+            </div>
+
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="9"
+                tabindex="10"
                 :disabled="processing"
                 data-test="register-user-button"
             >
@@ -183,7 +296,7 @@ watch(() => form.site_name, generateSlug);
                 <TextLink
                     :href="login()"
                     class="underline underline-offset-4"
-                    :tabindex="10"
+                    :tabindex="11"
                     >Đăng nhập</TextLink
                 >
             </div>

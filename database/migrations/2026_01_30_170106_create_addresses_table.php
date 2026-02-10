@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('addresses', function (Blueprint $table) {
             $table->id();
             $table->text('address');
-            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->morphs('addressable');
             $table->foreignId('ward_id')->constrained();
             $table->timestamps();
         });

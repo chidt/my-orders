@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Address;
 use App\Models\Customer;
+use App\Models\User;
 use App\Models\Ward;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,26 +24,41 @@ class AddressFactory extends Factory
     {
         return [
             'address' => fake()->streetAddress().', '.fake()->city(),
-            'customer_id' => fn () => $this->getRandomCustomerId(),
+            'addressable_id' => fn () => $this->getRandomAddressableId(),
+            'addressable_type' => fn () => $this->getRandomAddressableType(),
             'ward_id' => fn () => $this->getRandomWardId(),
         ];
     }
 
     /**
-     * Get a random existing customer ID.
-     * Creates a new customer if none exists.
+     * Get a random existing addressable ID.
+     * Creates a new model if none exists.
      */
-    private function getRandomCustomerId(): int
+    private function getRandomAddressableId(): int
     {
-        $customer = Customer::inRandomOrder()->first();
+        $type = $this->getRandomAddressableType();
 
-        if (! $customer) {
-            // Create a customer if none exists
-            $customer = Customer::factory()->create();
-            // Note: Command is not available in factory context, so we skip logging
+        if ($type === Customer::class) {
+            $model = Customer::inRandomOrder()->first();
+            if (! $model) {
+                $model = Customer::factory()->create();
+            }
+        } else {
+            $model = User::inRandomOrder()->first();
+            if (! $model) {
+                $model = User::factory()->create();
+            }
         }
 
-        return $customer->id;
+        return $model->id;
+    }
+
+    /**
+     * Get a random addressable type.
+     */
+    private function getRandomAddressableType(): string
+    {
+        return fake()->randomElement([Customer::class, User::class]);
     }
 
     /**
@@ -68,7 +84,19 @@ class AddressFactory extends Factory
     public function forCustomer(Customer|int $customer): static
     {
         return $this->state(fn (array $attributes) => [
-            'customer_id' => $customer instanceof Customer ? $customer->id : $customer,
+            'addressable_id' => $customer instanceof Customer ? $customer->id : $customer,
+            'addressable_type' => Customer::class,
+        ]);
+    }
+
+    /**
+     * Create an address for a specific user.
+     */
+    public function forUser(User|int $user): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'addressable_id' => $user instanceof User ? $user->id : $user,
+            'addressable_type' => User::class,
         ]);
     }
 

@@ -63,9 +63,7 @@ class CustomerSeeder extends Seeder
             $addressCount = rand(1, 3);
             for ($j = 0; $j < $addressCount; $j++) {
                 try {
-                    Address::factory()->create([
-                        'customer_id' => $customer->id,
-                    ]);
+                    Address::factory()->forCustomer($customer)->create();
                 } catch (\RuntimeException $e) {
                     $this->command->error('❌ Failed to create address: '.$e->getMessage());
 
@@ -127,12 +125,17 @@ class CustomerSeeder extends Seeder
             $this->command->info('✅ All address ward references are valid');
         }
 
-        // Check all addresses have valid customer references
-        $addressesWithInvalidCustomer = Address::whereNotIn('customer_id', Customer::pluck('id'))->count();
-        if ($addressesWithInvalidCustomer > 0) {
-            $this->command->error('❌ Found '.$addressesWithInvalidCustomer.' addresses with invalid customer_id');
+        // Check all addresses have valid addressable references
+        $addressesWithInvalidAddressable = Address::where(function ($query) {
+            $query->where('addressable_type', Customer::class)
+                ->whereNotIn('addressable_id', Customer::pluck('id'))
+                ->orWhere('addressable_type', User::class)
+                ->whereNotIn('addressable_id', User::pluck('id'));
+        })->count();
+        if ($addressesWithInvalidAddressable > 0) {
+            $this->command->error('❌ Found '.$addressesWithInvalidAddressable.' addresses with invalid addressable references');
         } else {
-            $this->command->info('✅ All address customer references are valid');
+            $this->command->info('✅ All address addressable references are valid');
         }
 
         $this->command->info('✅ Data integrity validation completed');
