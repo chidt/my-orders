@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard as siteDashboard } from '@/routes/site';
 

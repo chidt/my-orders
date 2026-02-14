@@ -19,42 +19,40 @@ class PermissionController extends Controller
 {
     public function index(IndexPermissionAction $action): Response
     {
-        $data = $action->handle();
+        $data = $action();
 
         return Inertia::render('Admin/Permissions/Index', $data);
     }
 
+    public function create(CreatePermissionAction $action): Response
+    {
+        return $action();
+    }
+
     public function store(StorePermissionRequest $request, StorePermissionAction $action): RedirectResponse
     {
-        $action->handle($request);
-
-        return redirect()
-            ->route('admin.permissions.index')
-            ->with('message', 'Tạo quyền hạn thành công.');
+        return $action($request);
     }
 
     public function show(Permission $permission, ShowPermissionAction $action): Response
     {
-        $data = $action->handle($permission);
+        $data = $action($permission);
 
         return Inertia::render('Admin/Permissions/Show', $data);
     }
 
+    public function edit(Permission $permission, EditPermissionAction $action): Response
+    {
+        return $action($permission);
+    }
+
     public function update(UpdatePermissionRequest $request, Permission $permission, UpdatePermissionAction $action): RedirectResponse
     {
-        $action->handle($request, $permission);
-
-        return redirect()
-            ->route('admin.permissions.index')
-            ->with('message', 'Cập nhật quyền hạn thành công.');
+        return $action($request, $permission);
     }
 
     public function destroy(Permission $permission, DestroyPermissionAction $action): RedirectResponse
     {
-        $action->handle($permission);
-
-        return redirect()
-            ->route('admin.permissions.index')
-            ->with('message', 'Xóa quyền hạn thành công.');
+        return $action($permission);
     }
 }

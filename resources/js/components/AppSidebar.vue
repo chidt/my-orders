@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { LayoutGrid, Settings, LucideUserKey } from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -18,6 +17,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { index as RolesIndex } from '@/routes/admin/roles';
 import { edit as SiteEdit } from '@/routes/site';
 import { type NavItem } from '@/types';
+import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 const { can } = usePermissions();
