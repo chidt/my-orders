@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, Link, usePage } from '@inertiajs/vue3';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { edit } from '@/routes/profile';
+import { edit, update } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem } from '@/types';
 
@@ -28,6 +27,15 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const page = usePage();
 const user = page.props.auth.user;
+
+const form = useForm({
+    name: user.name,
+    email: user.email,
+});
+
+const submitForm = () => {
+    form.patch(update().url);
+};
 </script>
 
 <template>
@@ -44,45 +52,44 @@ const user = page.props.auth.user;
                     description="Cập nhật tên và địa chỉ email của bạn"
                 />
 
-                <Form
-                    v-bind="ProfileController.update.form()"
+                <form
+                    @submit.prevent="submitForm"
                     class="space-y-6"
-                    v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
                         <Label for="name">Tên</Label>
                         <Input
                             id="name"
+                            v-model="form.name"
                             class="mt-1 block w-full"
                             name="name"
-                            :default-value="user.name"
                             required
                             autocomplete="name"
                             placeholder="Họ và tên"
                         />
-                        <InputError class="mt-2" :message="errors.name" />
+                        <InputError class="mt-2" :message="form.errors.name" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="email">Địa chỉ email</Label>
                         <Input
                             id="email"
+                            v-model="form.email"
                             type="email"
                             class="mt-1 block w-full"
                             name="email"
-                            :default-value="user.email"
                             required
                             autocomplete="username"
                             placeholder="Địa chỉ email"
                         />
-                        <InputError class="mt-2" :message="errors.email" />
+                        <InputError class="mt-2" :message="form.errors.email" />
                     </div>
 
                     <div v-if="mustVerifyEmail && !user.email_verified_at">
                         <p class="-mt-4 text-sm text-muted-foreground">
                             Địa chỉ email của bạn chưa được xác minh.
                             <Link
-                                :href="send()"
+                                :href="send().url"
                                 as="button"
                                 class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                             >
@@ -100,7 +107,8 @@ const user = page.props.auth.user;
 
                     <div class="flex items-center gap-4">
                         <Button
-                            :disabled="processing"
+                            type="submit"
+                            :disabled="form.processing"
                             data-test="update-profile-button"
                             >Lưu</Button
                         >
@@ -112,14 +120,14 @@ const user = page.props.auth.user;
                             leave-to-class="opacity-0"
                         >
                             <p
-                                v-show="recentlySuccessful"
+                                v-show="form.recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
                                 Đã lưu.
                             </p>
                         </Transition>
                     </div>
-                </Form>
+                </form>
             </div>
         </SettingsLayout>
     </AppLayout>

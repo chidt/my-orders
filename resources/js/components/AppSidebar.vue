@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Settings, LucideUserKey } from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
+import {
+    LayoutGrid,
+    Settings,
+    LucideUserKey,
+    ShieldUser,
+} from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -15,9 +19,11 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
+import { index as PermissionsIndex } from '@/routes/admin/permissions';
 import { index as RolesIndex } from '@/routes/admin/roles';
 import { edit as SiteEdit } from '@/routes/site';
 import { type NavItem } from '@/types';
+import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 const { can } = usePermissions();
@@ -49,6 +55,12 @@ const mainNavItems: NavItem[] = [
         href: RolesIndex(),
         icon: LucideUserKey,
         show: can('view_roles'),
+    },
+    {
+        title: 'Quản lý quyền hạn',
+        href: PermissionsIndex(),
+        icon: ShieldUser,
+        show: can('view_permissions'),
     },
     {
         title: 'Quản lý trang web',

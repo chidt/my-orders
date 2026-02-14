@@ -18,11 +18,30 @@ class UpdatePermissionRequest extends FormRequest
         ];
     }
 
+    /**
+     * Get custom error messages for validation rules.
+     *
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
-            'name.required' => 'The permission name is required.',
-            'name.unique' => 'This permission name already exists.',
+            'name.required' => 'Tên quyền hạn là bắt buộc.',
+            'name.string' => 'Tên quyền hạn phải là một chuỗi ký tự.',
+            'name.max' => 'Tên quyền hạn không được vượt quá 255 ký tự.',
+            'name.unique' => 'Tên quyền hạn này đã tồn tại.',
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'tên quyền hạn',
         ];
     }
 }
