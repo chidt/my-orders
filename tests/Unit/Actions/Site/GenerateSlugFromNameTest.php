@@ -38,13 +38,15 @@ test('it limits slug length to 50 characters', function () {
     // Just check that it's properly truncated, don't hardcode the exact result
 });
 
-test('it has method to check slug existence', function () {
+test('it has method to check unique slugs', function () {
     $action = new GenerateSlugFromName;
 
-    // Test that the protected method exists using reflection
-    $reflection = new \ReflectionClass($action);
-    expect($reflection->hasMethod('slugExists'))->toBeTrue();
+    // Test that the methods exist
+    expect(method_exists($action, 'handleUnique'))->toBeTrue();
+    expect(method_exists($action, 'handle'))->toBeTrue();
 
-    $method = $reflection->getMethod('slugExists');
-    expect($method->isProtected())->toBeTrue();
+    // Test basic functionality without database dependency
+    $basicSlug = $action->handle('Test Site');
+    expect($basicSlug)->toBeString()
+        ->and($basicSlug)->toBe('test-site');
 });

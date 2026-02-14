@@ -28,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // Restrict admin role/permission management to admin role and correct permissions
+        $middleware->group('admin.role.permission', ['auth', 'role:Admin', 'permission:manage_permissions|manage_roles']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

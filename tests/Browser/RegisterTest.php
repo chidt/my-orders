@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 it('user can register', function () {

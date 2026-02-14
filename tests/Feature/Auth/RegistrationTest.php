@@ -5,7 +5,7 @@ use App\Models\User;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 test('registration screen can be rendered', function () {

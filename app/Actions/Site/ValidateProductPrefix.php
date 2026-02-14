@@ -2,13 +2,17 @@
 
 namespace App\Actions\Site;
 
-class ValidateProductPrefix
+use App\Contracts\ActionContract;
+
+class ValidateProductPrefix implements ActionContract
 {
     /**
      * Validate and format product prefix.
      */
-    public function handle(?string $prefix): ?string
+    public function handle(mixed ...$parameters): mixed
     {
+        $prefix = $parameters[0] ?? null;
+
         if (empty($prefix) || trim($prefix) === '') {
             return null;
         }
@@ -22,6 +26,14 @@ class ValidateProductPrefix
 
         // Limit to 5 characters
         return substr($cleaned, 0, 5);
+    }
+
+    /**
+     * Validate and format product prefix (helper method with original signature).
+     */
+    public function validatePrefix(?string $prefix): ?string
+    {
+        return $this->handle($prefix);
     }
 
     /**

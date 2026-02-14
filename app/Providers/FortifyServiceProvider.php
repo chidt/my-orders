@@ -93,7 +93,6 @@ class FortifyServiceProvider extends ServiceProvider
         });
     }
 
-
     /**
      * Get role-based redirect response for authenticated user.
      */
@@ -106,7 +105,7 @@ class FortifyServiceProvider extends ServiceProvider
             $user->refresh();
         }
 
-        if ($user->hasRole('admin')) {
+        if ($user->hasRole('Admin')) {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 

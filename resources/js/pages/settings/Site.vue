@@ -9,8 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { type BreadcrumbItem } from '@/types';
 import type { Site } from '@/types/auth';
-import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 
 interface Props {
     site: Site;
@@ -18,6 +20,13 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const breadcrumbItems: BreadcrumbItem[] = [
+    {
+        title: 'Quản lý trang web',
+        href: '/settings/site',
+    },
+];
 
 const form = useForm({
     name: props.site.name,
@@ -43,21 +52,24 @@ const updateProductPrefixExample = () => {
 updateProductPrefixExample();
 
 const submit = () => {
-    form.put(route('site.update'), {
+    form.put('/settings/site', {
         preserveScroll: true,
         onSuccess: () => {
             // Success is handled by status prop
+            // Controller handles slug changes by redirecting to route which refreshes data
         }
     });
 };
 </script>
 
 <template>
-    <Head title="Quản lý trang web" />
+    <AppLayout :breadcrumbs="breadcrumbItems">
+        <Head title="Quản lý trang web" />
 
-    <AuthenticatedLayout>
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <h1 class="sr-only">Quản lý trang web</h1>
+
+        <SettingsLayout>
+            <div class="space-y-6">
                 <!-- Success Alert -->
                 <Alert v-if="status" class="border-green-200 bg-green-50">
                     <CheckCircle class="h-4 w-4 text-green-600" />
@@ -183,6 +195,6 @@ const submit = () => {
                     </CardContent>
                 </Card>
             </div>
-        </div>
-    </AuthenticatedLayout>
+        </SettingsLayout>
+    </AppLayout>
 </template>

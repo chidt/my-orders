@@ -29,8 +29,8 @@ class UserSeeder extends Seeder
         }
 
         // Assign role if not already assigned
-        if (! $adminUser->hasRole('admin')) {
-            $adminUser->assignRole('admin');
+        if (! $adminUser->hasRole('Admin')) {
+            $adminUser->assignRole('Admin');
             $this->command->info('Admin role assigned to user');
         }
 

@@ -4,7 +4,7 @@ use App\Models\Site;
 use App\Models\User;
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 it('redirects to site dashboard after registration', function () {

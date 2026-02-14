@@ -5,7 +5,7 @@ use App\Models\User;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 test('guests are redirected to the login page', function () {
@@ -15,7 +15,7 @@ test('guests are redirected to the login page', function () {
 
 test('authenticated admin users can visit the dashboard', function () {
     $user = User::factory()->create();
-    $user->assignRole('admin'); // Admin role required for dashboard access
+    $user->assignRole('Admin'); // Admin role required for dashboard access
     $this->actingAs($user);
 
     $response = $this->get(route('admin.dashboard'));

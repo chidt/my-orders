@@ -7,12 +7,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 it('allows admin users to access admin dashboard', function () {
     $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $admin->assignRole('Admin');
 
     $response = $this->actingAs($admin)->get('/admin/dashboard');
 
@@ -64,7 +64,7 @@ it('denies site admin access to other site dashboards', function () {
 it('denies non-site-admin users access to site dashboard', function () {
     $site = Site::factory()->create(['slug' => 'test-site']);
     $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $admin->assignRole('Admin');
 
     $response = $this->actingAs($admin)->get('/test-site/dashboard');
 
@@ -96,7 +96,7 @@ it('returns 404 for non-existent site dashboard', function () {
 
 it('admin dashboard shows correct statistics', function () {
     $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $admin->assignRole('Admin');
 
     // Create some test data
     User::factory()->count(3)->create();

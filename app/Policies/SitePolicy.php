@@ -12,7 +12,7 @@ class SitePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('manage_own_site');
     }
 
     /**
@@ -20,7 +20,7 @@ class SitePolicy
      */
     public function view(User $user, Site $site): bool
     {
-        return $user->hasPermissionTo('manage-own-site') && $site->user_id === $user->id;
+        return $user->can('manage_own_site') && $site->user_id === $user->id;
     }
 
     /**
@@ -36,7 +36,7 @@ class SitePolicy
      */
     public function update(User $user, Site $site): bool
     {
-        return $user->hasPermissionTo('manage-own-site') && $site->user_id === $user->id;
+        return $user->can('manage_own_site') && $site->user_id === $user->id;
     }
 
     /**

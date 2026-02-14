@@ -78,8 +78,12 @@ const getDashboardUrl = () => {
     if (user && user.roles && user.roles.includes('admin')) {
         return '/admin/dashboard';
     }
-    if (user && user.site && user.roles && user.roles.includes('SiteAdmin')) {
-        return `/${user.site.slug}/dashboard`;
+    if (user && user.roles && user.roles.includes('SiteAdmin')) {
+        // Use current page site data if available (e.g., on settings page after slug update)
+        const currentSite = $page.props.site || user.site;
+        if (currentSite) {
+            return `/${currentSite.slug}/dashboard`;
+        }
     }
     return '/';
 };

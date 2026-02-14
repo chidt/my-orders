@@ -1,34 +1,53 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { usePermissions } from '@/composables/usePermissions';
 import { toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editProfile } from '@/routes/profile';
+import { edit as editSite } from '@/routes/site';
 import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Hồ sơ',
-        href: editProfile(),
-    },
-    {
-        title: 'Mật khẩu',
-        href: editPassword(),
-    },
-    {
-        title: 'Xác thực hai lớp',
-        href: show(),
-    },
-    {
-        title: 'Giao diện',
-        href: editAppearance(),
-    },
-];
+const { can } = usePermissions();
+
+// Make sidebarNavItems reactive based on permissions
+const sidebarNavItems = computed(() => {
+    const baseItems: NavItem[] = [
+        {
+            title: 'Hồ sơ',
+            href: editProfile(),
+            show: true,
+        },
+        {
+            title: 'Mật khẩu',
+            href: editPassword(),
+            show: true,
+        },
+        {
+            title: 'Xác thực hai lớp',
+            href: show(),
+            show: true,
+        },
+        {
+            title: 'Giao diện',
+            href: editAppearance(),
+            show: true,
+        },
+        {
+            title: 'Quản lý trang web',
+            href: editSite(),
+            show: can('manage_own_site'),
+        },
+    ];
+
+    return baseItems;
+});
 
 const { isCurrentUrl } = useCurrentUrl();
 </script>

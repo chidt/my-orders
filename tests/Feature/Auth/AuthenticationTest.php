@@ -7,7 +7,7 @@ use Laravel\Fortify\Features;
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 test('login screen can be rendered', function () {
@@ -18,7 +18,7 @@ test('login screen can be rendered', function () {
 
 test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
-    $user->assignRole('admin'); // Assign admin role for dashboard access
+    $user->assignRole('Admin'); // Assign admin role for dashboard access
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,

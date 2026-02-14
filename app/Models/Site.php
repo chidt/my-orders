@@ -11,7 +11,6 @@ class Site extends Model
     /** @use HasFactory<SiteFactory> */
     use HasFactory;
 
-    public mixed $name;
     protected $fillable = [
         'name',
         'slug',

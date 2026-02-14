@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 it('user can login', function () {
@@ -11,7 +14,7 @@ it('user can login', function () {
         'email' => 'chidt@test.com',
         'password' => 'password',
     ]);
-    $user->assignRole('admin'); // Assign admin role for dashboard access
+    $user->assignRole('Admin'); // Assign admin role for dashboard access
 
     $page = visit('/');
 
@@ -21,6 +24,7 @@ it('user can login', function () {
         ->fill('email', 'chidt@test.com')
         ->fill('password', 'password')
         ->click('Đăng nhập')
+        ->assertPathEndsWith('/admin/dashboard')
         ->assertSee('Dashboard');
 
 });

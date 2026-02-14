@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(\Database\Seeders\RoleSeeder::class);
+    $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 });
 
 it('redirects admin users to admin dashboard after login', function () {
@@ -15,7 +15,7 @@ it('redirects admin users to admin dashboard after login', function () {
         'email' => 'admin@test.com',
         'password' => 'password',
     ]);
-    $admin->assignRole('admin');
+    $admin->assignRole('Admin');
 
     $response = $this->post('/login', [
         'email' => 'admin@test.com',
@@ -108,7 +108,7 @@ it('respects intended redirect after login', function () {
         'email' => 'admin@test.com',
         'password' => 'password',
     ]);
-    $admin->assignRole('admin');
+    $admin->assignRole('Admin');
 
     // First try to access a protected page
     $this->get('/admin/dashboard');

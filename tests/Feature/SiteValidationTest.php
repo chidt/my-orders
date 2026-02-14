@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Requests\StoreSiteRequest;
+use App\Http\Requests\Site\StoreSiteRequest;
 use App\Models\Site;
 
 test('site store request requires unique slug', function () {

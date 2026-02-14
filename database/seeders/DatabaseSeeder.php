@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         // Always seed roles and permissions first
         $this->call([
-            RoleSeeder::class,
+            RolePermissionSeeder::class,
         ]);
 
         // Seed users only in development or when explicitly requested
