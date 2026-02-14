@@ -45,8 +45,18 @@ class StoreSiteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'slug.regex' => 'The slug may only contain lowercase letters, numbers, and hyphens.',
-            'slug.unique' => 'The slug must be unique. This slug is already taken.',
+            'name.required' => 'Tên trang web là bắt buộc.',
+            'name.string' => 'Tên trang web phải là chuỗi ký tự.',
+            'name.max' => 'Tên trang web không được vượt quá :max ký tự.',
+
+            'slug.required' => 'Slug trang web là bắt buộc.',
+            'slug.string' => 'Slug trang web phải là chuỗi ký tự.',
+            'slug.max' => 'Slug trang web không được vượt quá :max ký tự.',
+            'slug.regex' => 'Slug chỉ được chứa chữ cái thường, số và dấu gạch ngang.',
+            'slug.unique' => 'Slug này đã được sử dụng. Vui lòng chọn slug khác.',
+
+            'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            'description.max' => 'Mô tả không được vượt quá :max ký tự.',
         ];
     }
 }
