@@ -8,6 +8,10 @@ beforeEach(function () {
 });
 
 it('redirects to site dashboard after registration', function () {
+    // Create test province and ward for required address fields
+    $province = \App\Models\Province::factory()->create();
+    $ward = \App\Models\Ward::factory()->create(['province_id' => $province->id]);
+
     $response = $this->post('/register', [
         'name' => 'John Doe',
         'email' => 'test@example.com',
@@ -17,6 +21,9 @@ it('redirects to site dashboard after registration', function () {
         'site_name' => 'Test Store',
         'site_slug' => 'test-store',
         'site_description' => 'A test store',
+        'address' => '123 Store Street',
+        'province_id' => $province->id,
+        'ward_id' => $ward->id,
     ]);
 
     // Check if user was created
