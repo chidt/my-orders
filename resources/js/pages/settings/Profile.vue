@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, Link, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { onMounted, ref } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -16,9 +18,6 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem } from '@/types';
-import { Form, Head, Link, usePage } from '@inertiajs/vue3';
-import axios from 'axios';
-import { onMounted, ref, watch } from 'vue';
 
 type Props = {
     mustVerifyEmail: boolean;
@@ -51,10 +50,10 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const page = usePage();
 const user = page.props.auth.user;
-const address = page.props.address;
-const defaultAddress = address ? address.address : '';
-const defaultProvinceId = address ? String(address.ward.province.id) : '';
-const defaultWardId = ref(address ? String(address.ward.id) : '');
+const profileAddress = page.props.address;
+const defaultAddress = profileAddress ? profileAddress.address : '';
+const defaultProvinceId = profileAddress ? String(profileAddress.ward.province.id) : '';
+const defaultWardId = ref(profileAddress ? String(profileAddress.ward.id) : '');
 
 const provinces = ref([]);
 const wards = ref([]);
