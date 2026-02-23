@@ -16,7 +16,15 @@ class Address extends Model
         'addressable_id',
         'addressable_type',
         'ward_id',
+        'is_default',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_default' => 'boolean',
+        ];
+    }
 
     public function addressable(): MorphTo
     {

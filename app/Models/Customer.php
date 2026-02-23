@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
+use App\Concerns\HasAddress;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Customer extends Model
 {
-    use HasFactory;
+    use HasAddress, HasFactory;
 
     protected $fillable = [
         'name',
@@ -24,11 +24,6 @@ class Customer extends Model
     public function user(): HasOne
     {
         return $this->hasOne(User::class);
-    }
-
-    public function addresses(): MorphMany
-    {
-        return $this->morphMany(Address::class, 'addressable');
     }
 
     public function site(): BelongsTo

@@ -30,6 +30,8 @@ class AddressFactory extends Factory
         ];
     }
 
+    private ?string $cachedAddressableType = null;
+
     /**
      * Get a random existing addressable ID.
      * Creates a new model if none exists.
@@ -38,6 +40,14 @@ class AddressFactory extends Factory
     {
         $type = $this->getRandomAddressableType();
 
+        return $this->getAddressableIdByType($type);
+    }
+
+    /**
+     * Get addressable ID by type.
+     */
+    private function getAddressableIdByType(string $type): int
+    {
         if ($type === Customer::class) {
             $model = Customer::inRandomOrder()->first();
             if (! $model) {
@@ -54,11 +64,15 @@ class AddressFactory extends Factory
     }
 
     /**
-     * Get a random addressable type.
+     * Get a random addressable type - cached per factory instance.
      */
     private function getRandomAddressableType(): string
     {
-        return fake()->randomElement([Customer::class, User::class]);
+        if ($this->cachedAddressableType === null) {
+            $this->cachedAddressableType = fake()->randomElement([Customer::class, User::class]);
+        }
+
+        return $this->cachedAddressableType;
     }
 
     /**
