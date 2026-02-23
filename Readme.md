@@ -1,5 +1,6 @@
 # My Orders App
-
+[![tests](https://github.com/chidt/my-orders/actions/workflows/tests.yml/badge.svg)](https://github.com/chidt/my-orders/actions/workflows/tests.yml)
+[![linter](https://github.com/chidt/my-orders/actions/workflows/lint.yml/badge.svg)](https://github.com/chidt/my-orders/actions/workflows/lint.yml)
 ## Run dev env with sail 
 
 1. Run `composer install`

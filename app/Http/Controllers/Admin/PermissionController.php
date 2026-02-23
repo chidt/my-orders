@@ -21,7 +21,7 @@ class PermissionController extends Controller
 {
     public function index(IndexPermissionAction $action): Response
     {
-        $data = $action->handle();
+        $data = $action();
 
         return Inertia::render('Admin/Permissions/Index', $data);
     }
@@ -38,7 +38,7 @@ class PermissionController extends Controller
 
     public function show(Permission $permission, ShowPermissionAction $action): Response
     {
-        $data = $action->handle($permission);
+        $data = $action($permission);
 
         return Inertia::render('Admin/Permissions/Show', $data);
     }

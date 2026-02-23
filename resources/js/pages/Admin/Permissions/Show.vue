@@ -163,4 +163,3 @@ const deletePermission = () => {
     }
 };
 </script>
-
