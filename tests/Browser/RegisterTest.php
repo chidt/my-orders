@@ -24,8 +24,8 @@ it('user can register', function () {
         ->fill('site_slug', 'demo-store')
         ->fill('site_description', 'Demo store for browser test')
         ->fill('address', '123 Test Street')
-        ->fill('province_id', $province->id)
-        ->fill('ward_id', $ward->id);
+        ->select('province_id', (string) $province->id)
+        ->select('ward_id', (string) $ward->id);
 
     // Submit the form using data-test attribute
     $page->click('@register-user-button');

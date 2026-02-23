@@ -7,7 +7,9 @@ use App\Models\Province;
 use App\Models\Site;
 use App\Models\User;
 use App\Models\Ward;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
+uses(RefreshDatabase::class);
 // Setup test data for factories that need existing provinces/wards
 beforeEach(function () {
     // Create test provinces if needed
