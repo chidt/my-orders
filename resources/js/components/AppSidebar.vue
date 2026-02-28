@@ -5,7 +5,6 @@ import {
     Settings,
     LucideUserKey,
     Warehouse,
-    MapPin,
     ShieldUser,
 } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';

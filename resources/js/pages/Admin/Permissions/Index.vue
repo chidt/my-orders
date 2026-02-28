@@ -303,11 +303,6 @@ interface PaginatedPermissions {
 
 interface Props {
     permissions: PaginatedPermissions;
-    can: {
-        create: boolean;
-        edit: boolean;
-        delete: boolean;
-    };
 }
 
 defineProps<Props>();

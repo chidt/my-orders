@@ -79,6 +79,8 @@ class RolePermissionSeeder extends Seeder
 
         // Assign all permissions to admin role
         $adminRole->syncPermissions($permissions);
+        // remove permission manage_own_site for admin role
+        $adminRole->revokePermissionTo('manage_own_site');
 
         $siteAdminRole->givePermissionTo([
             'manage_own_site',

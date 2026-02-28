@@ -113,10 +113,6 @@ interface Permission {
 
 interface Props {
     permission: Permission;
-    can: {
-        edit: boolean;
-        delete: boolean;
-    };
 }
 
 const props = defineProps<Props>();

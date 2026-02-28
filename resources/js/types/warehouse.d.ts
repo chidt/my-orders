@@ -53,4 +53,3 @@ export interface WarehouseEditProps {
   warehouse: Warehouse
 }
 
-export interface WarehouseShowProps extends WarehouseEditProps {}
