@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Permission\CreatePermissionAction;
 use App\Actions\Admin\Permission\DestroyPermissionAction;
+use App\Actions\Admin\Permission\EditPermissionAction;
 use App\Actions\Admin\Permission\IndexPermissionAction;
 use App\Actions\Admin\Permission\ShowPermissionAction;
 use App\Actions\Admin\Permission\StorePermissionAction;

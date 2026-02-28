@@ -259,7 +259,9 @@
                             </div>
                             <div class="hidden md:-mt-px md:flex">
                                 <template
-                                    v-for="link in roles.links"
+                                    v-for="link in roles.links.filter(link =>
+                                        !['Previous', 'Next', '&laquo; Previous', 'Next &raquo;', 'pagination.previous', 'pagination.next'].includes(link.label)
+                                    )"
                                     :key="link.label"
                                 >
                                     <Link
