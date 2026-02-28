@@ -10,6 +10,8 @@ beforeEach(function () {
 });
 
 it('user can register', function () {
+    $province = \App\Models\Province::factory()->create();
+    $ward = \App\Models\Ward::factory()->create(['province_id' => $province->id]);
     $page = visit('/register');
 
     // Fill out the registration form
@@ -20,7 +22,10 @@ it('user can register', function () {
         ->fill('password_confirmation', 'password123')
         ->fill('site_name', 'Demo Store')
         ->fill('site_slug', 'demo-store')
-        ->fill('site_description', 'Demo store for browser test');
+        ->fill('site_description', 'Demo store for browser test')
+        ->fill('address', '123 Test Street')
+        ->select('province_id', (string) $province->id)
+        ->select('ward_id', (string) $ward->id);
 
     // Submit the form using data-test attribute
     $page->click('@register-user-button');

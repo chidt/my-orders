@@ -13,12 +13,21 @@ beforeEach(function () {
 test('user registration requires unique email', function () {
     $existingUser = User::factory()->create(['email' => 'test@example.com']);
 
+    // Create test province and ward for required address fields
+    $province = \App\Models\Province::factory()->create();
+    $ward = \App\Models\Ward::factory()->create(['province_id' => $province->id]);
+
     $userData = [
         'name' => 'John Doe',
         'email' => 'test@example.com',
         'phone_number' => '+1234567890',
         'password' => 'password123',
         'password_confirmation' => 'password123',
+        'site_name' => 'Test Site',
+        'site_slug' => 'test-site',
+        'address' => '123 Test St',
+        'province_id' => $province->id,
+        'ward_id' => $ward->id,
     ];
 
     expect(fn () => app(CreateNewUser::class)->create($userData))
@@ -28,12 +37,21 @@ test('user registration requires unique email', function () {
 test('user registration requires unique phone number', function () {
     $existingUser = User::factory()->create(['phone_number' => '+1234567890']);
 
+    // Create test province and ward for required address fields
+    $province = \App\Models\Province::factory()->create();
+    $ward = \App\Models\Ward::factory()->create(['province_id' => $province->id]);
+
     $userData = [
         'name' => 'John Doe',
         'email' => 'unique@example.com',
         'phone_number' => '+1234567890',
         'password' => 'password123',
         'password_confirmation' => 'password123',
+        'site_name' => 'Test Site',
+        'site_slug' => 'test-site',
+        'address' => '123 Test St',
+        'province_id' => $province->id,
+        'ward_id' => $ward->id,
     ];
 
     expect(fn () => app(CreateNewUser::class)->create($userData))
@@ -41,6 +59,10 @@ test('user registration requires unique phone number', function () {
 });
 
 test('user registration succeeds with unique email and phone number', function () {
+    // Create test province and ward for required address fields
+    $province = \App\Models\Province::factory()->create();
+    $ward = \App\Models\Ward::factory()->create(['province_id' => $province->id]);
+
     $userData = [
         'name' => 'John Doe',
         'email' => 'unique@example.com',
@@ -49,6 +71,9 @@ test('user registration succeeds with unique email and phone number', function (
         'password_confirmation' => 'password123',
         'site_name' => 'My Awesome Site',
         'site_slug' => 'my-awesome-site',
+        'address' => '123 Test St',
+        'province_id' => $province->id,
+        'ward_id' => $ward->id,
     ];
 
     $user = app(CreateNewUser::class)->create($userData);
@@ -64,6 +89,10 @@ test('user registration succeeds with unique email and phone number', function (
 });
 
 test('user registration assigns default SiteAdmin role', function () {
+    // Create test province and ward for required address fields
+    $province = \App\Models\Province::factory()->create();
+    $ward = \App\Models\Ward::factory()->create(['province_id' => $province->id]);
+
     $userData = [
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
@@ -72,6 +101,9 @@ test('user registration assigns default SiteAdmin role', function () {
         'password_confirmation' => 'password123',
         'site_name' => 'Jane Shop',
         'site_slug' => 'jane-shop',
+        'address' => '456 Jane Ave',
+        'province_id' => $province->id,
+        'ward_id' => $ward->id,
     ];
 
     $user = app(CreateNewUser::class)->create($userData);

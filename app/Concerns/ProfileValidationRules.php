@@ -7,7 +7,7 @@ use Illuminate\Validation\Rule;
 
 trait ProfileValidationRules
 {
-    use SiteValidationRules;
+    use AddressValidationRules, SiteValidationRules;
 
     /**
      * Get the validation rules used to validate user profiles.
@@ -22,7 +22,7 @@ trait ProfileValidationRules
                 'email' => $this->emailRules($userId),
                 'phone_number' => $this->phoneNumberRules($userId),
             ],
-            $this->siteRules($userId)
+            $this->siteRules($userId), $this->addressRules()
         );
     }
 

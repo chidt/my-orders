@@ -63,7 +63,7 @@ it('denies site admin access to other site dashboards', function () {
 
 it('denies non-site-admin users access to site dashboard', function () {
     $site = Site::factory()->create(['slug' => 'test-site']);
-    $admin = User::factory()->create();
+    $admin = User::factory()->withoutSite()->create();
     $admin->assignRole('Admin');
 
     $response = $this->actingAs($admin)->get('/test-site/dashboard');
