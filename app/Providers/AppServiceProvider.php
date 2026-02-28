@@ -4,8 +4,7 @@ namespace App\Providers;
 
 use App\Models\Location;
 use App\Models\Site;
-use App\Models\Warehouse;
-use App\Policies\LocationPolicy;
+use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SitePolicy;
 use App\Policies\WarehousePolicy;
@@ -15,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configurePolicies(): void
     {
         Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(Site::class, SitePolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Location::class, LocationPolicy::class);

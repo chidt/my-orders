@@ -19,9 +19,14 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user()->load([
+            'addresses.ward.province',
+        ]);
+
         return Inertia::render('settings/Profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'address' => $user->addresses->first(),
         ]);
     }
 
@@ -35,6 +40,14 @@ class ProfileController extends Controller
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
+
+        $request->user()->addresses()->updateOrCreate(
+            [],
+            [
+                'address' => $request->validated()['address'],
+                'ward_id' => $request->validated()['ward_id'],
+            ]
+        );
 
         $request->user()->save();
 

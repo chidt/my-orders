@@ -40,13 +40,13 @@ class StoreRoleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Role name is required.',
-            'name.min' => 'Role name must be at least 2 characters.',
-            'name.max' => 'Role name may not be greater than 255 characters.',
-            'name.unique' => 'This role name already exists.',
-            'permissions.array' => 'Permissions must be an array.',
-            'permissions.*.integer' => 'Each permission must be a valid ID.',
-            'permissions.*.exists' => 'One or more selected permissions are invalid.',
+            'name.required' => 'Tên vai trò là bắt buộc.',
+            'name.min' => 'Tên vai trò phải có ít nhất 2 ký tự.',
+            'name.max' => 'Tên vai trò không được vượt quá 255 ký tự.',
+            'name.unique' => 'Tên vai trò này đã tồn tại.',
+            'permissions.array' => 'Quyền hạn phải là một mảng.',
+            'permissions.*.integer' => 'Mỗi quyền hạn phải là một ID hợp lệ.',
+            'permissions.*.exists' => 'Một hoặc nhiều quyền hạn được chọn không hợp lệ.',
         ];
     }
 
@@ -58,8 +58,8 @@ class StoreRoleRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => 'role name',
-            'permissions' => 'permissions',
+            'name' => 'tên vai trò',
+            'permissions' => 'quyền hạn',
         ];
     }
 }

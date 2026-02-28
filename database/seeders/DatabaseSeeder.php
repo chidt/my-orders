@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        Artisan::call('vnzone:import');
         // Always seed roles and permissions first
         $this->call([
             RolePermissionSeeder::class,
@@ -24,5 +26,6 @@ class DatabaseSeeder extends Seeder
                 UserSeeder::class,
             ]);
         }
+
     }
 }
