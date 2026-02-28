@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Models\Location;
 use App\Models\Site;
+use App\Models\Warehouse;
 use App\Policies\PermissionPolicy;
+use App\Policies\LocationPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SitePolicy;
 use App\Policies\WarehousePolicy;
