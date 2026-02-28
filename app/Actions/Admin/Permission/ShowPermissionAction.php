@@ -17,10 +17,6 @@ class ShowPermissionAction implements ActionContract
 
         return [
             'permission' => $permission,
-            'can' => [
-                'edit' => auth()->user()->can('edit_permissions'),
-                'delete' => auth()->user()->can('delete_permissions'),
-            ],
         ];
     }
 

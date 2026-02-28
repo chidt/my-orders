@@ -175,7 +175,7 @@
                                                                 )
                                                             "
                                                             @click="
-                                                                deletePermission(permission)
+                                                                openDeleteDialog(permission)
                                                             "
                                                             class="text-red-600 hover:text-red-900"
                                                         >
@@ -226,11 +226,44 @@
                 </div>
             </div>
         </div>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Xác nhận xóa quyền hạn</DialogTitle>
+                    <DialogDescription>
+                        Bạn có chắc chắn muốn xóa quyền hạn
+                        <span class="font-semibold">{{ permissionToDelete?.name }}</span>?
+                        <br>
+                        Hành động này không thể hoàn tác.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="cancelDelete">
+                        Hủy
+                    </Button>
+                    <Button variant="destructive" @click="confirmDelete">
+                        Xóa quyền hạn
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
@@ -241,9 +274,13 @@ import {
     index as PermissionsIndex,
     show as PermissionsShow,
 } from '@/routes/admin/permissions';
+
 const page = usePage();
-// eslint-disable-next-line vue/no-dupe-keys
 const { can } = usePermissions();
+
+// Dialog state management
+const showDeleteDialog = ref(false);
+const permissionToDelete = ref<Permission | null>(null);
 
 interface Permission {
     id: number;
@@ -266,11 +303,6 @@ interface PaginatedPermissions {
 
 interface Props {
     permissions: PaginatedPermissions;
-    can: {
-        create: boolean;
-        edit: boolean;
-        delete: boolean;
-    };
 }
 
 defineProps<Props>();
@@ -280,10 +312,25 @@ const breadcrumbs = [
     { title: 'Quyền hạn', href: PermissionsIndex.url(), current: true },
 ];
 
-const deletePermission = (permission: Permission) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa quyền hạn "${permission.name}"?`)) {
-        router.delete(PermissionsDestroy.url(permission.id));
-    }
+const openDeleteDialog = (permission: Permission) => {
+    permissionToDelete.value = permission;
+    showDeleteDialog.value = true;
+};
+
+const confirmDelete = () => {
+    if (!permissionToDelete.value) return;
+
+    router.delete(PermissionsDestroy.url(permissionToDelete.value.id), {
+        onFinish: () => {
+            showDeleteDialog.value = false;
+            permissionToDelete.value = null;
+        }
+    });
+};
+
+const cancelDelete = () => {
+    showDeleteDialog.value = false;
+    permissionToDelete.value = null;
 };
 </script>
 

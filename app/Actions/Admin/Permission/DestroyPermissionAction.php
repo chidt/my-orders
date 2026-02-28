@@ -16,6 +16,7 @@ class DestroyPermissionAction implements ActionContract
 
         Gate::authorize('delete', $permission);
 
+        // Check if permission is assigned to any roles
         if ($permission->roles()->exists()) {
             return redirect()
                 ->route('admin.permissions.index')

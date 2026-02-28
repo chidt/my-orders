@@ -18,11 +18,6 @@ class IndexPermissionAction implements ActionContract
 
         return [
             'permissions' => $permissions,
-            'can' => [
-                'create' => auth()->user()->can('create_permissions'),
-                'edit' => auth()->user()->can('edit_permissions'),
-                'delete' => auth()->user()->can('delete_permissions'),
-            ],
         ];
     }
 

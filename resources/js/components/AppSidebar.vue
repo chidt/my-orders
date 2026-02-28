@@ -4,6 +4,7 @@ import {
     LayoutGrid,
     Settings,
     LucideUserKey,
+    Warehouse,
     ShieldUser,
 } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
@@ -22,26 +23,50 @@ import { usePermissions } from '@/composables/usePermissions';
 import { index as PermissionsIndex } from '@/routes/admin/permissions';
 import { index as RolesIndex } from '@/routes/admin/roles';
 import { edit as SiteEdit } from '@/routes/site';
+import site from '@/routes/site';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 const { can } = usePermissions();
 
+interface Site {
+    id: number;
+    slug: string;
+    name: string;
+}
+
+interface User {
+    id: number;
+    name: string;
+    roles: string[];
+    site?: Site;
+}
+
 const getDashboardUrl = () => {
-    const user = page.props.auth.user;
+    const user = page.props.auth.user as User;
     if (user && user.roles && user.roles.includes('Admin')) {
         return '/admin/dashboard';
     }
     if (user && user.roles && user.roles.includes('SiteAdmin')) {
         // Use current page site data if available (e.g., on settings page after slug update)
-        const currentSite = page.props.site || user.site;
+        const currentSite = (page.props.site as Site) || user.site;
         if (currentSite) {
             return `/${currentSite.slug}/dashboard`;
         }
     }
     return '/';
 };
+
+const getWarehouseUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return site.warehouses.index.url(currentSite);
+    }
+    return null;
+};
+
 
 const mainNavItems: NavItem[] = [
     {
@@ -57,10 +82,16 @@ const mainNavItems: NavItem[] = [
         show: can('view_roles'),
     },
     {
-        title: 'Quản lý quyền hạn',
+        title: 'Quản lý quyền',
         href: PermissionsIndex(),
         icon: ShieldUser,
         show: can('view_permissions'),
+    },
+    {
+        title: 'Quản lý kho',
+        href: getWarehouseUrl() || '',
+        icon: Warehouse,
+        show: can('manage_warehouses') && getWarehouseUrl() !== null,
     },
     {
         title: 'Quản lý trang web',

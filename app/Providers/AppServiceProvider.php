@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Location;
 use App\Models\Site;
+use App\Models\Warehouse;
 use App\Policies\PermissionPolicy;
+use App\Policies\LocationPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SitePolicy;
+use App\Policies\WarehousePolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(\App\Services\DefaultLocationManager::class, function ($app) {
+            return new \App\Services\DefaultLocationManager;
+        });
     }
 
     /**
@@ -40,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(Site::class, SitePolicy::class);
+        Gate::policy(Warehouse::class, WarehousePolicy::class);
+        Gate::policy(Location::class, LocationPolicy::class);
     }
 
     protected function configureGates(): void

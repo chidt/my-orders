@@ -43,6 +43,7 @@ erDiagram
         tinyInt payment_status  "required"
         bigint payment_request_id  ""
         tinyInt status  "required"
+        tinyInt fulfillment_status  "default 0"
         int qty  "required"
         decimal price  "required"
         decimal discount  ""
@@ -51,7 +52,10 @@ erDiagram
         text note  ""
         bigint product_item_id FK "required"
         bigint order_id FK "required"
+        bigint site_id FK "required"
+        bigint purchase_request_detail_id FK ""
         datetime order_date  ""
+        datetime expected_fulfillment_date  ""
         json extra_attributes  ""
     }
 
@@ -66,6 +70,7 @@ erDiagram
         decimal partner_price  ""
         decimal purchase_price  "required"
         bigint product_id FK "required"
+        bigint site_id FK "required"
     }
 
     Attributes {
@@ -73,6 +78,8 @@ erDiagram
         string name  "required"
         string code  "required"
         text description  ""
+        int order "default 0"
+        bigint site_id FK "required"
     }
 
     ProductAttributeValues {
@@ -88,6 +95,12 @@ erDiagram
     }
 
     ProductItemAttributeValues {
+        bigint id PK "required"
+        bigint product_item_id FK "required"
+        bigint product_attribute_value_id FK "required"
+    }
+
+    ProductItemAttributeValues {
         bigint product_item_id FK "required"
         bigint product_attribute_value_id FK "required"
     }
@@ -98,11 +111,13 @@ erDiagram
         text description  ""
         int order  ""
         bigint parent_id FK ""
+        bigint site_id FK "required"
     }
 
     Tags {
         bigint id PK "required"
         string name  "required"
+        bigint site_id FK "required"
     }
 
     ProductTags {
@@ -134,6 +149,32 @@ erDiagram
         decimal total  "required"
         tinyInt payment_status  "required"
         text note  ""
+        bigint site_id FK "required"
+    }
+
+    PurchaseRequests {
+        bigint id PK "required"
+        string purchase_number UK "required"
+        bigint supplier_id FK "required"
+        bigint site_id FK "required"
+        tinyInt status "required default 1"
+        datetime request_date "required"
+        datetime expected_delivery_date ""
+        datetime actual_delivery_date ""
+        decimal total_amount "default 0"
+        text notes ""
+        text supplier_response ""
+    }
+
+    PurchaseRequestDetails {
+        bigint id PK "required"
+        bigint purchase_request_id FK "required"
+        bigint product_item_id FK "required"
+        int requested_qty "required"
+        int received_qty "default 0"
+        decimal unit_price "required"
+        decimal total_price "required"
+        text notes ""
     }
 
     Suppliers {
@@ -143,21 +184,13 @@ erDiagram
         string phone  ""
         string address  ""
         text description  ""
+        bigint site_id FK "required"
     }
 
     Units {
         bigint id PK "required"
         string name  "required"
         string unit  "required"
-    }
-
-    Locations {
-        bigint id PK "required"
-        string code  "required"
-        string name  "required"
-        boolean is_default  "required"
-        bigint warehouse_id FK "required"
-        int qty_in_stock  "required"
     }
 
     ProductTypes {
@@ -213,6 +246,7 @@ erDiagram
         json delivery_attributes  ""
         decimal shipping_charges  ""
         bigint customer_id FK "required"
+        bigint site_id FK "required"
     }
 
     WarehouseOutDetails {
@@ -231,6 +265,7 @@ erDiagram
         bigint id PK "required"
         string note  ""
         datetime receipt_date  "required"
+        bigint site_id FK "required"
     }
 
     WarehouseReceiptDetails {
@@ -239,6 +274,7 @@ erDiagram
         bigint product_item_id FK "required"
         bigint location_id FK "required"
         bigint order_detail_id FK ""
+        bigint purchase_request_detail_id FK ""
         int qty  "required"
         decimal purchase_price  "required"
         decimal fee_price  ""
@@ -283,6 +319,7 @@ erDiagram
         json generated_conversions  "required"
         json responsive_images  "required"
         int order_column  ""
+        bigint site_id FK "required"
     }
 
     Permissions {
@@ -345,6 +382,27 @@ erDiagram
         bigint customer_id FK ""
     }
 
+    Locations {
+        bigint id PK "required"
+        string code  "required"
+        string name  "required"
+        boolean is_default  "required"
+        bigint warehouse_id FK "required"
+    }
+
+    WarehouseInventory {
+        bigint id PK "required"
+        bigint product_item_id FK "required"
+        bigint location_id FK "required"
+        int current_qty "required default 0"
+        int reserved_qty "default 0"
+        int pre_order_qty "default 0"
+        decimal avg_cost "nullable"
+        bigint site_id FK "required"
+        json metadata "nullable"
+        timestamp last_updated
+    }
+
     Customers||--o{Orders:"  "
     Orders||--|{OrderDetails:"includes"
     Customers}|--||Sites:"  "
@@ -370,6 +428,11 @@ erDiagram
     Orders}o--||Customers:"  "
     PaymentRequests}o--||Customers:"  "
     OrderDetails||--||PaymentRequests:"  "
+    PurchaseRequests}|--||Suppliers:"  "
+    PurchaseRequests}|--||Sites:"  "
+    PurchaseRequests||--|{PurchaseRequestDetails:"  "
+    PurchaseRequestDetails}|--||ProductItems:"  "
+    OrderDetails}o--||PurchaseRequestDetails:"  "
     Products}o--||Suppliers:"  "
     Products}o--||Units:"  "
     Products}o--||Locations:"  "
@@ -387,6 +450,7 @@ erDiagram
     WarehouseReceiptDetails||--||ProductItems:"  "
     WarehouseReceiptDetails||--||Locations:"  "
     WarehouseReceiptDetails||--||OrderDetails:"  "
+    WarehouseReceiptDetails}o--||PurchaseRequestDetails:"  "
     Products||--|{Media:"  "
     ProductItems||--|{Media:"  "
     Categories||--|{Media:"  "
@@ -407,5 +471,23 @@ erDiagram
     ActivityLog}o--||WarehouseReceipts:"subject"
     ActivityLog}o--||WarehouseReceiptDetails:"subject"
     Orders}|--|{Sites:"  "
+    OrderDetails}|--||Sites:"  "
+    WarehouseOuts}|--||Sites:"  "
+    WarehouseReceipts}|--||Sites:"  "
+    Categories}|--||Sites:"  "
+    Tags}|--||Sites:"  "
+    Suppliers}|--||Sites:"  "
+    ProductItems}|--||Sites:"  "
+    PaymentRequests}|--||Sites:"  "
+    Media}|--||Sites:"  "
+    PurchaseRequests}|--||Sites:"  "
+    WarehouseInventory}|--||Sites:"  "
+    Attributes}|--||Sites:"  "
+    WarehouseInventory}|--||ProductItems:"  "
+    WarehouseInventory}|--||Locations:"  "
+    ProductItemAttributeValues||--||ProductItems:"  "
+    ProductItemAttributeValues||--||ProductAttributeValues:"  "
+    ProductAttributeValues||--||Products:"  "
+    ProductAttributeValues||--||Attributes:"  "
     Users}|--|{Sites:"  "
 ```
