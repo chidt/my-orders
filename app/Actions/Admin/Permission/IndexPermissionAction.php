@@ -22,4 +22,9 @@ class IndexPermissionAction implements ActionContract
             ],
         ];
     }
+
+    public function __invoke(): array
+    {
+        return $this->handle();
+    }
 }

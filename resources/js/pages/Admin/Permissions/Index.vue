@@ -175,7 +175,7 @@
                                                                 )
                                                             "
                                                             @click="
-                                                                deletePermission(permission)
+                                                                openDeleteDialog(permission)
                                                             "
                                                             class="text-red-600 hover:text-red-900"
                                                         >
@@ -197,24 +197,6 @@
                             class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0"
                         >
                             <div class="-mt-px flex w-0 flex-1">
-                                <Link
-                                    v-if="permissions.prev_page_url"
-                                    :href="permissions.prev_page_url"
-                                    class="inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                                >
-                                    <svg
-                                        class="mr-3 h-5 w-5 text-gray-400"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fill-rule="evenodd"
-                                            d="M18 10a.75.75 0 01-.75.75H4.66l2.1 1.95a.75.75 0 11-1.02 1.1l-3.5-3.25a.75.75 0 010-1.1l3.5-3.25a.75.75 0 111.02 1.1L4.66 9.25h12.59A.75.75 0 0118 10z"
-                                            clip-rule="evenodd"
-                                        />
-                                    </svg>
-                                    Trước
-                                </Link>
                             </div>
                             <div class="hidden md:-mt-px md:flex">
                                 <template
@@ -236,35 +218,50 @@
                                 </template>
                             </div>
                             <div class="-mt-px flex w-0 flex-1 justify-end">
-                                <Link
-                                    v-if="permissions.next_page_url"
-                                    :href="permissions.next_page_url"
-                                    class="inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                                >
-                                    Sau
-                                    <svg
-                                        class="ml-3 h-5 w-5 text-gray-400"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fill-rule="evenodd"
-                                            d="M2 10a.75.75 0 01.75-.75h12.59l-2.1-1.95a.75.75 0 111.02-1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z"
-                                            clip-rule="evenodd"
-                                        />
-                                    </svg>
-                                </Link>
                             </div>
                         </nav>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Xác nhận xóa quyền hạn</DialogTitle>
+                    <DialogDescription>
+                        Bạn có chắc chắn muốn xóa quyền hạn
+                        <span class="font-semibold">{{ permissionToDelete?.name }}</span>?
+                        <br>
+                        Hành động này không thể hoàn tác.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="cancelDelete">
+                        Hủy
+                    </Button>
+                    <Button variant="destructive" @click="confirmDelete">
+                        Xóa quyền hạn
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
@@ -275,9 +272,13 @@ import {
     index as PermissionsIndex,
     show as PermissionsShow,
 } from '@/routes/admin/permissions';
+
 const page = usePage();
-// eslint-disable-next-line vue/no-dupe-keys
 const { can } = usePermissions();
+
+// Dialog state management
+const showDeleteDialog = ref(false);
+const permissionToDelete = ref<Permission | null>(null);
 
 interface Permission {
     id: number;
@@ -314,10 +315,25 @@ const breadcrumbs = [
     { title: 'Quyền hạn', href: PermissionsIndex.url(), current: true },
 ];
 
-const deletePermission = (permission: Permission) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa quyền hạn "${permission.name}"?`)) {
-        router.delete(PermissionsDestroy.url(permission.id));
-    }
+const openDeleteDialog = (permission: Permission) => {
+    permissionToDelete.value = permission;
+    showDeleteDialog.value = true;
+};
+
+const confirmDelete = () => {
+    if (!permissionToDelete.value) return;
+
+    router.delete(PermissionsDestroy.url(permissionToDelete.value.id), {
+        onFinish: () => {
+            showDeleteDialog.value = false;
+            permissionToDelete.value = null;
+        }
+    });
+};
+
+const cancelDelete = () => {
+    showDeleteDialog.value = false;
+    permissionToDelete.value = null;
 };
 </script>
 

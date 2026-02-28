@@ -35,4 +35,9 @@ class Site extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function warehouses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Warehouse::class);
+    }
 }

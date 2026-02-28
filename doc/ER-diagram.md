@@ -151,15 +151,6 @@ erDiagram
         string unit  "required"
     }
 
-    Locations {
-        bigint id PK "required"
-        string code  "required"
-        string name  "required"
-        boolean is_default  "required"
-        bigint warehouse_id FK "required"
-        int qty_in_stock  "required"
-    }
-
     ProductTypes {
         bigint id PK "required"
         string name  "required"
@@ -343,6 +334,15 @@ erDiagram
         string phone_number UK "required"
         bigint site_id FK ""
         bigint customer_id FK ""
+    }
+
+    Locations {
+        bigint id PK "required"
+        string code  "required"
+        string name  "required"
+        boolean is_default  "required"
+        bigint warehouse_id FK "required"
+        int qty_in_stock  ""
     }
 
     Customers||--o{Orders:"  "

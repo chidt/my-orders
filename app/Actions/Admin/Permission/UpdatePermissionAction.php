@@ -3,6 +3,7 @@
 namespace App\Actions\Admin\Permission;
 
 use App\Contracts\ActionContract;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
 class UpdatePermissionAction implements ActionContract
@@ -17,5 +18,10 @@ class UpdatePermissionAction implements ActionContract
         ]);
 
         return $permission;
+    }
+
+    public function __invoke(Request $request, Permission $permission): Permission
+    {
+        return $this->handle($request, $permission);
     }
 }

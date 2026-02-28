@@ -18,7 +18,7 @@ class SiteDashboardController extends Controller
             abort(403, 'Unauthorized access to site dashboard');
         }
 
-        return Inertia::render('Site/Dashboard', [
+        return Inertia::render('site/Dashboard', [
             'site' => $site->only(['id', 'name', 'slug', 'description']),
             'stats' => [
                 'site_users' => $site->users()->count(),

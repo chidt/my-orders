@@ -42,7 +42,7 @@ it('allows site admin to access their site dashboard', function () {
     $response = $this->actingAs($siteAdmin)->get('/test-site/dashboard');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => $page->component('Site/Dashboard')
+    $response->assertInertia(fn ($page) => $page->component('site/Dashboard')
         ->has('site')
         ->has('stats')
         ->where('site.slug', 'test-site')

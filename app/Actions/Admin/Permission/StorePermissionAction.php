@@ -3,6 +3,7 @@
 namespace App\Actions\Admin\Permission;
 
 use App\Contracts\ActionContract;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
 class StorePermissionAction implements ActionContract
@@ -15,5 +16,10 @@ class StorePermissionAction implements ActionContract
             'name' => $request->validated('name'),
             'guard_name' => 'web',
         ]);
+    }
+
+    public function __invoke(Request $request): Permission
+    {
+        return $this->handle($request);
     }
 }
