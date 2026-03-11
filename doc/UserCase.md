@@ -29,6 +29,18 @@
 - **Output**: Categories hierarchy, Tags với site isolation
 - **⚠️ CRITICAL**: Phải hoàn thành trước UC006
 
+### [UC012-MA: Manage Attributes](UserCase/UC-012-MA.md)
+- **Priority**: HIGH - **PREREQUISITE** cho Product Variants
+- **Dependencies**: UC001, UC002 (cần authentication)
+- **Output**: Product attributes với site isolation
+- **⚠️ CRITICAL**: Phải hoàn thành trước UC006
+
+### [UC013-MPT: Manage Product Types](UserCase/UC-013-MPT.md)
+- **Priority**: HIGH - **PREREQUISITE** cho Products
+- **Dependencies**: UC001, UC002 (cần authentication)
+- **Output**: Product types với site isolation, color coding
+- **⚠️ CRITICAL**: Phải hoàn thành trước UC006
+
 ### [UC009-MS: Manage Suppliers](UserCase/UC-009-MS.md)
 - **Priority**: HIGH - **PREREQUISITE** cho Products  
 - **Dependencies**: UC001, UC002 (cần authentication)
@@ -40,6 +52,8 @@
 - **Priority**: HIGH - Core business functionality
 - **Dependencies**: 
   - **⚠️ REQUIRED**: UC011-MCT (Categories & Tags)
+  - **⚠️ REQUIRED**: UC012-MA (Attributes)
+  - **⚠️ REQUIRED**: UC013-MPT (Product Types)
   - **⚠️ REQUIRED**: UC009-MS (Suppliers)
   - **⚠️ REQUIRED**: UC004-MSW, UC005-MWL (Warehouses & Locations)
 - **Output**: Products với variants, SKUs, media integration
@@ -79,14 +93,14 @@ UC001-REG (Users & Sites)
     ↓
 UC002-LOG (Authentication)
     ↓
-┌─────────────────┬─────────────────┐
-│   UC004-MSW     │   UC011-MCT     │   UC009-MS
-│ (Warehouses)    │ (Categories)    │ (Suppliers)
-│       ↓         │       ↓         │       ↓
-│   UC005-MWL     │       └─────────┼───────┘
-│ (Locations)     │                 │
-│       ↓         │                 │
-└─────────────────┴─────────────────┘
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│   UC004-MSW     │   UC011-MCT     │   UC012-MA      │   UC013-MPT     │   UC009-MS
+│ (Warehouses)    │ (Categories)    │ (Attributes)    │ (ProductTypes)  │ (Suppliers)
+│       ↓         │       ↓         │       ↓         │       ↓         │       ↓
+│   UC005-MWL     │       └─────────┼───────┼─────────┼───────┴─────────┘
+│ (Locations)     │                 │       │         │
+│       ↓         │                 │       │         │
+└─────────────────┴─────────────────┴───────┴─────────┘
                   ↓
               UC006-MP (Products)
                   ↓
@@ -105,19 +119,19 @@ UC002-LOG (Authentication)
 ## Critical Implementation Rules
 
 ### ⚠️ BLOCKING DEPENDENCIES
-- **UC006 CANNOT START** until UC011, UC012 & UC009 are 100% complete
+- **UC006 CANNOT START** until UC011, UC012, UC013 & UC009 are 100% complete
 - **UC008 CANNOT START** until UC006 & UC007 are complete
 - **UC010 CANNOT START** until UC006 is complete
 
 ### ✅ PARALLEL IMPLEMENTATION ALLOWED
-- UC004 & UC011 & UC012 & UC009 can be developed in parallel (Week 3-5)
+- UC004 & UC011 & UC012 & UC013 & UC009 can be developed in parallel (Week 3-5)
 - UC005 can start after UC004 is complete
 - UC007 can be developed in parallel with UC006 completion
 - UC003 can be developed anytime after UC002
 
 ### 🎯 SPRINT PLANNING RECOMMENDATION
 - **Sprint 1**: UC001, UC002 (Authentication Foundation)
-- **Sprint 2**: UC004, UC011, UC012, UC009 (Infrastructure & Prerequisites)
+- **Sprint 2**: UC004, UC011, UC012, UC013, UC009 (Infrastructure & Prerequisites)
 - **Sprint 3**: UC005, UC006 (Locations & Products)
 - **Sprint 4**: UC007, UC008 (Customers & Orders)
 - **Sprint 5**: UC010, UC003 (Advanced Features)
@@ -138,6 +152,8 @@ UC002-LOG (Authentication)
 
 ### Setup & Configuration (MEDIUM)
 1. UC011-MCT (Categories & Tags)
-2. UC009-MS (Suppliers) 
-3. UC003-MOS (Site customization)
+2. UC012-MA (Attributes)
+3. UC013-MPT (Product Types)
+4. UC009-MS (Suppliers) 
+5. UC003-MOS (Site customization)
 

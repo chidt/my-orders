@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductTypeController;
 use App\Http\Controllers\Site\LocationController;
 use App\Http\Controllers\Site\WarehouseController;
 use App\Http\Controllers\SiteDashboardController;
@@ -10,6 +11,21 @@ Route::prefix('{site:slug}')->middleware(['auth', 'verified'])->group(function (
     // Site admin dashboard route
     Route::get('/dashboard', [SiteDashboardController::class, 'index'])
         ->name('site.dashboard');
+
+    // Product Type management routes
+    Route::resource('product-types', ProductTypeController::class)->names([
+        'index' => 'product-types.index',
+        'create' => 'product-types.create',
+        'store' => 'product-types.store',
+        'show' => 'product-types.show',
+        'edit' => 'product-types.edit',
+        'update' => 'product-types.update',
+        'destroy' => 'product-types.destroy',
+    ]);
+
+    // Product Type reordering route
+    Route::post('product-types/reorder', [ProductTypeController::class, 'reorder'])
+        ->name('product-types.reorder');
 
     // Warehouse management routes
     Route::resource('warehouses', WarehouseController::class)->names([
