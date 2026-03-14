@@ -2,7 +2,6 @@
 
 use App\Models\Site;
 use App\Models\User;
-use Spatie\Permission\Models\Permission;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 

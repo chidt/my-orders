@@ -39,7 +39,7 @@ trait SiteValidationRules
         $counter = 1;
 
         while (Site::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $counter++;
+            $slug = $originalSlug.'-'.$counter++;
         }
 
         return $slug;

@@ -2,36 +2,17 @@
 
 namespace App\Actions\Admin\Permission;
 
-use App\Contracts\ActionContract;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 
-class DestroyPermissionAction implements ActionContract
+class DestroyPermissionAction
 {
-    public function handle(mixed ...$parameters): RedirectResponse
+    public function destroy(Permission $permission): bool
     {
-        /** @var Permission $permission */
-        $permission = $parameters[0];
-
-        Gate::authorize('delete', $permission);
-
         // Check if permission is assigned to any roles
         if ($permission->roles()->exists()) {
-            return redirect()
-                ->route('admin.permissions.index')
-                ->with('error', 'Không thể xoá quyền hạn đang sử dụng cho vai trò.');
+            return false;
         }
 
-        $permission->delete();
-
-        return redirect()
-            ->route('admin.permissions.index')
-            ->with('message', 'Xoá quyền hạn thành công.');
-    }
-
-    public function __invoke(Permission $permission): RedirectResponse
-    {
-        return $this->handle($permission);
+        return $permission->delete();
     }
 }

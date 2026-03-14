@@ -1,4 +1,5 @@
 <?php
+
 it('Welcome page test', function () {
     $page = visit('/');
 

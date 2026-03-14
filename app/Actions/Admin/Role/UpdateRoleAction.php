@@ -2,23 +2,13 @@
 
 namespace App\Actions\Admin\Role;
 
-use App\Contracts\ActionContract;
 use App\Http\Requests\Admin\UpdateRoleRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
 
-class UpdateRoleAction implements ActionContract
+class UpdateRoleAction
 {
-    public function handle(mixed ...$parameters): RedirectResponse
+    public function update(UpdateRoleRequest $request, Role $role): Role
     {
-        /** @var UpdateRoleRequest $request */
-        /** @var Role $role */
-        $request = $parameters[0];
-        $role = $parameters[1];
-
-        Gate::authorize('update', $role);
-
         $role->update([
             'name' => $request->validated('name'),
         ]);
@@ -29,13 +19,6 @@ class UpdateRoleAction implements ActionContract
             $role->syncPermissions([]);
         }
 
-        return redirect()
-            ->route('admin.roles.index')
-            ->with('message', 'Cập nhật vai trò thành công.');
-    }
-
-    public function __invoke(UpdateRoleRequest $request, Role $role): RedirectResponse
-    {
-        return $this->handle($request, $role);
+        return $role;
     }
 }
