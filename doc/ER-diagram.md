@@ -199,6 +199,7 @@ erDiagram
         int order  ""
         boolean show_on_front  ""
         string color  ""
+        bigint site_id FK "required"
     }
 
     Warehouses {
@@ -437,6 +438,7 @@ erDiagram
     Products}o--||Units:"  "
     Products}o--||Locations:"  "
     Products}o--||ProductTypes:"  "
+    ProductTypes}|--||Sites:"  "
     Locations}o--||Warehouses:"  "
     ShoppingCarts||--|{ShoppingCartItems:"  "
     ShoppingCartItems||--||ProductItems:"  "

@@ -92,7 +92,7 @@ This file contains guidelines and commands for agentic coding agents working in 
   - Plans serve as implementation blueprints and progress tracking
 
 ### Implementation Summaries
-- When completing a feature implementation, **CREATE** a summary document in the root directory
+- When completing a feature implementation, **CREATE** a summary document in the implementation directory
   - Format: `[FEATURE-NAME]-IMPLEMENTATION-SUMMARY.md` 
   - Include: completion status, features implemented, files modified, test results, production readiness
   - Summaries provide quick reference for completed work and deployment guidance

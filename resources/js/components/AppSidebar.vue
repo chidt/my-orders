@@ -6,6 +6,7 @@ import {
     LucideUserKey,
     Warehouse,
     ShieldUser,
+    Package,
 } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -67,6 +68,15 @@ const getWarehouseUrl = (): string | null => {
     return null;
 };
 
+const getProductTypesUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return `/${currentSite.slug}/product-types`;
+    }
+    return null;
+};
+
 
 const mainNavItems: NavItem[] = [
     {
@@ -92,6 +102,12 @@ const mainNavItems: NavItem[] = [
         href: getWarehouseUrl() || '',
         icon: Warehouse,
         show: can('manage_warehouses') && getWarehouseUrl() !== null,
+    },
+    {
+        title: 'Loại sản phẩm',
+        href: getProductTypesUrl() || '',
+        icon: Package,
+        show: can('view_product_types') && getProductTypesUrl() !== null,
     },
     {
         title: 'Quản lý trang web',
