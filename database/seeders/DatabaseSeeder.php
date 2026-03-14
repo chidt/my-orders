@@ -31,6 +31,8 @@ class DatabaseSeeder extends Seeder
                 SupplierSeeder::class,
                 TagSeeder::class,
                 CategorySeeder::class,
+                WarehouseSeeder::class,
+                LocationSeeder::class,
             ]);
         }
 
