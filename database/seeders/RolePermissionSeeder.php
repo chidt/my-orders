@@ -71,6 +71,8 @@ class RolePermissionSeeder extends Seeder
             'view_warehouse_locations',
             'edit_warehouse_locations',
             'delete_warehouse_locations',
+
+            'manage_product_types',
         ];
 
         foreach ($permissions as $permission) {
@@ -81,6 +83,7 @@ class RolePermissionSeeder extends Seeder
         $adminRole->syncPermissions($permissions);
         // remove permission manage_own_site for admin role
         $adminRole->revokePermissionTo('manage_own_site');
+        $adminRole->revokePermissionTo('manage_product_types');
 
         $siteAdminRole->givePermissionTo([
             'manage_own_site',
@@ -96,6 +99,7 @@ class RolePermissionSeeder extends Seeder
             'view_warehouse_locations',
             'edit_warehouse_locations',
             'delete_warehouse_locations',
+            'manage_product_types',
         ]);
 
         $this->command->info('Roles, permissions, and admin user role assignment completed.');

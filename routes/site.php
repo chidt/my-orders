@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\ProductTypeController;
 use App\Http\Controllers\Site\LocationController;
+use App\Http\Controllers\Site\ProductTypeController;
 use App\Http\Controllers\Site\WarehouseController;
 use App\Http\Controllers\SiteDashboardController;
 use Illuminate\Support\Facades\Route;
 
-// Site routes with slug prefix and authentication
-Route::prefix('{site:slug}')->middleware(['auth', 'verified'])->group(function () {
+// Site routes with slug prefix (auth middleware already applied in web.php)
+Route::prefix('{site:slug}')->group(function () {
     // Site admin dashboard route
     Route::get('/dashboard', [SiteDashboardController::class, 'index'])
         ->name('site.dashboard');

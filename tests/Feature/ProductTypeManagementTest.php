@@ -133,7 +133,7 @@ test('site admin cannot access other site product types', function () {
     $response = $this->actingAs($this->user)
         ->get(route('product-types.edit', ['site' => $this->site->slug, 'product_type' => $otherProductType]));
 
-    $response->assertForbidden();
+    $response->assertNotFound(); // 404 is expected since model is scoped to user's site
 });
 
 test('site admin can delete product type when no products are using it', function () {

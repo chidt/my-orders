@@ -2,21 +2,16 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Palette } from 'lucide-vue-next';
 import { ref } from 'vue';
+import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import InputError from '@/components/InputError.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import siteRoute from '@/routes/site';
+import {
+    index as ProductTypesIndex,
+    update as ProductTypesUpdate
+} from '@/routes/product-types';
 
 interface Site {
     id: number;
@@ -36,7 +31,7 @@ interface ProductType {
 }
 
 interface Props {
-    site: Site;
+    site?: Site;
     productType: ProductType;
 }
 
@@ -63,7 +58,8 @@ const predefinedColors = [
 ];
 
 const submit = () => {
-    form.put(siteRoute('product-types.update', {
+    if (!props.site?.slug) return;
+    form.put(ProductTypesUpdate.url({
         site: props.site.slug,
         product_type: props.productType.id
     }));
@@ -82,34 +78,37 @@ const openColorPicker = () => {
     <AppLayout>
         <Head :title="`Chỉnh sửa loại sản phẩm: ${productType.name}`" />
 
-        <div class="space-y-6">
+        <div class="px-4 sm:px-6 lg:px-8 py-8">
             <!-- Header -->
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 mb-8">
                 <Button
                     :as="Link"
-                    :href="siteRoute('product-types.index', { site: props.site.slug })"
+                    :href="props.site?.slug ? ProductTypesIndex.url({ site: props.site.slug }) : '#'"
                     variant="outline"
                     size="icon"
+                    class="shrink-0"
                 >
                     <ArrowLeft class="h-4 w-4" />
                 </Button>
-                <div>
-                    <h1 class="text-2xl font-semibold text-gray-900">Chỉnh sửa loại sản phẩm</h1>
+                <div class="min-w-0 flex-1">
+                    <h1 class="text-2xl font-bold text-gray-900">Chỉnh sửa loại sản phẩm</h1>
                     <p class="mt-1 text-sm text-gray-600">
                         Cập nhật thông tin cho "{{ productType.name }}"
                     </p>
                 </div>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Thông tin cơ bản</CardTitle>
-                        <CardDescription>
+            <form @submit.prevent="submit" class="space-y-8">
+                <!-- Basic Information -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold text-gray-900">Thông tin cơ bản</h2>
+                        <p class="mt-1 text-sm text-gray-600">
                             Cập nhật thông tin cơ bản cho loại sản phẩm
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-6">
+                        </p>
+                    </div>
+
+                    <div class="space-y-6">
                         <!-- Name -->
                         <div class="space-y-2">
                             <Label for="name">Tên loại sản phẩm *</Label>
@@ -118,6 +117,7 @@ const openColorPicker = () => {
                                 v-model="form.name"
                                 placeholder="Ví dụ: Điện tử, Thời trang, Sách..."
                                 required
+                                class="w-full"
                             />
                             <InputError :message="form.errors.name" />
                         </div>
@@ -131,7 +131,7 @@ const openColorPicker = () => {
                                 type="number"
                                 min="0"
                                 placeholder="0"
-                                class="max-w-xs"
+                                class="w-full sm:max-w-xs"
                             />
                             <p class="text-sm text-gray-600">
                                 Thứ tự sắp xếp khi hiển thị danh sách (số càng nhỏ càng ưu tiên)
@@ -140,72 +140,76 @@ const openColorPicker = () => {
                         </div>
 
                         <!-- Show on Front -->
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-3">
                             <Checkbox
                                 id="show_on_front"
                                 :checked="form.show_on_front"
                                 @update:checked="form.show_on_front = $event"
                             />
-                            <Label for="show_on_front" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            <Label for="show_on_front" class="text-sm font-medium leading-none cursor-pointer">
                                 Hiển thị trên trang chủ
                             </Label>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Màu sắc</CardTitle>
-                        <CardDescription>
+                <!-- Color Selection -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold text-gray-900">Màu sắc</h2>
+                        <p class="mt-1 text-sm text-gray-600">
                             Chọn màu sắc đại diện cho loại sản phẩm
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-6">
+                        </p>
+                    </div>
+
+                    <div class="space-y-6">
                         <!-- Color Preview -->
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                             <div class="flex items-center gap-2">
                                 <div
-                                    class="w-8 h-8 rounded-lg border-2 border-gray-200"
+                                    class="w-8 h-8 rounded-lg border-2 border-gray-200 shrink-0"
                                     :style="{ backgroundColor: form.color }"
                                 ></div>
-                                <span class="text-sm text-gray-600">{{ form.color }}</span>
+                                <span class="text-sm font-medium text-gray-600">{{ form.color }}</span>
                             </div>
                         </div>
 
                         <!-- Predefined Colors -->
-                        <div class="space-y-2">
+                        <div class="space-y-3">
                             <Label>Màu sắc có sẵn</Label>
-                            <div class="flex gap-2 flex-wrap">
+                            <div class="grid grid-cols-4 sm:flex sm:flex-wrap gap-3">
                                 <button
                                     v-for="color in predefinedColors"
                                     :key="color"
                                     type="button"
                                     @click="selectColor(color)"
-                                    class="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-transform"
-                                    :class="form.color === color ? 'border-gray-900' : 'border-gray-200'"
+                                    class="w-12 h-12 rounded-lg border-2 hover:scale-105 transition-all duration-200"
+                                    :class="form.color === color ? 'border-gray-900 ring-2 ring-gray-900 ring-offset-2' : 'border-gray-200 hover:border-gray-300'"
                                     :style="{ backgroundColor: color }"
+                                    :title="color"
                                 ></button>
                             </div>
                         </div>
 
                         <!-- Custom Color -->
-                        <div class="space-y-2">
+                        <div class="space-y-3">
                             <Label for="color">Màu sắc tùy chỉnh</Label>
-                            <div class="flex gap-2">
+                            <div class="flex flex-col sm:flex-row gap-3">
                                 <Input
                                     id="color"
                                     v-model="form.color"
                                     placeholder="#3b82f6"
                                     pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-                                    class="max-w-xs"
+                                    class="flex-1 sm:max-w-xs"
                                 />
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="icon"
                                     @click="openColorPicker"
+                                    class="flex items-center gap-2 w-full sm:w-auto"
                                 >
                                     <Palette class="h-4 w-4" />
+                                    <span class="sm:hidden">Chọn màu</span>
                                 </Button>
                                 <input
                                     ref="colorInput"
@@ -219,65 +223,64 @@ const openColorPicker = () => {
                             </p>
                             <InputError :message="form.errors.color" />
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <!-- Preview Card -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Xem trước</CardTitle>
-                        <CardDescription>
+                <!-- Preview -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold text-gray-900">Xem trước</h2>
+                        <p class="mt-1 text-sm text-gray-600">
                             Xem trước loại sản phẩm sẽ hiển thị như thế nào
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="flex items-center gap-3 p-4 border rounded-lg bg-gray-50">
-                            <div
-                                class="w-4 h-4 rounded-full"
-                                :style="{ backgroundColor: form.color }"
-                            ></div>
-                            <span class="font-medium">
-                                {{ form.name || 'Tên loại sản phẩm' }}
-                            </span>
-                            <span v-if="form.show_on_front" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                Hiển thị trang chủ
-                            </span>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-4 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50">
+                        <div
+                            class="w-5 h-5 rounded-full shrink-0"
+                            :style="{ backgroundColor: form.color }"
+                        ></div>
+                        <span class="font-medium text-gray-900">
+                            {{ form.name || 'Tên loại sản phẩm' }}
+                        </span>
+                        <span v-if="form.show_on_front" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Hiển thị trang chủ
+                        </span>
+                    </div>
+                </div>
 
                 <!-- Usage Warning -->
-                <Card v-if="productType.products_count > 0" class="border-amber-200 bg-amber-50">
-                    <CardContent class="pt-6">
-                        <div class="flex gap-3">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-medium text-amber-800">Cảnh báo</h3>
-                                <p class="mt-1 text-sm text-amber-700">
-                                    Loại sản phẩm này đang được sử dụng bởi {{ productType.products_count }} sản phẩm.
-                                    Việc thay đổi thông tin có thể ảnh hưởng đến cách hiển thị của các sản phẩm này.
-                                </p>
-                            </div>
+                <div v-if="productType.products_count > 0" class="bg-amber-50 rounded-lg border border-amber-200 p-6">
+                    <div class="flex gap-3">
+                        <div class="shrink-0">
+                            <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
                         </div>
-                    </CardContent>
-                </Card>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-sm font-medium text-amber-800">Cảnh báo</h3>
+                            <p class="mt-1 text-sm text-amber-700">
+                                Loại sản phẩm này đang được sử dụng bởi {{ productType.products_count }} sản phẩm.
+                                Việc thay đổi thông tin có thể ảnh hưởng đến cách hiển thị của các sản phẩm này.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Action Buttons -->
-                <div class="flex justify-end gap-4">
+                <div class="flex flex-col sm:flex-row gap-4 sm:justify-end">
                     <Button
                         :as="Link"
-                        :href="siteRoute('product-types.index', { site: props.site.slug })"
+                        :href="props.site?.slug ? ProductTypesIndex.url({ site: props.site.slug }) : '#'"
                         variant="outline"
+                        class="w-full sm:w-auto order-2 sm:order-1"
                     >
                         Hủy
                     </Button>
                     <Button
                         type="submit"
                         :disabled="form.processing"
+                        class="w-full sm:w-auto order-1 sm:order-2"
                     >
                         {{ form.processing ? 'Đang cập nhật...' : 'Cập nhật loại sản phẩm' }}
                     </Button>

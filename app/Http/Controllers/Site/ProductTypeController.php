@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Site;
 
-use App\Http\Requests\StoreProductTypeRequest;
-use App\Http\Requests\UpdateProductTypeRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductType\StoreProductTypeRequest;
+use App\Http\Requests\ProductType\UpdateProductTypeRequest;
 use App\Models\ProductType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -48,6 +49,7 @@ class ProductTypeController extends Controller
         $productTypes = $query->paginate(20)->withQueryString();
 
         return Inertia::render('Products/ProductTypes/Index', [
+            'site' => auth()->user()->site,
             'productTypes' => $productTypes,
             'filters' => $request->only(['search', 'show_on_front', 'sort_by', 'sort_direction']),
         ]);
@@ -60,7 +62,9 @@ class ProductTypeController extends Controller
     {
         Gate::authorize('create', ProductType::class);
 
-        return Inertia::render('Products/ProductTypes/Create');
+        return Inertia::render('Products/ProductTypes/Create', [
+            'site' => auth()->user()->site,
+        ]);
     }
 
     /**
@@ -82,13 +86,20 @@ class ProductTypeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ProductType $productType): Response
+    public function show($site, $productType): Response
     {
+        // Manually resolve ProductType if it comes as string/ID
+        if (is_string($productType) || is_numeric($productType)) {
+            $productType = ProductType::forSite(auth()->user()->site_id)
+                ->findOrFail($productType);
+        }
+
         Gate::authorize('view', $productType);
 
         $productType->load('site')->loadCount('products');
 
         return Inertia::render('Products/ProductTypes/Show', [
+            'site' => auth()->user()->site,
             'productType' => $productType,
         ]);
     }
@@ -96,11 +107,18 @@ class ProductTypeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ProductType $productType): Response
+    public function edit($site, $productType): Response
     {
+        // Manually resolve ProductType if it comes as string/ID
+        if (is_string($productType) || is_numeric($productType)) {
+            $productType = ProductType::forSite(auth()->user()->site_id)
+                ->findOrFail($productType);
+        }
+
         Gate::authorize('update', $productType);
 
         return Inertia::render('Products/ProductTypes/Edit', [
+            'site' => auth()->user()->site,
             'productType' => $productType,
         ]);
     }
@@ -108,8 +126,15 @@ class ProductTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProductTypeRequest $request, ProductType $productType)
+    public function update(UpdateProductTypeRequest $request, $site, $productType)
     {
+
+        // Manually resolve ProductType if it comes as string/ID
+        if (is_string($productType) || is_numeric($productType)) {
+            $productType = ProductType::forSite(auth()->user()->site_id)
+                ->findOrFail($productType);
+        }
+
         Gate::authorize('update', $productType);
 
         $productType->update($request->validated());
@@ -121,8 +146,14 @@ class ProductTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductType $productType)
+    public function destroy($site, $productType)
     {
+        // Manually resolve ProductType if it comes as string/ID
+        if (is_string($productType) || is_numeric($productType)) {
+            $productType = ProductType::forSite(auth()->user()->site_id)
+                ->findOrFail($productType);
+        }
+
         Gate::authorize('delete', $productType);
 
         if (! $productType->canDelete()) {

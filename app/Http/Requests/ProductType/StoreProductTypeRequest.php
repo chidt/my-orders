@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\ProductType;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateProductTypeRequest extends FormRequest
+class StoreProductTypeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,6 @@ class UpdateProductTypeRequest extends FormRequest
      */
     public function rules(): array
     {
-        $productType = $this->route('product_type');
-
         return [
             'name' => [
                 'required',
@@ -31,7 +29,7 @@ class UpdateProductTypeRequest extends FormRequest
                 'max:100',
                 Rule::unique('product_types')->where(function ($query) {
                     return $query->where('site_id', $this->user()->site_id);
-                })->ignore($productType->id),
+                }),
             ],
             'order' => 'integer|min:0',
             'show_on_front' => 'boolean',

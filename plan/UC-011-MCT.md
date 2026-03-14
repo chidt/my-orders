@@ -148,10 +148,10 @@ php artisan make:model Tag --factory --no-interaction
 
 #### 3.1 Define Permissions
 Create permission seeder or add to existing:
-- `manage-categories` - Full category management
-- `manage-tags` - Full tag management
-- `view-categories` - View categories (if needed for staff)
-- `view-tags` - View tags (if needed for staff)
+- `manage_categories` - Full category management
+- `manage_tags` - Full tag management
+- `view_categories` - View categories (if needed for staff)
+- `view_tags` - View tags (if needed for staff)
 
 #### 3.2 Middleware and Policies
 Create policies for authorization:

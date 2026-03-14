@@ -101,8 +101,8 @@ public function productTypes(): HasMany
 
 #### 3.1 Define Permissions
 Create permission seeder or add to existing:
-- `manage-product-types` - Full product type management
-- `view-product-types` - View product types (if needed for staff)
+- `manage_product_types` - Full product type management
+- `view_product_types` - View product types (if needed for staff)
 
 #### 3.2 Create Policy
 ```bash

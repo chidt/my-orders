@@ -31,6 +31,30 @@ class ProductType extends Model
     }
 
     /**
+     * Retrieve the model for a bound value.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?? $this->getRouteKeyName();
+
+        // First, try to get site from authenticated user (most reliable in testing)
+        $siteId = null;
+        if (auth()->check() && auth()->user()->site_id) {
+            $siteId = auth()->user()->site_id;
+        }
+
+        // If we have a site_id, scope the query
+        if ($siteId) {
+            return $this->where($field, $value)
+                ->where('site_id', $siteId)
+                ->first();
+        }
+
+        // Fallback to default behavior (this shouldn't happen in normal operation)
+        return parent::resolveRouteBinding($value, $field);
+    }
+
+    /**
      * Get the site that owns the product type.
      */
     public function site(): BelongsTo
@@ -47,11 +71,12 @@ class ProductType extends Model
         // Create a dummy relationship that returns empty results
         // when Product class doesn't exist yet
         if (! class_exists('App\Models\Product')) {
-            // Return a relationship that will always be empty
-            return $this->hasMany(self::class)->whereRaw('1 = 0');
+            // Create a relationship using existing columns that will always be empty
+            // Using site_id = site_id AND site_id = 0 (impossible condition)
+            return $this->hasMany(self::class, 'site_id', 'site_id')->where('site_id', 0);
         }
 
-        return $this->hasMany(\App\Models\Product::class, 'product_type');
+        return $this->hasMany(\App\Models\Product::class, 'product_type_id');
     }
 
     /**
