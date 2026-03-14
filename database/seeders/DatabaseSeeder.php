@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
         // Always seed roles and permissions first
         $this->call([
             RolePermissionSeeder::class,
+            ProductTypePermissionSeeder::class,
+            UnitsSeeder::class,
         ]);
 
         // Seed users only in development or when explicitly requested
@@ -24,6 +26,11 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local', 'testing')) {
             $this->call([
                 UserSeeder::class,
+                CategorySeeder::class,
+                ProductTypeSeeder::class,
+                SupplierSeeder::class,
+                TagSeeder::class,
+                CategorySeeder::class,
             ]);
         }
 

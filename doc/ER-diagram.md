@@ -100,11 +100,6 @@ erDiagram
         bigint product_attribute_value_id FK "required"
     }
 
-    ProductItemAttributeValues {
-        bigint product_item_id FK "required"
-        bigint product_attribute_value_id FK "required"
-    }
-
     Categories {
         bigint id PK ""
         string name  "required"
@@ -287,7 +282,7 @@ erDiagram
         string name  "required"
         string code UK "required"
         string supplier_code  ""
-        tinyInt product_type FK "required"
+        tinyInt product_type_id FK "required"
         text description  ""
         int qty_in_stock  "required"
         decimal weight  ""
