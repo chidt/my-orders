@@ -11,11 +11,21 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug');
             $table->text('description')->nullable();
-            $table->integer('order')->nullable();
+            $table->integer('order')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->foreignId('parent_id')->nullable()->constrained('categories')->cascadeOnDelete();
             $table->foreignId('site_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
+
+            // Indexes for performance
+            $table->index(['site_id', 'parent_id']);
+            $table->index(['site_id', 'order']);
+            $table->index(['site_id', 'is_active']);
+
+            // Unique constraints for site-scoped data
+            $table->unique(['site_id', 'slug']);
         });
     }
 

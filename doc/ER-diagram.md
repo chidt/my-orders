@@ -103,8 +103,10 @@ erDiagram
     Categories {
         bigint id PK ""
         string name  "required"
+        string slug  "required"
         text description  ""
-        int order  ""
+        int order  "required default 0"
+        boolean is_active  "required default true"
         bigint parent_id FK ""
         bigint site_id FK "required"
     }
@@ -112,6 +114,7 @@ erDiagram
     Tags {
         bigint id PK "required"
         string name  "required"
+        string slug  "required"
         bigint site_id FK "required"
     }
 

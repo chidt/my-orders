@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('product_tags', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
+
+            // Unique constraint to prevent duplicate tag assignments
+            $table->unique(['product_id', 'tag_id']);
+
+            // Indexes for performance
+            $table->index('product_id');
+            $table->index('tag_id');
         });
     }
 

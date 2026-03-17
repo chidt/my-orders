@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Site\CategoryController;
 use App\Http\Controllers\Site\LocationController;
 use App\Http\Controllers\Site\ProductTypeController;
+use App\Http\Controllers\Site\TagController;
 use App\Http\Controllers\Site\WarehouseController;
 use App\Http\Controllers\SiteDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -11,6 +13,42 @@ Route::prefix('{site:slug}')->group(function () {
     // Site admin dashboard route
     Route::get('/dashboard', [SiteDashboardController::class, 'index'])
         ->name('site.dashboard');
+
+    // Category management routes
+    Route::resource('categories', CategoryController::class)->names([
+        'index' => 'categories.index',
+        'create' => 'categories.create',
+        'store' => 'categories.store',
+        'show' => 'categories.show',
+        'edit' => 'categories.edit',
+        'update' => 'categories.update',
+        'destroy' => 'categories.destroy',
+    ]);
+
+    // Category reordering route
+    Route::post('categories/reorder', [CategoryController::class, 'reorder'])
+        ->name('categories.reorder');
+
+    // Tag utility routes (must come before resource routes to avoid conflicts)
+    Route::get('tags-popular', [TagController::class, 'popular'])
+        ->name('tags.popular');
+    Route::post('tags/merge', [TagController::class, 'merge'])
+        ->name('tags.merge');
+    Route::delete('tags/bulk-delete-unused', [TagController::class, 'bulkDeleteUnused'])
+        ->name('tags.bulk-delete-unused');
+    Route::get('tags-search', [TagController::class, 'search'])
+        ->name('tags.search');
+
+    // Tag management routes
+    Route::resource('tags', TagController::class)->names([
+        'index' => 'tags.index',
+        'create' => 'tags.create',
+        'store' => 'tags.store',
+        'show' => 'tags.show',
+        'edit' => 'tags.edit',
+        'update' => 'tags.update',
+        'destroy' => 'tags.destroy',
+    ]);
 
     // Product Type management routes
     Route::resource('product-types', ProductTypeController::class)->names([
