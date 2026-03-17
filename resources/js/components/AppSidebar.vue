@@ -7,6 +7,9 @@ import {
     Warehouse,
     ShieldUser,
     Package,
+    FolderTree,
+    Tag,
+    ToggleLeftIcon
 } from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -77,6 +80,24 @@ const getProductTypesUrl = (): string | null => {
     return null;
 };
 
+const getCategoriesUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return `/${currentSite.slug}/categories`;
+    }
+    return null;
+};
+
+const getTagsUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return `/${currentSite.slug}/tags`;
+    }
+    return null;
+};
+
 
 const mainNavItems: NavItem[] = [
     {
@@ -104,10 +125,32 @@ const mainNavItems: NavItem[] = [
         show: can('manage_warehouses') && getWarehouseUrl() !== null,
     },
     {
-        title: 'Loại sản phẩm',
-        href: getProductTypesUrl() || '',
+        title: 'Quản lý sản phẩm',
+        href: '#', // Dummy href for parent item
         icon: Package,
-        show: can('view_product_types') && getProductTypesUrl() !== null,
+        show: (can('view_product_types') && getProductTypesUrl() !== null) ||
+              (can('view_categories') || can('manage_categories')) && getCategoriesUrl() !== null ||
+              (can('view_tags') || can('manage_tags')) && getTagsUrl() !== null,
+        children: [
+            {
+                title: 'Loại sản phẩm',
+                href: getProductTypesUrl() || '',
+                icon: ToggleLeftIcon,
+                show: can('view_product_types') && getProductTypesUrl() !== null,
+            },
+            {
+                title: 'Quản lý danh mục',
+                href: getCategoriesUrl() || '',
+                icon: FolderTree,
+                show: (can('view_categories') || can('manage_categories')) && getCategoriesUrl() !== null,
+            },
+            {
+                title: 'Quản lý thẻ',
+                href: getTagsUrl() || '',
+                icon: Tag,
+                show: (can('view_tags') || can('manage_tags')) && getTagsUrl() !== null,
+            },
+        ],
     },
     {
         title: 'Quản lý trang web',

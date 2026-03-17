@@ -23,8 +23,10 @@ class TagFactory extends Factory
             'seasonal', 'imported', 'local', 'handmade', 'artisan',
         ];
 
+        $name = $this->faker->randomElement($tags);
+
         return [
-            'name' => $this->faker->unique()->randomElement($tags),
+            'name' => $name,
             'site_id' => Site::factory(),
         ];
     }
@@ -45,9 +47,11 @@ class TagFactory extends Factory
     public function promotional(): static
     {
         $promoTags = ['sale', 'discount', 'special offer', 'flash sale', 'clearance'];
+        $name = $this->faker->randomElement($promoTags);
 
         return $this->state(fn (array $attributes) => [
-            'name' => $this->faker->randomElement($promoTags),
+            'name' => $name,
+            'slug' => \Illuminate\Support\Str::slug($name),
         ]);
     }
 }

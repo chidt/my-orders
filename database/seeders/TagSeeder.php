@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Site;
 use App\Models\Tag;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class TagSeeder extends Seeder
 {
@@ -94,6 +95,7 @@ class TagSeeder extends Seeder
             foreach ($tags as $tagName) {
                 Tag::create([
                     'name' => $tagName,
+                    'slug' => Str::slug($tagName),
                     'site_id' => null,
                 ]);
             }
@@ -103,6 +105,7 @@ class TagSeeder extends Seeder
                 foreach ($tags as $tagName) {
                     Tag::create([
                         'name' => $tagName,
+                        'slug' => Str::slug($tagName),
                         'site_id' => $site->id,
                     ]);
                 }

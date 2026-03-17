@@ -10,9 +10,17 @@ return new class extends Migration
     {
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name', 100);
+            $table->string('slug', 100);
             $table->foreignId('site_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
+
+            // Indexes for performance
+            $table->index('site_id');
+
+            // Unique constraints for site-scoped data
+            $table->unique(['site_id', 'slug']);
+            $table->unique(['site_id', 'name']);
         });
     }
 
