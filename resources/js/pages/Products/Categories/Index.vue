@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, Edit, Trash2, Eye, EyeOff, FolderTree, List, TreePine } from 'lucide-vue-next';
 import { computed, ref, watch, onMounted } from 'vue';
+import CategoryTree from '@/components/CategoryTree.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,6 @@ import {
 } from '@/components/ui/select';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
-import CategoryTree from '@/components/CategoryTree.vue';
 import CategoriesRoutes from '@/routes/categories';
 
 interface Site {
@@ -317,9 +317,6 @@ const handleTreeSelect = (category: Category | null) => {
     console.log('Selected category:', category);
 };
 
-const toggleViewMode = () => {
-    viewMode.value = viewMode.value === 'table' ? 'tree' : 'table';
-};
 
 // Watch for view mode changes and fetch all categories when switching to tree view
 watch(viewMode, (newMode) => {

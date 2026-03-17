@@ -111,7 +111,10 @@
 </template>
 
 <script setup lang="ts">
+import { FolderTree, Search } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -121,9 +124,6 @@ import {
     SelectGroup,
     SelectLabel
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { FolderTree, Search } from 'lucide-vue-next';
 
 interface Category {
     id: number;
@@ -218,7 +218,7 @@ const rootCategories = computed(() => {
 });
 
 const hierarchicalCategories = computed(() => {
-    return filteredCategories.value
+    return [...filteredCategories.value]
         .sort((a, b) => {
             // Sort by breadcrumb path for hierarchical display
             const aPath = a.breadcrumb.join('');

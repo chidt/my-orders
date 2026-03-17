@@ -37,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { Button } from '@/components/ui/button';
 import { FolderTree, Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
 import CategoryTreeNode from './CategoryTreeNode.vue';
 
 interface Category {
@@ -81,16 +81,6 @@ const expandedNodes = ref<Set<number>>(new Set());
 const selectedNode = ref<number | null>(props.selectedId || null);
 
 // Computed
-const rootCategories = computed(() => {
-    return props.categories
-        .filter(category => !category.parent_id)
-        .sort((a, b) => {
-            if (a.order !== b.order) {
-                return a.order - b.order;
-            }
-            return a.name.localeCompare(b.name);
-        });
-});
 
 // Methods
 const toggleNode = (categoryId: number) => {
@@ -141,47 +131,6 @@ if (props.selectedId) {
     });
 }
 
-// Build tree structure from flat array
-const buildTree = (categories: Category[]): Category[] => {
-    const categoryMap = new Map<number, Category>();
-    const tree: Category[] = [];
-
-    // Create a map for quick lookup and initialize children arrays
-    categories.forEach(category => {
-        categoryMap.set(category.id, { ...category, children: [] });
-    });
-
-    // Build the tree structure
-    categories.forEach(category => {
-        const node = categoryMap.get(category.id)!;
-        if (category.parent_id) {
-            const parent = categoryMap.get(category.parent_id);
-            if (parent) {
-                parent.children!.push(node);
-            }
-        } else {
-            tree.push(node);
-        }
-    });
-
-    // Sort children for each node
-    const sortChildren = (nodes: Category[]) => {
-        nodes.forEach(node => {
-            if (node.children && node.children.length > 0) {
-                node.children.sort((a, b) => {
-                    if (a.order !== b.order) {
-                        return a.order - b.order;
-                    }
-                    return a.name.localeCompare(b.name);
-                });
-                sortChildren(node.children);
-            }
-        });
-    };
-
-    sortChildren(tree);
-    return tree;
-};
 
 // Expose methods for parent component
 defineExpose({

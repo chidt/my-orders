@@ -278,9 +278,21 @@
 </template>
 
 <script setup lang="ts">
+import {
+    X,
+    Eye,
+    EyeOff,
+    ArrowUpDown,
+    Merge,
+    Download,
+    Trash2,
+    ChevronUp,
+    ChevronDown,
+    FolderTree,
+} from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -296,18 +308,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    X,
-    Eye,
-    EyeOff,
-    ArrowUpDown,
-    Merge,
-    Download,
-    Trash2,
-    ChevronUp,
-    ChevronDown,
-    FolderTree,
-} from 'lucide-vue-next';
 
 interface BulkItem {
     id: number;

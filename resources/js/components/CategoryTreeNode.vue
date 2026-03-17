@@ -138,9 +138,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
     ChevronRight,
     FolderTree,
@@ -148,6 +145,9 @@ import {
     Edit,
     Trash2
 } from 'lucide-vue-next';
+import { computed } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface Category {
     id: number;

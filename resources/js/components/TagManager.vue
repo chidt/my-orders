@@ -116,11 +116,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tag, X, Plus } from 'lucide-vue-next';
+import { computed, ref, watch, nextTick } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface TagData {
     id: number;
@@ -269,7 +269,7 @@ const clearAllTags = () => {
 };
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
+watch(() => props.modelValue, () => {
     // React to external changes if needed
 }, { deep: true });
 
