@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-009-MS                                  |
 | Tên Use Case   | Quản lý nhà cung cấp                       |
-| Actor          | SiteAdmin (người dùng có quyền hạn manage-suppliers) |
+| Actor          | SiteAdmin (người dùng có quyền hạn manage_suppliers) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật, xóa thông tin nhà cung cấp thuộc trang web mà họ sở hữu |
 | Độ ưu tiên     | Trung bình                                 |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage-suppliers**<br>- Trang web thuộc về người dùng hiện tại |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage_suppliers**<br>- Trang web thuộc về người dùng hiện tại |
 | Post-condition | Thông tin nhà cung cấp được tạo/cập nhật/xóa thành công và thuộc về trang web hiện tại |
 
 ---
@@ -54,7 +54,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Không có quyền **manage-suppliers** | Không hiển thị menu quản lý nhà cung cấp |
+| AF-01| Không có quyền **manage_suppliers** | Không hiển thị menu quản lý nhà cung cấp |
 | AF-02| Tên nhà cung cấp đã tồn tại  | Hiển thị cảnh báo (cho phép trùng) |
 | AF-03| Thiếu thông tin bắt buộc     | Hiển thị lỗi validation       |
 | AF-04| Nhà cung cấp có sản phẩm     | Không cho phép xóa, chỉ vô hiệu hóa |

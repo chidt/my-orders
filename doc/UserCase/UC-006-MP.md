@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-006-MP                                  |
 | Tên Use Case   | Quản lý sản phẩm                           |
-| Actor          | SiteAdmin (người dùng có quyền hạn manage-products) |
+| Actor          | SiteAdmin (người dùng có quyền hạn manage_products) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật, xóa sản phẩm thuộc trang web mà họ sở hữu |
 | Độ ưu tiên     | Cao                                        |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage-products**<br>- Trang web thuộc về người dùng hiện tại<br>- **⚠️ BẮT BUỘC**: UC011-MCT (Categories và Tags) đã được triển khai<br>- **⚠️ BẮT BUỘC**: UC012-MA (Attributes) đã được triển khai<br>- **⚠️ BẮT BUỘC**: UC009-MS (Suppliers) đã được triển khai<br>- **⚠️ BẮT BUỘC**: UC004-MSW & UC005-MWL (Warehouses & Locations) đã được triển khai |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage_products**<br>- Trang web thuộc về người dùng hiện tại<br>- **⚠️ BẮT BUỘC**: UC011-MCT (Categories và Tags) đã được triển khai<br>- **⚠️ BẮT BUỘC**: UC012-MA (Attributes) đã được triển khai<br>- **⚠️ BẮT BUỘC**: UC009-MS (Suppliers) đã được triển khai<br>- **⚠️ BẮT BUỘC**: UC004-MSW & UC005-MWL (Warehouses & Locations) đã được triển khai |
 | Post-condition | Sản phẩm được tạo/cập nhật/xóa thành công và thuộc về trang web hiện tại |
 
 ---
@@ -83,7 +83,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Không có quyền **manage-products** | Không hiển thị menu quản lý sản phẩm |
+| AF-01| Không có quyền **manage_products** | Không hiển thị menu quản lý sản phẩm |
 | AF-02| Mã sản phẩm đã tồn tại       | Hiển thị lỗi và tạo mã mới    |
 | AF-03| Thiếu thông tin bắt buộc     | Hiển thị lỗi validation       |
 | AF-04| Upload file quá dung lượng   | Hiển thị lỗi và yêu cầu resize |

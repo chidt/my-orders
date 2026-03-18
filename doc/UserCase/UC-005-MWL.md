@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-005-MWL                                 |
 | Tên Use Case   | Quản lý vị trí trong kho                   |
-| Actor          | SiteAdmin (người dùng có vai trò manage-warehouse-locations) |
+| Actor          | SiteAdmin (người dùng có vai trò manage_warehouse_locations) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật, xóa vị trí trong kho thuộc trang web mà họ sở hữu |
 | Độ ưu tiên     | Cao                                        |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có vai trò **manage-warehouse-locations**<br>- Kho thuộc về trang web của người dùng hiện tại<br>- Kho đã được tạo trước đó |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có vai trò **manage_warehouse_locations**<br>- Kho thuộc về trang web của người dùng hiện tại<br>- Kho đã được tạo trước đó |
 | Post-condition | Vị trí trong kho được tạo/cập nhật/xóa thành công và thuộc về kho hợp lệ |
 
 ---
@@ -81,7 +81,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Người dùng không có vai trò **manage-warehouse-locations** | Không hiển thị chức năng quản lý vị trí |
+| AF-01| Người dùng không có vai trò **manage_warehouse_locations** | Không hiển thị chức năng quản lý vị trí |
 | AF-02| Kho không thuộc về trang web hiện tại | Không cho phép truy cập |
 | AF-03| Mã vị trí đã tồn tại trong kho | Hiển thị lỗi                  |
 | AF-04| Dữ liệu không hợp lệ         | Hiển thị lỗi validation       |

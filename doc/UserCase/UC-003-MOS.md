@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-003-MOS                                 |
 | Tên Use Case   | Quản lý trang web của tôi                  |
-| Actor          | SiteAdmin (người dùng có vai trò manage-own-site) |
+| Actor          | SiteAdmin (người dùng có vai trò manage_own_site) |
 | Mô tả          | Người dùng có thể cập nhật thông tin về trang web mà họ sở hữu |
 | Độ ưu tiên     | Trung bình                                 |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có vai trò **manage-own-site**<br>- Trang web thuộc về người dùng hiện tại (user_id trong bảng sites = current auth user) |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có vai trò **manage_own_site**<br>- Trang web thuộc về người dùng hiện tại (user_id trong bảng sites = current auth user) |
 | Post-condition | Thông tin trang web được cập nhật thành công |
 
 ---
@@ -42,7 +42,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Người dùng không có vai trò **manage-own-site** | Không hiển thị menu "Quản lý trang web" |
+| AF-01| Người dùng không có vai trò **manage_own_site** | Không hiển thị menu "Quản lý trang web" |
 | AF-02| Trang web không thuộc về người dùng | Không cho phép truy cập/chỉnh sửa |
 | AF-03| Slug đã tồn tại              | Hiển thị lỗi                  |
 | AF-04| Dữ liệu không hợp lệ         | Hiển thị lỗi validation       |
@@ -70,7 +70,7 @@
 
 ### Sidebar Navigation
 - Menu **"Quản lý trang web"** chỉ hiển thị khi:
-  - Người dùng có vai trò **manage-own-site**
+  - Người dùng có vai trò **manage_own_site**
   - Trang web hiện tại thuộc về người dùng (user_id = current user)
 
 ### Form chỉnh sửa trang web
@@ -118,7 +118,7 @@
 ## Security Requirements
 
 1. **Authorization**: Chỉ cho phép người dùng chỉnh sửa trang web mà họ sở hữu
-2. **Role-based Access**: Kiểm tra vai trò **manage-own-site**
+2. **Role-based Access**: Kiểm tra vai trò **manage_own_site**
 3. **Input Validation**: Validate tất cả input từ client
 4. **CSRF Protection**: Sử dụng CSRF token cho form
 
@@ -127,6 +127,6 @@
 ## Technical Notes
 
 - Sử dụng Laravel Policy để kiểm tra quyền sở hữu trang web
-- Implement middleware để check role **manage-own-site**
+- Implement middleware để check role **manage_own_site**
 - Settings được lưu dưới dạng JSON trong database
 - Slug phải unique và follow URL-friendly format

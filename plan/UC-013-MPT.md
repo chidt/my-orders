@@ -416,7 +416,7 @@ Use hex color validation:
 ### Permission Integration
 Leverage existing Spatie permission system:
 ```php
-$user->can('manage-product-types')
+$user->can('manage_product_types')
 Gate::authorize('update', $productType)
 ```
 

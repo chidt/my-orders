@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-008-MO                                  |
 | Tên Use Case   | Quản lý đơn hàng                           |
-| Actor          | SiteAdmin (người dùng có quyền hạn manage-orders) |
+| Actor          | SiteAdmin (người dùng có quyền hạn manage_orders) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật trạng thái đơn hàng thuộc trang web mà họ sở hữu |
 | Độ ưu tiên     | Cao                                        |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage-orders**<br>- Đã có khách hàng và sản phẩm trong hệ thống |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage_orders**<br>- Đã có khách hàng và sản phẩm trong hệ thống |
 | Post-condition | Đơn hàng được tạo/cập nhật thành công và thuộc về trang web hiện tại |
 
 ---
@@ -92,7 +92,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Không có quyền **manage-orders** | Không hiển thị menu quản lý đơn hàng |
+| AF-01| Không có quyền **manage_orders** | Không hiển thị menu quản lý đơn hàng |
 | AF-02| Sản phẩm không đủ hàng (available_qty < qty) | Tự động tạo pre-order, OrderDetail = WaitingForStock (6) |
 | AF-03| Khách hàng chưa có địa chỉ   | Yêu cầu tạo địa chỉ trước     |
 | AF-04| OrderDetail status = Completed (10) hoặc Cancelled (11) | Không cho phép chỉnh sửa |

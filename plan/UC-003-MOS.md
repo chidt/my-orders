@@ -1,7 +1,7 @@
 # UC003 Implementation Plan - Manage Own Site (MOS)
 
 ## 🎯 Objective
-Implement site management functionality allowing users with `manage-own-site` permission to update their owned site information including name, slug, description, and product prefix settings through a secure web interface with proper authorization.
+Implement site management functionality allowing users with `manage_own_site` permission to update their owned site information including name, slug, description, and product prefix settings through a secure web interface with proper authorization.
 
 ## 📋 Current State Analysis
 
@@ -9,7 +9,7 @@ Implement site management functionality allowing users with `manage-own-site` pe
 - Site model with proper fillable fields (name, slug, description, settings, user_id)
 - Sites database table with JSON settings column
 - User-Site relationship (belongsTo/hasMany)
-- Permission system with `manage-own-site` permission
+- Permission system with `manage_own_site` permission
 - CheckRole middleware for role verification
 - Spatie Laravel Permission package configured
 - Settings routes structure in place
@@ -33,10 +33,10 @@ Implement site management functionality allowing users with `manage-own-site` pe
 ```php
 // Policy methods to implement:
 // - update(User $user, Site $site): bool - Check if user owns the site
-// - viewAny(User $user): bool - Check if user has manage-own-site permission
+// - viewAny(User $user): bool - Check if user has manage_own_site permission
 ```
 - Verify user ownership (site->user_id === auth->id)
-- Check `manage-own-site` permission
+- Check `manage_own_site` permission
 - Register policy in AppServiceProvider
 
 **2. Update AppServiceProvider** (`app/Providers/AppServiceProvider.php`):
@@ -110,7 +110,7 @@ Implement site management functionality allowing users with `manage-own-site` pe
 **1. Update AppSidebar Component** (`resources/js/components/AppSidebar.vue`):
 ```typescript
 // Add to mainNavItems conditionally:
-// - Check if user has manage-own-site permission
+// - Check if user has manage_own_site permission
 // - Check if current site belongs to user
 // - Add "Quản lý trang web" menu item with Settings icon
 ```
@@ -241,7 +241,7 @@ Implement site management functionality allowing users with `manage-own-site` pe
 3. **End-to-End Tests**: Complete user workflow
 
 ### Manual Testing Checklist
-- [ ] User with `manage-own-site` permission sees sidebar item
+- [ ] User with `manage_own_site` permission sees sidebar item
 - [ ] User without permission doesn't see sidebar item  
 - [ ] Site owner can access and update site information
 - [ ] Non-owner cannot access other sites

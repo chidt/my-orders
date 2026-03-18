@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-007-MC                                  |
 | Tên Use Case   | Quản lý khách hàng                         |
-| Actor          | SiteAdmin (người dùng có quyền hạn manage-customers) |
+| Actor          | SiteAdmin (người dùng có quyền hạn manage_customers) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật, xóa thông tin khách hàng thuộc trang web mà họ sở hữu |
 | Độ ưu tiên     | Cao                                        |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage-customers**<br>- Trang web thuộc về người dùng hiện tại |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage_customers**<br>- Trang web thuộc về người dùng hiện tại |
 | Post-condition | Thông tin khách hàng được tạo/cập nhật/xóa thành công và thuộc về trang web hiện tại |
 
 ---
@@ -68,7 +68,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Không có quyền **manage-customers** | Không hiển thị menu quản lý khách hàng |
+| AF-01| Không có quyền **manage_customers** | Không hiển thị menu quản lý khách hàng |
 | AF-02| Email đã tồn tại trong site  | Hiển thị lỗi                  |
 | AF-03| Số điện thoại đã tồn tại     | Hiển thị cảnh báo (cho phép trùng) |
 | AF-04| Thiếu thông tin bắt buộc     | Hiển thị lỗi validation       |

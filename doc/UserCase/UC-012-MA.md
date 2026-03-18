@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-012-MA                                  |
 | Tên Use Case   | Quản lý thuộc tính sản phẩm (Attributes)  |
-| Actor          | SiteAdmin (người dùng có quyền hạn manage-attributes) |
+| Actor          | SiteAdmin (người dùng có quyền hạn manage_attributes) |
 | Mô tả          | Người dùng có thể quản lý các thuộc tính sản phẩm như Kích thước, Màu sắc, Loại sản phẩm cho site của mình |
 | Độ ưu tiên     | Cao - **PREREQUISITE** cho UC006-MP (Manage Products) |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage-attributes**<br>- Đã có site trong hệ thống |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage_attributes**<br>- Đã có site trong hệ thống |
 | Post-condition | Các thuộc tính sản phẩm được tạo/cập nhật/xóa thành công với site isolation |
 
 ---
@@ -87,7 +87,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Không có quyền **manage-attributes** | Không hiển thị menu quản lý attributes |
+| AF-01| Không có quyền **manage_attributes** | Không hiển thị menu quản lý attributes |
 | AF-02| Code đã tồn tại trong site   | Hiển thị lỗi và yêu cầu nhập code khác |
 | AF-03| Attribute không thuộc site   | Không cho phép chỉnh sửa/xóa |
 | AF-04| Attribute đang được sử dụng bởi Products | Cảnh báo và không cho phép xóa |

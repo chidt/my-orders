@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-010-MI                                  |
 | Tên Use Case   | Quản lý kho hàng, xuất nhập tồn và đặt hàng trước |
-| Actor          | SiteAdmin (người dùng có quyền hạn manage-inventory) |
+| Actor          | SiteAdmin (người dùng có quyền hạn manage_inventory) |
 | Mô tả          | Người dùng có thể quản lý việc nhập kho, xuất kho, theo dõi tồn kho và xử lý đặt hàng trước (pre-order) thuộc trang web mà họ sở hữu |
 | Độ ưu tiên     | Cao                                        |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage-inventory**<br>- Đã có warehouse, location và sản phẩm trong hệ thống<br>- WarehouseInventory table đã được thiết lập |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage_inventory**<br>- Đã có warehouse, location và sản phẩm trong hệ thống<br>- WarehouseInventory table đã được thiết lập |
 | Post-condition | Giao dịch nhập/xuất kho được ghi nhận, tồn kho được cập nhật chính xác, và pre-order được xử lý tự động |
 
 ---
@@ -158,7 +158,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Không có quyền **manage-inventory** | Không hiển thị menu quản lý kho hàng |
+| AF-01| Không có quyền **manage_inventory** | Không hiển thị menu quản lý kho hàng |
 | AF-02| Số lượng xuất > available_qty | Hiển thị lỗi và không cho phép |
 | AF-03| Location không thuộc site    | Không cho phép chọn location |
 | AF-04| Sản phẩm không thuộc site    | Không cho phép chọn sản phẩm |

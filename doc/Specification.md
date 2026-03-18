@@ -146,7 +146,7 @@
 - Site settings JSON storage
 - Owner-only access control
 
-**Permissions**: `manage-own-site` role required
+**Permissions**: `manage_own_site` role required
 
 ### UC004: Manage Site Warehouse (High Priority)
 **Objective**: Enable warehouse CRUD operations for site inventory management
@@ -168,7 +168,7 @@
 - Stock quantity tracking per location
 - Warehouse ownership validation
 
-**Permissions**: `manage-warehouse-locations` role required
+**Permissions**: `manage_warehouse_locations` role required
 
 ## Technical Requirements
 

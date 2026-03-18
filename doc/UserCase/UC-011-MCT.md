@@ -6,7 +6,7 @@
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-011-MCT                                 |
 | Tên Use Case   | Quản lý danh mục và thẻ tag sản phẩm      |
-| Actor          | SiteAdmin (người dùng có quyền hạn manage-categories) |
+| Actor          | SiteAdmin (người dùng có quyền hạn manage_categories) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật, xóa danh mục và thẻ tag sản phẩm thuộc trang web mà họ sở hữu |
 | Độ ưu tiên     | Trung bình                                 |
 
@@ -16,7 +16,7 @@
 
 | Loại           | Mô tả                       |
 |----------------|----------------------------|
-| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage-categories**<br>- Trang web thuộc về người dùng hiện tại |
+| Pre-condition  | - Người dùng đã đăng nhập<br>- Người dùng có quyền hạn **manage_categories**<br>- Trang web thuộc về người dùng hiện tại |
 | Post-condition | Danh mục/tag được tạo/cập nhật/xóa thành công và thuộc về trang web hiện tại |
 
 ---
@@ -66,7 +66,7 @@
 
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
-| AF-01| Không có quyền **manage-categories** | Không hiển thị menu quản lý danh mục |
+| AF-01| Không có quyền **manage_categories** | Không hiển thị menu quản lý danh mục |
 | AF-02| Tên danh mục đã tồn tại      | Hiển thị cảnh báo (cho phép trùng) |
 | AF-03| Danh mục có sản phẩm         | Không cho phép xóa, chỉ vô hiệu hóa |
 | AF-04| Tag đã tồn tại               | Hiển thị cảnh báo |

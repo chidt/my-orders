@@ -152,11 +152,11 @@ class RoleSeeder extends Seeder
         
         // Create permissions (using firstOrCreate to prevent duplicates)
         $permissions = [
-            'manage-users',
-            'manage-sites',
-            'view-admin-dashboard',
-            'manage-own-site',
-            'view-site-dashboard',
+            'manage_users',
+            'manage_sites',
+            'view_admin_dashboard',
+            'manage_own_site',
+            'view_site_dashboard',
         ];
         
         foreach ($permissions as $permission) {
@@ -165,14 +165,14 @@ class RoleSeeder extends Seeder
         
         // Assign permissions to roles
         $adminRole->givePermissionTo([
-            'manage-users',
-            'manage-sites', 
-            'view-admin-dashboard'
+            'manage_users',
+            'manage_sites', 
+            'view_admin_dashboard'
         ]);
         
         $siteAdminRole->givePermissionTo([
-            'manage-own-site',
-            'view-site-dashboard'
+            'manage_own_site',
+            'view_site_dashboard'
         ]);
     }
 }
