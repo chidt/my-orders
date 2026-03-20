@@ -71,6 +71,13 @@ class RolePermissionSeeder extends Seeder
             'view_warehouse_locations',
             'edit_warehouse_locations',
             'delete_warehouse_locations',
+
+            // Supplier management
+            'manage_suppliers',
+            'view_suppliers',
+            'create_suppliers',
+            'edit_suppliers',
+            'delete_suppliers',
         ];
 
         foreach ($permissions as $permission) {
@@ -96,6 +103,11 @@ class RolePermissionSeeder extends Seeder
             'view_warehouse_locations',
             'edit_warehouse_locations',
             'delete_warehouse_locations',
+            'manage_suppliers',
+            'view_suppliers',
+            'create_suppliers',
+            'edit_suppliers',
+            'delete_suppliers',
         ]);
 
         $this->command->info('Roles, permissions, and admin user role assignment completed.');

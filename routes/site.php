@@ -3,6 +3,7 @@
 use App\Http\Controllers\Site\CategoryController;
 use App\Http\Controllers\Site\LocationController;
 use App\Http\Controllers\Site\ProductTypeController;
+use App\Http\Controllers\Site\SupplierController;
 use App\Http\Controllers\Site\TagController;
 use App\Http\Controllers\Site\WarehouseController;
 use App\Http\Controllers\SiteDashboardController;
@@ -85,5 +86,16 @@ Route::prefix('{site:slug}')->group(function () {
         'edit' => 'site.warehouses.locations.edit',
         'update' => 'site.warehouses.locations.update',
         'destroy' => 'site.warehouses.locations.destroy',
+    ]);
+
+    // Supplier management routes
+    Route::resource('suppliers', SupplierController::class)->names([
+        'index' => 'site.suppliers.index',
+        'create' => 'site.suppliers.create',
+        'store' => 'site.suppliers.store',
+        'show' => 'site.suppliers.show',
+        'edit' => 'site.suppliers.edit',
+        'update' => 'site.suppliers.update',
+        'destroy' => 'site.suppliers.destroy',
     ]);
 });

@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Models\Location;
 use App\Models\Site;
+use App\Models\Supplier;
 use App\Models\Warehouse;
 use App\Policies\LocationPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SitePolicy;
+use App\Policies\SupplierPolicy;
 use App\Policies\WarehousePolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -48,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Site::class, SitePolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Location::class, LocationPolicy::class);
+        Gate::policy(Supplier::class, SupplierPolicy::class);
     }
 
     protected function configureGates(): void
