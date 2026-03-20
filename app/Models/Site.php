@@ -40,4 +40,9 @@ class Site extends Model
     {
         return $this->hasMany(Warehouse::class);
     }
+
+    public function suppliers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Supplier::class);
+    }
 }

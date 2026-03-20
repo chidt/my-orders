@@ -29,4 +29,14 @@ class Supplier extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function scopeForSite($query, int $siteId)
+    {
+        return $query->where('site_id', $siteId);
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return ! $this->products()->exists();
+    }
 }

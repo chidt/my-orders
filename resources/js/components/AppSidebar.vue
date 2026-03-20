@@ -6,6 +6,7 @@ import {
     LucideUserKey,
     Warehouse,
     ShieldUser,
+    Handshake,
     Package,
     FolderTree,
     Tag,
@@ -98,6 +99,15 @@ const getTagsUrl = (): string | null => {
     return null;
 };
 
+const getSupplierUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return site.suppliers.index.url(currentSite.slug);
+    }
+    return null;
+};
+
 
 const mainNavItems: NavItem[] = [
     {
@@ -130,7 +140,8 @@ const mainNavItems: NavItem[] = [
         icon: Package,
         show: (can('view_product_types') && getProductTypesUrl() !== null) ||
               (can('view_categories') || can('manage_categories')) && getCategoriesUrl() !== null ||
-              (can('view_tags') || can('manage_tags')) && getTagsUrl() !== null,
+              (can('view_tags') || can('manage_tags')) && getTagsUrl() !== null ||
+              (can('manage_suppliers') && getSupplierUrl() !== null),
         children: [
             {
                 title: 'Loại sản phẩm',
@@ -149,6 +160,12 @@ const mainNavItems: NavItem[] = [
                 href: getTagsUrl() || '',
                 icon: Tag,
                 show: (can('view_tags') || can('manage_tags')) && getTagsUrl() !== null,
+            },
+            {
+                title: 'Nhà cung cấp',
+                href: getSupplierUrl() || '',
+                icon: Handshake,
+                show: can('manage_suppliers') && getSupplierUrl() !== null,
             },
         ],
     },

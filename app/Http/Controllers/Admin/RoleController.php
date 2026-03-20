@@ -113,7 +113,7 @@ class RoleController extends Controller
 
         $deleted = $action->destroy($role);
 
-        if (!$deleted) {
+        if (! $deleted) {
             return redirect()
                 ->route('admin.roles.index')
                 ->with('error', 'Không thể xoá vai trò đang sử dụng cho người dùng.');
