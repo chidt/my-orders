@@ -1,17 +1,4 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import {
-    LayoutGrid,
-    Settings,
-    LucideUserKey,
-    Warehouse,
-    ShieldUser,
-    Handshake,
-    Package,
-    FolderTree,
-    Tag,
-    ToggleLeftIcon
-} from 'lucide-vue-next';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -27,9 +14,22 @@ import {
 import { usePermissions } from '@/composables/usePermissions';
 import { index as PermissionsIndex } from '@/routes/admin/permissions';
 import { index as RolesIndex } from '@/routes/admin/roles';
-import { edit as SiteEdit } from '@/routes/site';
-import site from '@/routes/site';
+import site, { edit as SiteEdit } from '@/routes/site';
 import { type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    FolderTree,
+    Handshake,
+    Layers,
+    LayoutGrid,
+    LucideUserKey,
+    Package,
+    Settings,
+    ShieldUser,
+    Tag,
+    ToggleLeftIcon,
+    Warehouse,
+} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
@@ -108,6 +108,14 @@ const getSupplierUrl = (): string | null => {
     return null;
 };
 
+const getAttributesUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return site.attributes.index.url(currentSite.slug);
+    }
+    return null;
+};
 
 const mainNavItems: NavItem[] = [
     {
@@ -138,28 +146,43 @@ const mainNavItems: NavItem[] = [
         title: 'Quản lý sản phẩm',
         href: '#', // Dummy href for parent item
         icon: Package,
-        show: (can('view_product_types') && getProductTypesUrl() !== null) ||
-              (can('view_categories') || can('manage_categories')) && getCategoriesUrl() !== null ||
-              (can('view_tags') || can('manage_tags')) && getTagsUrl() !== null ||
-              (can('manage_suppliers') && getSupplierUrl() !== null),
+        show:
+            (can('view_product_types') && getProductTypesUrl() !== null) ||
+            (can('view_attributes') && getAttributesUrl() !== null) ||
+            ((can('view_categories') || can('manage_categories')) &&
+                getCategoriesUrl() !== null) ||
+            ((can('view_tags') || can('manage_tags')) &&
+                getTagsUrl() !== null) ||
+            (can('manage_suppliers') && getSupplierUrl() !== null),
         children: [
             {
                 title: 'Loại sản phẩm',
                 href: getProductTypesUrl() || '',
                 icon: ToggleLeftIcon,
-                show: can('view_product_types') && getProductTypesUrl() !== null,
+                show:
+                    can('view_product_types') && getProductTypesUrl() !== null,
+            },
+            {
+                title: 'Thuộc tính',
+                href: getAttributesUrl() || '',
+                icon: Layers,
+                show: can('view_attributes') && getAttributesUrl() !== null,
             },
             {
                 title: 'Quản lý danh mục',
                 href: getCategoriesUrl() || '',
                 icon: FolderTree,
-                show: (can('view_categories') || can('manage_categories')) && getCategoriesUrl() !== null,
+                show:
+                    (can('view_categories') || can('manage_categories')) &&
+                    getCategoriesUrl() !== null,
             },
             {
                 title: 'Quản lý thẻ',
                 href: getTagsUrl() || '',
                 icon: Tag,
-                show: (can('view_tags') || can('manage_tags')) && getTagsUrl() !== null,
+                show:
+                    (can('view_tags') || can('manage_tags')) &&
+                    getTagsUrl() !== null,
             },
             {
                 title: 'Nhà cung cấp',

@@ -2,10 +2,10 @@
     <div class="category-tree-node">
         <!-- Node Content -->
         <div
-            class="flex items-center group hover:bg-gray-50 rounded-lg transition-colors duration-150"
+            class="group flex items-center rounded-lg transition-colors duration-150 hover:bg-gray-50"
             :class="{
-                'bg-blue-50 border-l-2 border-l-blue-500': isSelected,
-                'ml-4': level > 0
+                'border-l-2 border-l-blue-500 bg-blue-50': isSelected,
+                'ml-4': level > 0,
             }"
         >
             <!-- Expand/Collapse Button -->
@@ -14,7 +14,7 @@
                 @click="toggleExpanded"
                 variant="ghost"
                 size="sm"
-                class="p-1 h-6 w-6 mr-1 shrink-0"
+                class="mr-1 h-6 w-6 shrink-0 p-1"
             >
                 <ChevronRight
                     class="h-4 w-4 transition-transform duration-200"
@@ -25,25 +25,26 @@
 
             <!-- Category Icon -->
             <FolderTree
-                class="h-4 w-4 mr-2 shrink-0"
+                class="mr-2 h-4 w-4 shrink-0"
                 :class="{
                     'text-gray-400': category.is_active,
-                    'text-gray-300': !category.is_active
+                    'text-gray-300': !category.is_active,
                 }"
             />
 
             <!-- Category Info -->
             <div
-                class="flex-1 min-w-0 py-2 pr-2 cursor-pointer"
+                class="min-w-0 flex-1 cursor-pointer py-2 pr-2"
                 @click="selectCategory"
             >
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center min-w-0">
+                    <div class="flex min-w-0 items-center">
                         <span
-                            class="font-medium text-sm truncate"
+                            class="truncate text-sm font-medium"
                             :class="{
                                 'text-gray-900': category.is_active,
-                                'text-gray-500 line-through': !category.is_active
+                                'text-gray-500 line-through':
+                                    !category.is_active,
                             }"
                         >
                             {{ category.name }}
@@ -71,13 +72,13 @@
                     <!-- Actions Menu (visible on hover) -->
                     <div
                         v-if="canManage"
-                        class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        class="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                     >
                         <Button
                             @click.stop="addChild"
                             variant="ghost"
                             size="sm"
-                            class="p-1 h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            class="h-6 w-6 p-1 text-green-600 hover:bg-green-50 hover:text-green-700"
                             title="Thêm danh mục con"
                         >
                             <Plus class="h-3 w-3" />
@@ -87,7 +88,7 @@
                             @click.stop="editCategory"
                             variant="ghost"
                             size="sm"
-                            class="p-1 h-6 w-6 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            class="h-6 w-6 p-1 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                             title="Sửa danh mục"
                         >
                             <Edit class="h-3 w-3" />
@@ -97,9 +98,11 @@
                             @click.stop="deleteCategory"
                             variant="ghost"
                             size="sm"
-                            class="p-1 h-6 w-6 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            class="h-6 w-6 p-1 text-red-600 hover:bg-red-50 hover:text-red-700"
                             title="Xóa danh mục"
-                            :disabled="category.products_count > 0 || hasChildren"
+                            :disabled="
+                                category.products_count > 0 || hasChildren
+                            "
                         >
                             <Trash2 class="h-3 w-3" />
                         </Button>
@@ -109,7 +112,7 @@
                 <!-- Description -->
                 <p
                     v-if="category.description"
-                    class="text-xs text-gray-600 mt-1 truncate"
+                    class="mt-1 truncate text-xs text-gray-600"
                     :title="category.description"
                 >
                     {{ category.description }}
@@ -118,7 +121,7 @@
         </div>
 
         <!-- Children -->
-        <div v-if="hasChildren && isExpanded" class="ml-6 mt-1 space-y-1">
+        <div v-if="hasChildren && isExpanded" class="mt-1 ml-6 space-y-1">
             <CategoryTreeNode
                 v-for="child in sortedChildren"
                 :key="child.id"
@@ -138,16 +141,10 @@
 </template>
 
 <script setup lang="ts">
-import {
-    ChevronRight,
-    FolderTree,
-    Plus,
-    Edit,
-    Trash2
-} from 'lucide-vue-next';
-import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ChevronRight, Edit, FolderTree, Plus, Trash2 } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface Category {
     id: number;

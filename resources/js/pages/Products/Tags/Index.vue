@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Edit, Trash2, Tag, TrendingUp, Search } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +20,9 @@ import {
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import TagsRoutes from '@/routes/tags';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Edit, Plus, Search, Tag, Trash2, TrendingUp } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface Site {
     id: number;

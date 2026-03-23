@@ -175,7 +175,9 @@
                                                                 )
                                                             "
                                                             @click="
-                                                                openDeleteDialog(permission)
+                                                                openDeleteDialog(
+                                                                    permission,
+                                                                )
                                                             "
                                                             class="text-red-600 hover:text-red-900"
                                                         >
@@ -196,12 +198,19 @@
                         <nav
                             class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0"
                         >
-                            <div class="-mt-px flex w-0 flex-1">
-                            </div>
+                            <div class="-mt-px flex w-0 flex-1"></div>
                             <div class="hidden md:-mt-px md:flex">
                                 <template
-                                    v-for="link in permissions.links.filter(link =>
-                                        !['Previous', 'Next', '&laquo; Previous', 'Next &raquo;', 'pagination.previous', 'pagination.next'].includes(link.label)
+                                    v-for="link in permissions.links.filter(
+                                        (link) =>
+                                            ![
+                                                'Previous',
+                                                'Next',
+                                                '&laquo; Previous',
+                                                'Next &raquo;',
+                                                'pagination.previous',
+                                                'pagination.next',
+                                            ].includes(link.label),
                                     )"
                                     :key="link.label"
                                 >
@@ -219,8 +228,9 @@
                                     />
                                 </template>
                             </div>
-                            <div class="-mt-px flex w-0 flex-1 justify-end">
-                            </div>
+                            <div
+                                class="-mt-px flex w-0 flex-1 justify-end"
+                            ></div>
                         </nav>
                     </div>
                 </div>
@@ -228,14 +238,20 @@
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+        <Dialog
+            :open="showDeleteDialog"
+            @update:open="showDeleteDialog = $event"
+        >
             <DialogContent class="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Xác nhận xóa quyền hạn</DialogTitle>
                     <DialogDescription>
                         Bạn có chắc chắn muốn xóa quyền hạn
-                        <span class="font-semibold">{{ permissionToDelete?.name }}</span>?
-                        <br>
+                        <span class="font-semibold">{{
+                            permissionToDelete?.name
+                        }}</span
+                        >?
+                        <br />
                         Hành động này không thể hoàn tác.
                     </DialogDescription>
                 </DialogHeader>
@@ -253,8 +269,6 @@
 </template>
 
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -274,6 +288,8 @@ import {
     index as PermissionsIndex,
     show as PermissionsShow,
 } from '@/routes/admin/permissions';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const page = usePage();
 const { can } = usePermissions();
@@ -324,7 +340,7 @@ const confirmDelete = () => {
         onFinish: () => {
             showDeleteDialog.value = false;
             permissionToDelete.value = null;
-        }
+        },
     });
 };
 
@@ -333,4 +349,3 @@ const cancelDelete = () => {
     permissionToDelete.value = null;
 };
 </script>
-

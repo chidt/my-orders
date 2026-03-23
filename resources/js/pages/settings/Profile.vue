@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import axios from 'axios';
-import { onMounted, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -17,6 +14,9 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { onMounted, ref } from 'vue';
 
 type Props = {
     mustVerifyEmail: boolean;
@@ -51,7 +51,9 @@ const page = usePage();
 const user = page.props.auth.user;
 const profileAddress = page.props.address;
 const defaultAddress = profileAddress ? profileAddress.address : '';
-const defaultProvinceId = profileAddress ? String(profileAddress.ward.province.id) : '';
+const defaultProvinceId = profileAddress
+    ? String(profileAddress.ward.province.id)
+    : '';
 const defaultWardId = ref(profileAddress ? String(profileAddress.ward.id) : '');
 
 const provinces = ref([]);
@@ -90,7 +92,6 @@ onMounted(() => {
         fetchWards(Number(defaultProvinceId));
     }
 });
-
 </script>
 
 <template>
@@ -107,10 +108,7 @@ onMounted(() => {
                     description="Cập nhật tên và địa chỉ email của bạn"
                 />
 
-                <form
-                    @submit.prevent="submitForm"
-                    class="space-y-6"
-                >
+                <form @submit.prevent="submitForm" class="space-y-6">
                     <div class="grid gap-2">
                         <Label for="name">Tên</Label>
                         <Input

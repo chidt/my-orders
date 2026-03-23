@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Site\AttributeController;
 use App\Http\Controllers\Site\CategoryController;
 use App\Http\Controllers\Site\LocationController;
 use App\Http\Controllers\Site\ProductTypeController;
@@ -97,5 +98,16 @@ Route::prefix('{site:slug}')->group(function () {
         'edit' => 'site.suppliers.edit',
         'update' => 'site.suppliers.update',
         'destroy' => 'site.suppliers.destroy',
+    ]);
+
+    // Attribute management routes
+    Route::resource('attributes', AttributeController::class)->names([
+        'index' => 'site.attributes.index',
+        'create' => 'site.attributes.create',
+        'store' => 'site.attributes.store',
+        'show' => 'site.attributes.show',
+        'edit' => 'site.attributes.edit',
+        'update' => 'site.attributes.update',
+        'destroy' => 'site.attributes.destroy',
     ]);
 });

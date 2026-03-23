@@ -216,7 +216,9 @@
                                                                 )
                                                             "
                                                             @click="
-                                                                openDeleteDialog(role)
+                                                                openDeleteDialog(
+                                                                    role,
+                                                                )
                                                             "
                                                             class="text-red-600 hover:text-red-900"
                                                         >
@@ -237,12 +239,19 @@
                         <nav
                             class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0"
                         >
-                            <div class="-mt-px flex w-0 flex-1">
-                            </div>
+                            <div class="-mt-px flex w-0 flex-1"></div>
                             <div class="hidden md:-mt-px md:flex">
                                 <template
-                                    v-for="link in roles.links.filter(link =>
-                                        !['Previous', 'Next', '&laquo; Previous', 'Next &raquo;', 'pagination.previous', 'pagination.next'].includes(link.label)
+                                    v-for="link in roles.links.filter(
+                                        (link) =>
+                                            ![
+                                                'Previous',
+                                                'Next',
+                                                '&laquo; Previous',
+                                                'Next &raquo;',
+                                                'pagination.previous',
+                                                'pagination.next',
+                                            ].includes(link.label),
                                     )"
                                     :key="link.label"
                                 >
@@ -267,14 +276,20 @@
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+        <Dialog
+            :open="showDeleteDialog"
+            @update:open="showDeleteDialog = $event"
+        >
             <DialogContent class="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Xác nhận xóa vai trò</DialogTitle>
                     <DialogDescription>
                         Bạn có chắc chắn muốn xóa vai trò
-                        <span class="font-semibold">{{ roleToDelete?.name }}</span>?
-                        <br>
+                        <span class="font-semibold">{{
+                            roleToDelete?.name
+                        }}</span
+                        >?
+                        <br />
                         Hành động này không thể hoàn tác.
                     </DialogDescription>
                 </DialogHeader>
@@ -299,9 +314,7 @@
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button @click="closeErrorDialog">
-                        Đã hiểu
-                    </Button>
+                    <Button @click="closeErrorDialog"> Đã hiểu </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -309,8 +322,6 @@
 </template>
 
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -330,6 +341,8 @@ import {
     index as RolesIndex,
     show as RolesShow,
 } from '@/routes/admin/roles';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 const page = usePage();
 // eslint-disable-next-line vue/no-dupe-keys
 const { can } = usePermissions();
@@ -383,7 +396,8 @@ const breadcrumbs = [
 
 const openDeleteDialog = (role: Role) => {
     if (role.users_count > 0) {
-        errorMessage.value = 'Không thể xóa vai trò đang được sử dụng bởi người dùng.';
+        errorMessage.value =
+            'Không thể xóa vai trò đang được sử dụng bởi người dùng.';
         showErrorDialog.value = true;
         return;
     }
@@ -399,7 +413,7 @@ const confirmDelete = () => {
         onFinish: () => {
             showDeleteDialog.value = false;
             roleToDelete.value = null;
-        }
+        },
     });
 };
 

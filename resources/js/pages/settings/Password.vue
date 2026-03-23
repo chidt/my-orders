@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
 import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -10,6 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/user-password';
 import { type BreadcrumbItem } from '@/types';
+import { Form, Head } from '@inertiajs/vue3';
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -37,7 +37,11 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     v-bind="PasswordController.update.form()"
                     :options="{ preserveScroll: true }"
                     reset-on-success
-                    :reset-on-error="['password', 'password_confirmation', 'current_password']"
+                    :reset-on-error="[
+                        'password',
+                        'password_confirmation',
+                        'current_password',
+                    ]"
                     class="space-y-6"
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
@@ -68,7 +72,9 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password_confirmation">Xác nhận mật khẩu</Label>
+                        <Label for="password_confirmation"
+                            >Xác nhận mật khẩu</Label
+                        >
                         <Input
                             id="password_confirmation"
                             name="password_confirmation"

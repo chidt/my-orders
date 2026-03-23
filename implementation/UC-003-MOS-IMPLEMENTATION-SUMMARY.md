@@ -7,7 +7,7 @@
 #### ✅ Backend Implementation
 - **Site Policy** (`app/Policies/SitePolicy.php`)
   - User ownership validation (user_id === current user)
-  - Permission-based access control (`manage-own-site`)
+  - Permission-based access control (`manage_own_site`)
   - Proper authorization for view and update operations
 
 - **Site Management Controller** (`app/Http/Controllers/Settings/SiteController.php`)
@@ -38,7 +38,7 @@
 #### ✅ Frontend Implementation  
 - **Sidebar Navigation** (`resources/js/components/AppSidebar.vue`)
   - Conditional "Quản lý trang web" menu item
-  - Permission-based visibility (`manage-own-site`)
+  - Permission-based visibility (`manage_own_site`)
   - Settings icon from lucide-vue-next
 
 - **Site Management Page** (`resources/js/Pages/settings/Site.vue`)
@@ -55,7 +55,7 @@
 
 #### ✅ Security & Authorization
 - **Policy-Based Authorization**: All operations verified through SitePolicy
-- **Permission Middleware**: `manage-own-site` permission checks
+- **Permission Middleware**: `manage_own_site` permission checks
 - **CSRF Protection**: Automatic Laravel form protection
 - **Input Sanitization**: Comprehensive validation and filtering
 - **Ownership Validation**: Users can only manage sites they own
@@ -147,7 +147,7 @@
 - Proper indexing on user_id for performance
 
 ### Permission Requirements
-- `manage-own-site` permission must exist
+- `manage_own_site` permission must exist
 - Users need this permission to access site management
 - Properly configured in existing role/permission system
 

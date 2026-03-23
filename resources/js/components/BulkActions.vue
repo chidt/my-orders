@@ -3,7 +3,7 @@
         <!-- Action Bar -->
         <div
             v-if="selectedItems.length > 0"
-            class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-3 flex items-center gap-4 min-w-max"
+            class="fixed bottom-4 left-1/2 z-50 flex min-w-max -translate-x-1/2 items-center gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-lg"
         >
             <!-- Selection Info -->
             <div class="flex items-center gap-2">
@@ -14,7 +14,7 @@
                     @click="clearSelection"
                     variant="ghost"
                     size="sm"
-                    class="p-1 h-6 w-6 text-gray-400 hover:text-gray-600"
+                    class="h-6 w-6 p-1 text-gray-400 hover:text-gray-600"
                 >
                     <X class="h-4 w-4" />
                 </Button>
@@ -31,10 +31,10 @@
                         @click="toggleActiveStatus(true)"
                         variant="outline"
                         size="sm"
-                        class="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        class="text-green-600 hover:bg-green-50 hover:text-green-700"
                         :disabled="loading"
                     >
-                        <Eye class="h-4 w-4 mr-1" />
+                        <Eye class="mr-1 h-4 w-4" />
                         Kích hoạt
                     </Button>
 
@@ -42,10 +42,10 @@
                         @click="toggleActiveStatus(false)"
                         variant="outline"
                         size="sm"
-                        class="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                        class="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
                         :disabled="loading"
                     >
-                        <EyeOff class="h-4 w-4 mr-1" />
+                        <EyeOff class="mr-1 h-4 w-4" />
                         Ẩn
                     </Button>
 
@@ -53,10 +53,10 @@
                         @click="showReorderModal = true"
                         variant="outline"
                         size="sm"
-                        class="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        class="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                         :disabled="loading"
                     >
-                        <ArrowUpDown class="h-4 w-4 mr-1" />
+                        <ArrowUpDown class="mr-1 h-4 w-4" />
                         Sắp xếp
                     </Button>
                 </template>
@@ -67,10 +67,10 @@
                         @click="showMergeModal = true"
                         variant="outline"
                         size="sm"
-                        class="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        class="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                         :disabled="loading || selectedItems.length < 2"
                     >
-                        <Merge class="h-4 w-4 mr-1" />
+                        <Merge class="mr-1 h-4 w-4" />
                         Gộp thẻ
                     </Button>
                 </template>
@@ -80,10 +80,10 @@
                     @click="exportItems"
                     variant="outline"
                     size="sm"
-                    class="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                    class="text-gray-600 hover:bg-gray-50 hover:text-gray-700"
                     :disabled="loading"
                 >
-                    <Download class="h-4 w-4 mr-1" />
+                    <Download class="mr-1 h-4 w-4" />
                     Xuất
                 </Button>
 
@@ -92,17 +92,22 @@
                     @click="confirmDelete"
                     variant="outline"
                     size="sm"
-                    class="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    class="text-red-600 hover:bg-red-50 hover:text-red-700"
                     :disabled="loading || !canDelete"
                 >
-                    <Trash2 class="h-4 w-4 mr-1" />
+                    <Trash2 class="mr-1 h-4 w-4" />
                     Xóa
                 </Button>
             </div>
 
             <!-- Loading Indicator -->
-            <div v-if="loading" class="flex items-center gap-2 text-sm text-gray-600">
-                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <div
+                v-if="loading"
+                class="flex items-center gap-2 text-sm text-gray-600"
+            >
+                <div
+                    class="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-600"
+                ></div>
                 Đang xử lý...
             </div>
         </div>
@@ -114,15 +119,25 @@
                     <DialogTitle>Xác nhận xóa hàng loạt</DialogTitle>
                     <DialogDescription>
                         Bạn có chắc chắn muốn xóa {{ selectedItems.length }}
-                        {{ type === 'categories' ? 'danh mục' : 'thẻ' }} đã chọn?
-                        <br><br>
-                        <strong class="text-red-600">Hành động này không thể hoàn tác.</strong>
-                        <br><br>
-                        <span v-if="type === 'categories'" class="text-sm text-gray-600">
-                            Chỉ có thể xóa danh mục không có sản phẩm hoặc danh mục con.
+                        {{ type === 'categories' ? 'danh mục' : 'thẻ' }} đã
+                        chọn? <br /><br />
+                        <strong class="text-red-600"
+                            >Hành động này không thể hoàn tác.</strong
+                        >
+                        <br /><br />
+                        <span
+                            v-if="type === 'categories'"
+                            class="text-sm text-gray-600"
+                        >
+                            Chỉ có thể xóa danh mục không có sản phẩm hoặc danh
+                            mục con.
                         </span>
-                        <span v-if="type === 'tags'" class="text-sm text-gray-600">
-                            Chỉ có thể xóa thẻ không được sử dụng bởi sản phẩm nào.
+                        <span
+                            v-if="type === 'tags'"
+                            class="text-sm text-gray-600"
+                        >
+                            Chỉ có thể xóa thẻ không được sử dụng bởi sản phẩm
+                            nào.
                         </span>
                     </DialogDescription>
                 </DialogHeader>
@@ -139,7 +154,7 @@
                         variant="destructive"
                         :disabled="loading"
                     >
-                        <Trash2 class="h-4 w-4 mr-2" />
+                        <Trash2 class="mr-2 h-4 w-4" />
                         {{ loading ? 'Đang xóa...' : 'Xóa ngay' }}
                     </Button>
                 </DialogFooter>
@@ -152,13 +167,16 @@
                 <DialogHeader>
                     <DialogTitle>Gộp thẻ</DialogTitle>
                     <DialogDescription>
-                        Chọn thẻ chính để giữ lại, các thẻ khác sẽ được gộp vào thẻ này.
+                        Chọn thẻ chính để giữ lại, các thẻ khác sẽ được gộp vào
+                        thẻ này.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="text-sm font-medium">Thẻ chính (sẽ được giữ lại):</label>
+                        <label class="text-sm font-medium"
+                            >Thẻ chính (sẽ được giữ lại):</label
+                        >
                         <Select v-model="primaryTagId">
                             <SelectTrigger>
                                 <SelectValue placeholder="Chọn thẻ chính..." />
@@ -170,15 +188,20 @@
                                     :value="item.id.toString()"
                                 >
                                     {{ item.name }}
-                                    <span class="text-gray-500 ml-2">({{ item.products_count || 0 }} sản phẩm)</span>
+                                    <span class="ml-2 text-gray-500"
+                                        >({{ item.products_count || 0 }} sản
+                                        phẩm)</span
+                                    >
                                 </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <div>
-                        <label class="text-sm font-medium text-gray-600">Các thẻ sẽ bị gộp:</label>
-                        <div class="flex flex-wrap gap-2 mt-2">
+                        <label class="text-sm font-medium text-gray-600"
+                            >Các thẻ sẽ bị gộp:</label
+                        >
+                        <div class="mt-2 flex flex-wrap gap-2">
                             <Badge
                                 v-for="item in tagsToMerge"
                                 :key="item.id"
@@ -202,7 +225,7 @@
                         @click="executeMerge"
                         :disabled="loading || !primaryTagId"
                     >
-                        <Merge class="h-4 w-4 mr-2" />
+                        <Merge class="mr-2 h-4 w-4" />
                         {{ loading ? 'Đang gộp...' : 'Gộp thẻ' }}
                     </Button>
                 </DialogFooter>
@@ -219,18 +242,18 @@
                     </DialogDescription>
                 </DialogHeader>
 
-                <div class="space-y-2 max-h-96 overflow-y-auto">
+                <div class="max-h-96 space-y-2 overflow-y-auto">
                     <div
                         v-for="(item, index) in reorderItems"
                         :key="item.id"
-                        class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        class="flex items-center gap-3 rounded-lg bg-gray-50 p-3"
                     >
                         <div class="flex flex-col gap-1">
                             <Button
                                 @click="moveUp(index)"
                                 variant="ghost"
                                 size="sm"
-                                class="p-1 h-6 w-6"
+                                class="h-6 w-6 p-1"
                                 :disabled="index === 0"
                             >
                                 <ChevronUp class="h-4 w-4" />
@@ -239,14 +262,14 @@
                                 @click="moveDown(index)"
                                 variant="ghost"
                                 size="sm"
-                                class="p-1 h-6 w-6"
+                                class="h-6 w-6 p-1"
                                 :disabled="index === reorderItems.length - 1"
                             >
                                 <ChevronDown class="h-4 w-4" />
                             </Button>
                         </div>
 
-                        <div class="flex items-center gap-2 flex-1">
+                        <div class="flex flex-1 items-center gap-2">
                             <FolderTree class="h-4 w-4 text-gray-400" />
                             <span>{{ item.name }}</span>
                             <Badge variant="outline" class="text-xs">
@@ -264,11 +287,8 @@
                     >
                         Hủy
                     </Button>
-                    <Button
-                        @click="executeReorder"
-                        :disabled="loading"
-                    >
-                        <ArrowUpDown class="h-4 w-4 mr-2" />
+                    <Button @click="executeReorder" :disabled="loading">
+                        <ArrowUpDown class="mr-2 h-4 w-4" />
                         {{ loading ? 'Đang cập nhật...' : 'Cập nhật thứ tự' }}
                     </Button>
                 </DialogFooter>
@@ -278,19 +298,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-    X,
-    Eye,
-    EyeOff,
-    ArrowUpDown,
-    Merge,
-    Download,
-    Trash2,
-    ChevronUp,
-    ChevronDown,
-    FolderTree,
-} from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -308,6 +315,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    ArrowUpDown,
+    ChevronDown,
+    ChevronUp,
+    Download,
+    Eye,
+    EyeOff,
+    FolderTree,
+    Merge,
+    Trash2,
+    X,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface BulkItem {
     id: number;
@@ -345,7 +365,7 @@ const reorderItems = ref<BulkItem[]>([]);
 
 // Computed
 const canDelete = computed(() => {
-    return props.selectedItems.every(item => {
+    return props.selectedItems.every((item) => {
         if (props.type === 'categories') {
             return (item.products_count || 0) === 0; // Categories with no products
         } else {
@@ -356,7 +376,9 @@ const canDelete = computed(() => {
 
 const tagsToMerge = computed(() => {
     if (!primaryTagId.value) return props.selectedItems;
-    return props.selectedItems.filter(item => item.id.toString() !== primaryTagId.value);
+    return props.selectedItems.filter(
+        (item) => item.id.toString() !== primaryTagId.value,
+    );
 });
 
 // Methods
@@ -380,7 +402,7 @@ const executeDelete = () => {
 const executeMerge = () => {
     if (!primaryTagId.value) return;
 
-    const tagIds = tagsToMerge.value.map(tag => tag.id);
+    const tagIds = tagsToMerge.value.map((tag) => tag.id);
     emit('merge-tags', parseInt(primaryTagId.value), tagIds);
     showMergeModal.value = false;
     primaryTagId.value = '';
@@ -415,7 +437,9 @@ const moveDown = (index: number) => {
 
 // Watch for modal openings to initialize data
 const initializeReorderModal = () => {
-    reorderItems.value = [...props.selectedItems].sort((a, b) => (a.order || 0) - (b.order || 0));
+    reorderItems.value = [...props.selectedItems].sort(
+        (a, b) => (a.order || 0) - (b.order || 0),
+    );
 };
 
 // Expose method for parent to trigger reorder modal

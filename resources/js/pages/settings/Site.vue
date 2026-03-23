@@ -5,7 +5,13 @@ import { ref } from 'vue';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,8 +39,8 @@ const form = useForm({
     slug: props.site.slug,
     description: props.site.description || '',
     settings: {
-        product_prefix: props.site.settings?.product_prefix || ''
-    }
+        product_prefix: props.site.settings?.product_prefix || '',
+    },
 });
 
 const productPrefixExample = ref('');
@@ -57,7 +63,7 @@ const submit = () => {
         onSuccess: () => {
             // Success is handled by status prop
             // Controller handles slug changes by redirecting to route which refreshes data
-        }
+        },
     });
 };
 </script>
@@ -97,10 +103,15 @@ const submit = () => {
                                     v-model="form.name"
                                     type="text"
                                     class="mt-1 block w-full"
-                                    :class="{ 'border-red-500': form.errors.name }"
+                                    :class="{
+                                        'border-red-500': form.errors.name,
+                                    }"
                                     required
                                 />
-                                <div v-if="form.errors.name" class="text-sm text-red-600">
+                                <div
+                                    v-if="form.errors.name"
+                                    class="text-sm text-red-600"
+                                >
                                     {{ form.errors.name }}
                                 </div>
                             </div>
@@ -113,13 +124,19 @@ const submit = () => {
                                     v-model="form.slug"
                                     type="text"
                                     class="mt-1 block w-full"
-                                    :class="{ 'border-red-500': form.errors.slug }"
+                                    :class="{
+                                        'border-red-500': form.errors.slug,
+                                    }"
                                     required
                                 />
                                 <div class="text-sm text-gray-600">
-                                    Chỉ được chứa chữ cái thường, số và dấu gạch ngang. Ví dụ: my-awesome-site
+                                    Chỉ được chứa chữ cái thường, số và dấu gạch
+                                    ngang. Ví dụ: my-awesome-site
                                 </div>
-                                <div v-if="form.errors.slug" class="text-sm text-red-600">
+                                <div
+                                    v-if="form.errors.slug"
+                                    class="text-sm text-red-600"
+                                >
                                     {{ form.errors.slug }}
                                 </div>
                             </div>
@@ -131,27 +148,42 @@ const submit = () => {
                                     id="description"
                                     v-model="form.description"
                                     class="mt-1 block w-full"
-                                    :class="{ 'border-red-500': form.errors.description }"
+                                    :class="{
+                                        'border-red-500':
+                                            form.errors.description,
+                                    }"
                                     rows="3"
                                     placeholder="Mô tả ngắn gọn về trang web của bạn..."
                                 />
-                                <div v-if="form.errors.description" class="text-sm text-red-600">
+                                <div
+                                    v-if="form.errors.description"
+                                    class="text-sm text-red-600"
+                                >
                                     {{ form.errors.description }}
                                 </div>
                             </div>
 
                             <!-- Product Settings -->
                             <div class="space-y-4">
-                                <h3 class="text-lg font-medium">Cài đặt sản phẩm</h3>
+                                <h3 class="text-lg font-medium">
+                                    Cài đặt sản phẩm
+                                </h3>
 
                                 <div class="space-y-2">
-                                    <Label for="product_prefix">Tiền tố mã sản phẩm</Label>
+                                    <Label for="product_prefix"
+                                        >Tiền tố mã sản phẩm</Label
+                                    >
                                     <Input
                                         id="product_prefix"
                                         v-model="form.settings.product_prefix"
                                         type="text"
                                         class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors['settings.product_prefix'] }"
+                                        :class="{
+                                            'border-red-500':
+                                                form.errors[
+                                                    'settings.product_prefix'
+                                                ],
+                                        }"
                                         @input="updateProductPrefixExample"
                                         placeholder="A"
                                         maxlength="5"
@@ -159,14 +191,33 @@ const submit = () => {
                                     <div class="text-sm text-gray-600">
                                         <div class="flex items-center gap-1">
                                             <Info class="h-4 w-4" />
-                                            <span>Ví dụ: "{{ form.settings.product_prefix || 'A' }}" → "{{ productPrefixExample }}"</span>
+                                            <span
+                                                >Ví dụ: "{{
+                                                    form.settings
+                                                        .product_prefix || 'A'
+                                                }}" → "{{
+                                                    productPrefixExample
+                                                }}"</span
+                                            >
                                         </div>
                                         <div class="mt-1">
-                                            Chỉ được chứa chữ cái in hoa và số, tối đa 5 ký tự
+                                            Chỉ được chứa chữ cái in hoa và số,
+                                            tối đa 5 ký tự
                                         </div>
                                     </div>
-                                    <div v-if="form.errors['settings.product_prefix']" class="text-sm text-red-600">
-                                        {{ form.errors['settings.product_prefix'] }}
+                                    <div
+                                        v-if="
+                                            form.errors[
+                                                'settings.product_prefix'
+                                            ]
+                                        "
+                                        class="text-sm text-red-600"
+                                    >
+                                        {{
+                                            form.errors[
+                                                'settings.product_prefix'
+                                            ]
+                                        }}
                                     </div>
                                 </div>
                             </div>
@@ -176,9 +227,11 @@ const submit = () => {
                                 <Button
                                     type="submit"
                                     :disabled="form.processing"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white"
+                                    class="bg-blue-600 text-white hover:bg-blue-700"
                                 >
-                                    <span v-if="form.processing">Đang lưu...</span>
+                                    <span v-if="form.processing"
+                                        >Đang lưu...</span
+                                    >
                                     <span v-else>Lưu thay đổi</span>
                                 </Button>
 

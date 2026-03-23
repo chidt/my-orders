@@ -19,8 +19,11 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="categories.length === 0" class="text-center py-8 text-gray-500">
-            <FolderTree class="mx-auto h-12 w-12 text-gray-300 mb-4" />
+        <div
+            v-if="categories.length === 0"
+            class="py-8 text-center text-gray-500"
+        >
+            <FolderTree class="mx-auto mb-4 h-12 w-12 text-gray-300" />
             <p class="text-sm">Chưa có danh mục nào</p>
             <Button
                 v-if="canManage"
@@ -29,7 +32,7 @@
                 size="sm"
                 class="mt-4"
             >
-                <Plus class="h-4 w-4 mr-2" />
+                <Plus class="mr-2 h-4 w-4" />
                 Thêm danh mục đầu tiên
             </Button>
         </div>
@@ -37,9 +40,9 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button';
 import { FolderTree, Plus } from 'lucide-vue-next';
 import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
 import CategoryTreeNode from './CategoryTreeNode.vue';
 
 interface Category {
@@ -94,14 +97,14 @@ const toggleNode = (categoryId: number) => {
 const selectNode = (categoryId: number | null) => {
     selectedNode.value = categoryId;
     const category = categoryId
-        ? props.categories.find(c => c.id === categoryId) || null
+        ? props.categories.find((c) => c.id === categoryId) || null
         : null;
     emit('select', category);
 };
 
 // Auto-expand if expandAll prop is true
 if (props.expandAll) {
-    props.categories.forEach(category => {
+    props.categories.forEach((category) => {
         if (category.children && category.children.length > 0) {
             expandedNodes.value.add(category.id);
         }
@@ -110,7 +113,10 @@ if (props.expandAll) {
 
 // Auto-expand path to selected node
 if (props.selectedId) {
-    const findPathToNode = (nodeId: number, categories: Category[]): number[] => {
+    const findPathToNode = (
+        nodeId: number,
+        categories: Category[],
+    ): number[] => {
         for (const category of categories) {
             if (category.id === nodeId) {
                 return [category.id];
@@ -126,16 +132,15 @@ if (props.selectedId) {
     };
 
     const pathToSelected = findPathToNode(props.selectedId, props.categories);
-    pathToSelected.slice(0, -1).forEach(id => {
+    pathToSelected.slice(0, -1).forEach((id) => {
         expandedNodes.value.add(id);
     });
 }
 
-
 // Expose methods for parent component
 defineExpose({
     expandAll: () => {
-        props.categories.forEach(category => {
+        props.categories.forEach((category) => {
             expandedNodes.value.add(category.id);
         });
     },

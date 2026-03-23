@@ -1,6 +1,6 @@
+import type { User } from '@/types';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import type { User } from '@/types';
 
 type Permissions = Record<string, boolean>;
 

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Form, Head, useForm } from '@inertiajs/vue3';
-import axios from 'axios';
-import { onMounted, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
@@ -19,6 +16,9 @@ import { Textarea } from '@/components/ui/textarea';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
+import { Form, Head, useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+import { onMounted, ref, watch } from 'vue';
 
 const form = useForm(store.form());
 const provinces = ref([]);
