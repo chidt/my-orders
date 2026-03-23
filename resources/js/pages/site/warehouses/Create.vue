@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowLeft } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import siteRoute from '@/routes/site';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowLeft } from 'lucide-vue-next';
 
 interface Site {
     id: number;
@@ -90,7 +90,11 @@ const generateCode = () => {
                         <div class="sm:flex-auto">
                             <div class="flex items-center space-x-4">
                                 <Link
-                                    :href="siteRoute.warehouses.index.url(site.slug)"
+                                    :href="
+                                        siteRoute.warehouses.index.url(
+                                            site.slug,
+                                        )
+                                    "
                                     class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                                     title="Quay lại"
                                 >
@@ -252,7 +256,11 @@ const generateCode = () => {
                                     <Button
                                         variant="outline"
                                         as="Link"
-                                        :href="siteRoute.warehouses.index.url(site.slug)"
+                                        :href="
+                                            siteRoute.warehouses.index.url(
+                                                site.slug,
+                                            )
+                                        "
                                     >
                                         Hủy
                                     </Button>
@@ -261,7 +269,9 @@ const generateCode = () => {
                                         type="submit"
                                         :disabled="form.processing"
                                     >
-                                        <span v-if="form.processing">Đang tạo...</span>
+                                        <span v-if="form.processing"
+                                            >Đang tạo...</span
+                                        >
                                         <span v-else>Tạo kho</span>
                                     </Button>
                                 </div>

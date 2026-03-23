@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Edit, Trash2, Eye, EyeOff, FolderTree, List, TreePine } from 'lucide-vue-next';
-import { computed, ref, watch, onMounted } from 'vue';
 import CategoryTree from '@/components/CategoryTree.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +21,18 @@ import {
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import CategoriesRoutes from '@/routes/categories';
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    Edit,
+    Eye,
+    EyeOff,
+    FolderTree,
+    List,
+    Plus,
+    Trash2,
+    TreePine,
+} from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface Site {
     id: number;
@@ -109,9 +118,10 @@ const canManageCategories = computed(
 // Build tree structure from categories array
 const categoriesTree = computed(() => {
     // Use all categories for tree view, paginated categories for table view
-    const categoriesToProcess = viewMode.value === 'tree' && allCategories.value.length > 0
-        ? allCategories.value
-        : props.categories.data;
+    const categoriesToProcess =
+        viewMode.value === 'tree' && allCategories.value.length > 0
+            ? allCategories.value
+            : props.categories.data;
 
     if (!categoriesToProcess.length) return [];
 
@@ -120,12 +130,12 @@ const categoriesTree = computed(() => {
     const tree: Category[] = [];
 
     // First pass: create map entries with children arrays
-    categoriesToProcess.forEach(category => {
+    categoriesToProcess.forEach((category) => {
         categoryMap.set(category.id, { ...category, children: [] });
     });
 
     // Second pass: build the tree structure
-    categoriesToProcess.forEach(category => {
+    categoriesToProcess.forEach((category) => {
         const node = categoryMap.get(category.id)!;
 
         if (category.parent_id && categoryMap.has(category.parent_id)) {
@@ -145,7 +155,7 @@ const categoriesTree = computed(() => {
             return a.name.localeCompare(b.name);
         });
 
-        categories.forEach(category => {
+        categories.forEach((category) => {
             if (category.children && category.children.length > 0) {
                 sortCategories(category.children);
             }
@@ -179,18 +189,21 @@ const fetchAllCategories = async () => {
 
         // Make request to get all categories
         const response = await fetch(
-            CategoriesRoutes.index.url({ site: props.site.slug }) + '?' + params.toString(),
+            CategoriesRoutes.index.url({ site: props.site.slug }) +
+                '?' +
+                params.toString(),
             {
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                }
-            }
+                },
+            },
         );
 
         if (response.ok) {
             const data = await response.json();
-            allCategories.value = data.props?.categories?.data || data.categories?.data || [];
+            allCategories.value =
+                data.props?.categories?.data || data.categories?.data || [];
         }
     } catch (error) {
         console.error('Error fetching all categories:', error);
@@ -298,9 +311,10 @@ const handleTreeDelete = (category: Category) => {
 
 const handleTreeAddChild = (parentCategory: Category) => {
     if (props.site?.slug) {
-        window.location.href = CategoriesRoutes.create.url({
-            site: props.site.slug,
-        }) + `?parent_id=${parentCategory.id}`;
+        window.location.href =
+            CategoriesRoutes.create.url({
+                site: props.site.slug,
+            }) + `?parent_id=${parentCategory.id}`;
     }
 };
 
@@ -316,7 +330,6 @@ const handleTreeSelect = (category: Category | null) => {
     // Handle category selection if needed
     console.log('Selected category:', category);
 };
-
 
 // Watch for view mode changes and fetch all categories when switching to tree view
 watch(viewMode, (newMode) => {
@@ -338,7 +351,6 @@ onMounted(() => {
         fetchAllCategories();
     }
 });
-
 </script>
 
 <template>
@@ -359,7 +371,9 @@ onMounted(() => {
 
                 <div class="flex items-center gap-3">
                     <!-- View Toggle -->
-                    <div class="flex items-center gap-1 border border-gray-200 rounded-lg p-1">
+                    <div
+                        class="flex items-center gap-1 rounded-lg border border-gray-200 p-1"
+                    >
                         <Button
                             @click="viewMode = 'tree'"
                             variant="ghost"
@@ -387,7 +401,9 @@ onMounted(() => {
                         v-if="canManageCategories && props.site?.slug"
                         :as="Link"
                         :href="
-                            CategoriesRoutes.create.url({ site: props.site.slug })
+                            CategoriesRoutes.create.url({
+                                site: props.site.slug,
+                            })
                         "
                         class="flex w-full items-center justify-center gap-2 sm:w-auto"
                     >
@@ -467,7 +483,11 @@ onMounted(() => {
                 <p class="text-sm text-gray-600">
                     Tổng cộng
                     <span class="font-medium">
-                        {{ viewMode === 'tree' && allCategories.length > 0 ? allCategories.length : categories.total }}
+                        {{
+                            viewMode === 'tree' && allCategories.length > 0
+                                ? allCategories.length
+                                : categories.total
+                        }}
                     </span>
                     danh mục
                     <span v-if="viewMode === 'tree'" class="text-gray-500">
@@ -477,7 +497,10 @@ onMounted(() => {
             </div>
 
             <!-- Content -->
-            <div v-if="categories.data.length === 0" class="rounded-lg border border-gray-200 bg-white py-12 text-center">
+            <div
+                v-if="categories.data.length === 0"
+                class="rounded-lg border border-gray-200 bg-white py-12 text-center"
+            >
                 <FolderTree class="mx-auto h-16 w-16 text-gray-300" />
                 <h3 class="mt-4 text-lg font-medium text-gray-900">
                     Chưa có danh mục
@@ -489,7 +512,11 @@ onMounted(() => {
                     <Button
                         v-if="canManageCategories && props.site?.slug"
                         :as="Link"
-                        :href="CategoriesRoutes.create.url({ site: props.site.slug })"
+                        :href="
+                            CategoriesRoutes.create.url({
+                                site: props.site.slug,
+                            })
+                        "
                         class="flex items-center gap-2"
                     >
                         <Plus class="h-4 w-4" />
@@ -499,12 +526,22 @@ onMounted(() => {
             </div>
 
             <!-- Tree View (Desktop) -->
-            <div v-else-if="viewMode === 'tree'" class="hidden md:block rounded-lg border border-gray-200 bg-white p-6">
+            <div
+                v-else-if="viewMode === 'tree'"
+                class="hidden rounded-lg border border-gray-200 bg-white p-6 md:block"
+            >
                 <!-- Loading State -->
-                <div v-if="loadingAllCategories" class="flex items-center justify-center py-12">
+                <div
+                    v-if="loadingAllCategories"
+                    class="flex items-center justify-center py-12"
+                >
                     <div class="text-center">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                        <p class="mt-2 text-sm text-gray-600">Đang tải danh mục...</p>
+                        <div
+                            class="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"
+                        ></div>
+                        <p class="mt-2 text-sm text-gray-600">
+                            Đang tải danh mục...
+                        </p>
                     </div>
                 </div>
 
@@ -696,7 +733,10 @@ onMounted(() => {
             </div>
 
             <!-- Mobile List (Table Mode) -->
-            <div v-if="categories.data.length > 0 && viewMode === 'table'" class="space-y-3 md:hidden">
+            <div
+                v-if="categories.data.length > 0 && viewMode === 'table'"
+                class="space-y-3 md:hidden"
+            >
                 <div
                     v-for="category in categories.data"
                     :key="category.id"
@@ -833,13 +873,23 @@ onMounted(() => {
             </div>
 
             <!-- Mobile Tree View -->
-            <div v-if="categories.data.length > 0 && viewMode === 'tree'" class="md:hidden">
+            <div
+                v-if="categories.data.length > 0 && viewMode === 'tree'"
+                class="md:hidden"
+            >
                 <div class="rounded-lg border border-gray-200 bg-white p-4">
                     <!-- Loading State -->
-                    <div v-if="loadingAllCategories" class="flex items-center justify-center py-8">
+                    <div
+                        v-if="loadingAllCategories"
+                        class="flex items-center justify-center py-8"
+                    >
                         <div class="text-center">
-                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
-                            <p class="mt-2 text-xs text-gray-600">Đang tải...</p>
+                            <div
+                                class="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900"
+                            ></div>
+                            <p class="mt-2 text-xs text-gray-600">
+                                Đang tải...
+                            </p>
                         </div>
                     </div>
 

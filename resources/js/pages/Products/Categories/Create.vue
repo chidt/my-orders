@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, FolderTree } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,6 +14,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import CategoriesRoutes from '@/routes/categories';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowLeft, FolderTree } from 'lucide-vue-next';
 
 interface Site {
     id: number;
@@ -55,12 +55,18 @@ const submit = () => {
     <AppLayout>
         <Head title="Thêm danh mục mới" />
 
-        <div class="px-4 sm:px-6 lg:px-8 py-8">
+        <div class="px-4 py-8 sm:px-6 lg:px-8">
             <!-- Header -->
-            <div class="flex items-center gap-4 mb-8">
+            <div class="mb-8 flex items-center gap-4">
                 <Button
                     :as="Link"
-                    :href="props.site?.slug ? CategoriesRoutes.index.url({ site: props.site.slug }) : '#'"
+                    :href="
+                        props.site?.slug
+                            ? CategoriesRoutes.index.url({
+                                  site: props.site.slug,
+                              })
+                            : '#'
+                    "
                     variant="outline"
                     size="icon"
                     class="shrink-0"
@@ -68,7 +74,9 @@ const submit = () => {
                     <ArrowLeft class="h-4 w-4" />
                 </Button>
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-2xl font-bold text-gray-900">Thêm danh mục mới</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        Thêm danh mục mới
+                    </h1>
                     <p class="mt-1 text-sm text-gray-600">
                         Tạo danh mục mới cho sản phẩm của bạn
                     </p>
@@ -77,9 +85,11 @@ const submit = () => {
 
             <form @submit.prevent="submit" class="space-y-8">
                 <!-- Basic Information -->
-                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6">
-                        <h2 class="text-lg font-semibold text-gray-900">Thông tin cơ bản</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            Thông tin cơ bản
+                        </h2>
                         <p class="mt-1 text-sm text-gray-600">
                             Nhập thông tin cơ bản cho danh mục
                         </p>
@@ -97,7 +107,10 @@ const submit = () => {
                                 placeholder="Ví dụ: Áo Nam"
                                 required
                             />
-                            <InputError class="mt-2" :message="form.errors.name" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.name"
+                            />
                         </div>
 
                         <!-- Slug -->
@@ -111,9 +124,13 @@ const submit = () => {
                                 placeholder="ao-nam (tự động tạo nếu để trống)"
                             />
                             <p class="text-sm text-gray-500">
-                                Đường dẫn thân thiện cho SEO. Để trống để tự động tạo từ tên danh mục.
+                                Đường dẫn thân thiện cho SEO. Để trống để tự
+                                động tạo từ tên danh mục.
                             </p>
-                            <InputError class="mt-2" :message="form.errors.slug" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.slug"
+                            />
                         </div>
 
                         <!-- Description -->
@@ -126,15 +143,20 @@ const submit = () => {
                                 rows="4"
                                 placeholder="Mô tả chi tiết về danh mục này..."
                             />
-                            <InputError class="mt-2" :message="form.errors.description" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.description"
+                            />
                         </div>
                     </div>
                 </div>
 
                 <!-- Category Structure -->
-                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6">
-                        <h2 class="text-lg font-semibold text-gray-900">Cấu trúc danh mục</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            Cấu trúc danh mục
+                        </h2>
                         <p class="mt-1 text-sm text-gray-600">
                             Thiết lập vị trí của danh mục trong cây phân cấp
                         </p>
@@ -146,18 +168,27 @@ const submit = () => {
                             <Label for="parent_id">Danh mục cha</Label>
                             <Select v-model="form.parent_id">
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Chọn danh mục cha (để trống cho danh mục gốc)" />
+                                    <SelectValue
+                                        placeholder="Chọn danh mục cha (để trống cho danh mục gốc)"
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem :value="null">Không có (danh mục gốc)</SelectItem>
+                                    <SelectItem :value="null"
+                                        >Không có (danh mục gốc)</SelectItem
+                                    >
                                     <SelectItem
                                         v-for="category in parentCategories"
                                         :key="category.id"
                                         :value="category.id"
                                     >
                                         <div class="flex items-center">
-                                            <div :class="`pl-${category.depth * 4}`" class="flex items-center">
-                                                <FolderTree class="h-4 w-4 text-gray-400 mr-2" />
+                                            <div
+                                                :class="`pl-${category.depth * 4}`"
+                                                class="flex items-center"
+                                            >
+                                                <FolderTree
+                                                    class="mr-2 h-4 w-4 text-gray-400"
+                                                />
                                                 {{ category.name }}
                                             </div>
                                         </div>
@@ -165,9 +196,13 @@ const submit = () => {
                                 </SelectContent>
                             </Select>
                             <p class="text-sm text-gray-500">
-                                Chọn danh mục cha để tạo danh mục con. Tối đa 3 cấp độ.
+                                Chọn danh mục cha để tạo danh mục con. Tối đa 3
+                                cấp độ.
                             </p>
-                            <InputError class="mt-2" :message="form.errors.parent_id" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.parent_id"
+                            />
                         </div>
 
                         <!-- Order -->
@@ -184,15 +219,20 @@ const submit = () => {
                             <p class="text-sm text-gray-500">
                                 Số nhỏ hơn sẽ hiển thị trước. Mặc định là 0.
                             </p>
-                            <InputError class="mt-2" :message="form.errors.order" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.order"
+                            />
                         </div>
                     </div>
                 </div>
 
                 <!-- Settings -->
-                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6">
-                        <h2 class="text-lg font-semibold text-gray-900">Cài đặt</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            Cài đặt
+                        </h2>
                         <p class="mt-1 text-sm text-gray-600">
                             Các tùy chọn hiển thị cho danh mục
                         </p>
@@ -208,12 +248,13 @@ const submit = () => {
                             <div class="grid gap-1.5 leading-none">
                                 <Label
                                     for="is_active"
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    class="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                 >
                                     Kích hoạt danh mục
                                 </Label>
                                 <p class="text-xs text-muted-foreground">
-                                    Danh mục sẽ hiển thị trong danh sách và có thể được sử dụng
+                                    Danh mục sẽ hiển thị trong danh sách và có
+                                    thể được sử dụng
                                 </p>
                             </div>
                         </div>
@@ -224,7 +265,13 @@ const submit = () => {
                 <div class="flex items-center justify-end gap-4 pt-6">
                     <Button
                         :as="Link"
-                        :href="props.site?.slug ? CategoriesRoutes.index.url({ site: props.site.slug }) : '#'"
+                        :href="
+                            props.site?.slug
+                                ? CategoriesRoutes.index.url({
+                                      site: props.site.slug,
+                                  })
+                                : '#'
+                        "
                         variant="outline"
                         type="button"
                     >

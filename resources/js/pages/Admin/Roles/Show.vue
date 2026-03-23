@@ -28,7 +28,10 @@
                                     Chỉnh sửa
                                 </Link>
                                 <button
-                                    v-if="can('delete_roles') && role.users.length === 0"
+                                    v-if="
+                                        can('delete_roles') &&
+                                        role.users.length === 0
+                                    "
                                     @click="deleteRole"
                                     class="block rounded-md bg-red-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                                 >
@@ -95,9 +98,7 @@
                                             class="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto"
                                         >
                                             <div class="text-gray-900">
-                                                {{
-                                                    role.permissions.length
-                                                }}
+                                                {{ role.permissions.length }}
                                                 quyền
                                             </div>
                                         </dd>
@@ -284,16 +285,16 @@
 </template>
 
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
 import {
-    index as RolesIndex,
-    edit as RolesEdit,
     destroy as RolesDestroy,
+    edit as RolesEdit,
+    index as RolesIndex,
 } from '@/routes/admin/roles';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 // eslint-disable-next-line vue/no-dupe-keys
 const { can } = usePermissions();

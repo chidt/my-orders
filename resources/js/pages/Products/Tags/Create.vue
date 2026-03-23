@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import TagsRoutes from '@/routes/tags';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowLeft } from 'lucide-vue-next';
 
 interface Site {
     id: number;
@@ -35,12 +35,16 @@ const submit = () => {
     <AppLayout>
         <Head title="Thêm thẻ mới" />
 
-        <div class="px-4 sm:px-6 lg:px-8 py-8">
+        <div class="px-4 py-8 sm:px-6 lg:px-8">
             <!-- Header -->
-            <div class="flex items-center gap-4 mb-8">
+            <div class="mb-8 flex items-center gap-4">
                 <Button
                     :as="Link"
-                    :href="props.site?.slug ? TagsRoutes.index.url({ site: props.site.slug }) : '#'"
+                    :href="
+                        props.site?.slug
+                            ? TagsRoutes.index.url({ site: props.site.slug })
+                            : '#'
+                    "
                     variant="outline"
                     size="icon"
                     class="shrink-0"
@@ -48,7 +52,9 @@ const submit = () => {
                     <ArrowLeft class="h-4 w-4" />
                 </Button>
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-2xl font-bold text-gray-900">Thêm thẻ mới</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        Thêm thẻ mới
+                    </h1>
                     <p class="mt-1 text-sm text-gray-600">
                         Tạo thẻ mới để phân loại sản phẩm
                     </p>
@@ -57,9 +63,11 @@ const submit = () => {
 
             <form @submit.prevent="submit" class="space-y-8">
                 <!-- Basic Information -->
-                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6">
-                        <h2 class="text-lg font-semibold text-gray-900">Thông tin thẻ</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            Thông tin thẻ
+                        </h2>
                         <p class="mt-1 text-sm text-gray-600">
                             Nhập thông tin cơ bản cho thẻ
                         </p>
@@ -80,7 +88,10 @@ const submit = () => {
                             <p class="text-sm text-gray-500">
                                 Tên thẻ ngắn gọn, dễ nhớ để phân loại sản phẩm
                             </p>
-                            <InputError class="mt-2" :message="form.errors.name" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.name"
+                            />
                         </div>
 
                         <!-- Slug -->
@@ -94,25 +105,33 @@ const submit = () => {
                                 placeholder="ban-chay (tự động tạo nếu để trống)"
                             />
                             <p class="text-sm text-gray-500">
-                                Đường dẫn thân thiện cho SEO. Để trống để tự động tạo từ tên thẻ.
+                                Đường dẫn thân thiện cho SEO. Để trống để tự
+                                động tạo từ tên thẻ.
                             </p>
-                            <InputError class="mt-2" :message="form.errors.slug" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.slug"
+                            />
                         </div>
                     </div>
                 </div>
 
                 <!-- Examples -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div class="rounded-lg border border-blue-200 bg-blue-50 p-6">
                     <div class="mb-4">
-                        <h3 class="text-base font-medium text-blue-900">Gợi ý thẻ phổ biến</h3>
+                        <h3 class="text-base font-medium text-blue-900">
+                            Gợi ý thẻ phổ biến
+                        </h3>
                         <p class="mt-1 text-sm text-blue-700">
                             Một số ví dụ về thẻ thường được sử dụng
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div class="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                         <div>
-                            <h4 class="font-medium text-blue-900 mb-2">Khuyến mãi</h4>
+                            <h4 class="mb-2 font-medium text-blue-900">
+                                Khuyến mãi
+                            </h4>
                             <ul class="space-y-1 text-blue-700">
                                 <li>Sale</li>
                                 <li>Giảm giá</li>
@@ -121,7 +140,9 @@ const submit = () => {
                             </ul>
                         </div>
                         <div>
-                            <h4 class="font-medium text-blue-900 mb-2">Trạng thái</h4>
+                            <h4 class="mb-2 font-medium text-blue-900">
+                                Trạng thái
+                            </h4>
                             <ul class="space-y-1 text-blue-700">
                                 <li>Mới</li>
                                 <li>Bán chạy</li>
@@ -130,7 +151,9 @@ const submit = () => {
                             </ul>
                         </div>
                         <div>
-                            <h4 class="font-medium text-blue-900 mb-2">Chất lượng</h4>
+                            <h4 class="mb-2 font-medium text-blue-900">
+                                Chất lượng
+                            </h4>
                             <ul class="space-y-1 text-blue-700">
                                 <li>Cao cấp</li>
                                 <li>Chất lượng</li>
@@ -139,7 +162,9 @@ const submit = () => {
                             </ul>
                         </div>
                         <div>
-                            <h4 class="font-medium text-blue-900 mb-2">Xuất xứ</h4>
+                            <h4 class="mb-2 font-medium text-blue-900">
+                                Xuất xứ
+                            </h4>
                             <ul class="space-y-1 text-blue-700">
                                 <li>Made in Vietnam</li>
                                 <li>Hàng nhập</li>
@@ -154,7 +179,13 @@ const submit = () => {
                 <div class="flex items-center justify-end gap-4 pt-6">
                     <Button
                         :as="Link"
-                        :href="props.site?.slug ? TagsRoutes.index.url({ site: props.site.slug }) : '#'"
+                        :href="
+                            props.site?.slug
+                                ? TagsRoutes.index.url({
+                                      site: props.site.slug,
+                                  })
+                                : '#'
+                        "
                         variant="outline"
                         type="button"
                     >

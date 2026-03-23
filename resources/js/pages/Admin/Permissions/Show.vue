@@ -21,7 +21,11 @@
                             <div class="flex items-center gap-3">
                                 <Link
                                     v-if="can('edit_permissions')"
-                                    :href="PermissionsEdit.url({ permission: permission.id })"
+                                    :href="
+                                        PermissionsEdit.url({
+                                            permission: permission.id,
+                                        })
+                                    "
                                     class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                                 >
                                     Chỉnh sửa
@@ -79,7 +83,11 @@
                                             class="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto"
                                         >
                                             <div class="text-gray-900">
-                                                {{ getPermissionDescription(permission.name) }}
+                                                {{
+                                                    getPermissionDescription(
+                                                        permission.name,
+                                                    )
+                                                }}
                                             </div>
                                         </dd>
                                     </div>
@@ -94,15 +102,15 @@
 </template>
 
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
 import {
-    index as PermissionsIndex,
-    edit as PermissionsEdit,
     destroy as PermissionsDestroy,
+    edit as PermissionsEdit,
+    index as PermissionsIndex,
 } from '@/routes/admin/permissions';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 const { can } = usePermissions();
 
@@ -125,29 +133,29 @@ const breadcrumbs = [
 
 const getPermissionDescription = (permissionName: string): string => {
     const descriptions: Record<string, string> = {
-        'view_admin_dashboard': 'Xem bảng điều khiển quản trị viên',
-        'view_site_dashboard': 'Xem bảng điều khiển trang web',
-        'view_permissions': 'Xem danh sách quyền hạn',
-        'create_permissions': 'Tạo quyền hạn mới',
-        'edit_permissions': 'Chỉnh sửa quyền hạn',
-        'delete_permissions': 'Xóa quyền hạn',
-        'manage_permissions': 'Quản lý đầy đủ quyền hạn',
-        'view_roles': 'Xem danh sách vai trò',
-        'create_roles': 'Tạo vai trò mới',
-        'edit_roles': 'Chỉnh sửa vai trò',
-        'delete_roles': 'Xóa vai trò',
-        'manage_roles': 'Quản lý đầy đủ vai trò',
-        'view_users': 'Xem danh sách người dùng',
-        'create_users': 'Tạo người dùng mới',
-        'edit_users': 'Chỉnh sửa người dùng',
-        'delete_users': 'Xóa người dùng',
-        'manage_users': 'Quản lý đầy đủ người dùng',
-        'view_own_site': 'Xem thông tin trang web của mình',
-        'edit_own_site': 'Chỉnh sửa trang web của mình',
-        'manage_own_site': 'Quản lý trang web của mình',
-        'view_all_sites': 'Xem tất cả trang web',
-        'edit_all_sites': 'Chỉnh sửa tất cả trang web',
-        'manage_all_sites': 'Quản lý tất cả trang web',
+        view_admin_dashboard: 'Xem bảng điều khiển quản trị viên',
+        view_site_dashboard: 'Xem bảng điều khiển trang web',
+        view_permissions: 'Xem danh sách quyền hạn',
+        create_permissions: 'Tạo quyền hạn mới',
+        edit_permissions: 'Chỉnh sửa quyền hạn',
+        delete_permissions: 'Xóa quyền hạn',
+        manage_permissions: 'Quản lý đầy đủ quyền hạn',
+        view_roles: 'Xem danh sách vai trò',
+        create_roles: 'Tạo vai trò mới',
+        edit_roles: 'Chỉnh sửa vai trò',
+        delete_roles: 'Xóa vai trò',
+        manage_roles: 'Quản lý đầy đủ vai trò',
+        view_users: 'Xem danh sách người dùng',
+        create_users: 'Tạo người dùng mới',
+        edit_users: 'Chỉnh sửa người dùng',
+        delete_users: 'Xóa người dùng',
+        manage_users: 'Quản lý đầy đủ người dùng',
+        view_own_site: 'Xem thông tin trang web của mình',
+        edit_own_site: 'Chỉnh sửa trang web của mình',
+        manage_own_site: 'Quản lý trang web của mình',
+        view_all_sites: 'Xem tất cả trang web',
+        edit_all_sites: 'Chỉnh sửa tất cả trang web',
+        manage_all_sites: 'Quản lý tất cả trang web',
     };
 
     return descriptions[permissionName] || 'Không có mô tả';
@@ -155,7 +163,9 @@ const getPermissionDescription = (permissionName: string): string => {
 
 const deletePermission = () => {
     if (confirm('Bạn có chắc chắn muốn xóa quyền hạn này?')) {
-        router.delete(PermissionsDestroy.url({ permission: props.permission.id }));
+        router.delete(
+            PermissionsDestroy.url({ permission: props.permission.id }),
+        );
     }
 };
 </script>

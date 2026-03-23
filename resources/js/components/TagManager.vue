@@ -2,7 +2,10 @@
     <div class="tag-manager">
         <!-- Input Section -->
         <div class="mb-4">
-            <div class="flex flex-wrap gap-2 mb-3" v-if="selectedTags.length > 0">
+            <div
+                class="mb-3 flex flex-wrap gap-2"
+                v-if="selectedTags.length > 0"
+            >
                 <Badge
                     v-for="tag in selectedTags"
                     :key="tag.id"
@@ -15,7 +18,7 @@
                         @click="removeTag(tag)"
                         variant="ghost"
                         size="sm"
-                        class="p-0 h-auto ml-1 hover:bg-transparent"
+                        class="ml-1 h-auto p-0 hover:bg-transparent"
                     >
                         <X class="h-3 w-3 text-gray-500 hover:text-red-500" />
                     </Button>
@@ -39,31 +42,34 @@
                     @click="clearInput"
                     variant="ghost"
                     size="sm"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 h-6 w-6"
+                    class="absolute top-1/2 right-2 h-6 w-6 -translate-y-1/2 p-1"
                 >
                     <X class="h-4 w-4 text-gray-400" />
                 </Button>
 
                 <!-- Suggestions Dropdown -->
                 <div
-                    v-if="showSuggestions && (filteredSuggestions.length > 0 || canCreateNew)"
-                    class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                    v-if="
+                        showSuggestions &&
+                        (filteredSuggestions.length > 0 || canCreateNew)
+                    "
+                    class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
                 >
                     <!-- Existing suggestions -->
                     <button
                         v-for="suggestion in filteredSuggestions"
                         :key="suggestion.id"
                         @mousedown.prevent="selectSuggestion(suggestion)"
-                        class="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center justify-between group"
+                        class="group flex w-full items-center justify-between px-4 py-2 text-left hover:bg-gray-50"
                     >
                         <div class="flex items-center">
-                            <Tag class="h-4 w-4 mr-2 text-gray-400" />
+                            <Tag class="mr-2 h-4 w-4 text-gray-400" />
                             <span>{{ suggestion.name }}</span>
                         </div>
                         <Badge
                             v-if="suggestion.products_count > 0"
                             variant="outline"
-                            class="text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                            class="text-xs opacity-0 transition-opacity group-hover:opacity-100"
                         >
                             {{ suggestion.products_count }}
                         </Badge>
@@ -73,23 +79,23 @@
                     <button
                         v-if="canCreateNew && inputValue.trim() && !exactMatch"
                         @mousedown.prevent="createNewTag"
-                        class="w-full px-4 py-2 text-left hover:bg-blue-50 flex items-center text-blue-600 border-t"
+                        class="flex w-full items-center border-t px-4 py-2 text-left text-blue-600 hover:bg-blue-50"
                     >
-                        <Plus class="h-4 w-4 mr-2" />
+                        <Plus class="mr-2 h-4 w-4" />
                         Tạo thẻ mới: "{{ inputValue.trim() }}"
                     </button>
                 </div>
             </div>
 
             <!-- Helper text -->
-            <p v-if="helperText" class="text-sm text-gray-500 mt-2">
+            <p v-if="helperText" class="mt-2 text-sm text-gray-500">
                 {{ helperText }}
             </p>
         </div>
 
         <!-- Popular Tags Section -->
         <div v-if="popularTags.length > 0 && showPopular" class="mb-4">
-            <label class="text-sm font-medium text-gray-700 mb-2 block">
+            <label class="mb-2 block text-sm font-medium text-gray-700">
                 Thẻ phổ biến:
             </label>
             <div class="flex flex-wrap gap-2">
@@ -97,30 +103,37 @@
                     v-for="tag in popularTags.slice(0, maxPopular)"
                     :key="tag.id"
                     variant="outline"
-                    class="cursor-pointer hover:bg-gray-50 transition-colors"
-                    :class="{ 'opacity-50 cursor-not-allowed': isTagSelected(tag) }"
+                    class="cursor-pointer transition-colors hover:bg-gray-50"
+                    :class="{
+                        'cursor-not-allowed opacity-50': isTagSelected(tag),
+                    }"
                     @click="selectSuggestion(tag)"
                 >
-                    <Tag class="h-3 w-3 mr-1" />
+                    <Tag class="mr-1 h-3 w-3" />
                     {{ tag.name }}
-                    <span class="text-xs text-gray-500 ml-1">({{ tag.products_count }})</span>
+                    <span class="ml-1 text-xs text-gray-500"
+                        >({{ tag.products_count }})</span
+                    >
                 </Badge>
             </div>
         </div>
 
         <!-- Selected Tags Summary -->
-        <div v-if="showSummary && selectedTags.length > 0" class="text-sm text-gray-600">
+        <div
+            v-if="showSummary && selectedTags.length > 0"
+            class="text-sm text-gray-600"
+        >
             Đã chọn {{ selectedTags.length }} thẻ
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { Tag, X, Plus } from 'lucide-vue-next';
-import { computed, ref, watch, nextTick } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Plus, Tag, X } from 'lucide-vue-next';
+import { computed, nextTick, ref, watch } from 'vue';
 
 interface TagData {
     id: number;
@@ -157,7 +170,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
     'update:modelValue': [tags: TagData[]];
     'create-tag': [name: string];
-    'search': [query: string];
+    search: [query: string];
 }>();
 
 // State
@@ -172,21 +185,20 @@ const filteredSuggestions = computed(() => {
     if (!inputValue.value.trim()) return [];
 
     const query = inputValue.value.toLowerCase().trim();
-    const selectedIds = new Set(selectedTags.value.map(tag => tag.id));
+    const selectedIds = new Set(selectedTags.value.map((tag) => tag.id));
 
     return props.availableTags
-        .filter(tag =>
-            !selectedIds.has(tag.id) &&
-            tag.name.toLowerCase().includes(query)
+        .filter(
+            (tag) =>
+                !selectedIds.has(tag.id) &&
+                tag.name.toLowerCase().includes(query),
         )
         .slice(0, 10);
 });
 
 const exactMatch = computed(() => {
     const query = inputValue.value.trim().toLowerCase();
-    return props.availableTags.some(tag =>
-        tag.name.toLowerCase() === query
-    );
+    return props.availableTags.some((tag) => tag.name.toLowerCase() === query);
 });
 
 const canAddMore = computed(() => {
@@ -208,10 +220,18 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
         if (filteredSuggestions.value.length > 0) {
             selectSuggestion(filteredSuggestions.value[0]);
-        } else if (props.canCreateNew && inputValue.value.trim() && !exactMatch.value) {
+        } else if (
+            props.canCreateNew &&
+            inputValue.value.trim() &&
+            !exactMatch.value
+        ) {
             createNewTag();
         }
-    } else if (event.key === 'Backspace' && !inputValue.value && selectedTags.value.length > 0) {
+    } else if (
+        event.key === 'Backspace' &&
+        !inputValue.value &&
+        selectedTags.value.length > 0
+    ) {
         // Remove last tag when backspace on empty input
         removeTag(selectedTags.value[selectedTags.value.length - 1]);
     } else if (event.key === 'Escape') {
@@ -251,7 +271,7 @@ const createNewTag = () => {
 };
 
 const removeTag = (tag: TagData) => {
-    const newTags = selectedTags.value.filter(t => t.id !== tag.id);
+    const newTags = selectedTags.value.filter((t) => t.id !== tag.id);
     emit('update:modelValue', newTags);
 };
 
@@ -261,7 +281,7 @@ const clearInput = () => {
 };
 
 const isTagSelected = (tag: TagData): boolean => {
-    return selectedTags.value.some(t => t.id === tag.id);
+    return selectedTags.value.some((t) => t.id === tag.id);
 };
 
 const clearAllTags = () => {
@@ -269,9 +289,13 @@ const clearAllTags = () => {
 };
 
 // Watch for external changes
-watch(() => props.modelValue, () => {
-    // React to external changes if needed
-}, { deep: true });
+watch(
+    () => props.modelValue,
+    () => {
+        // React to external changes if needed
+    },
+    { deep: true },
+);
 
 // Expose methods
 defineExpose({

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -13,6 +11,8 @@ import { edit as editSite } from '@/routes/site';
 import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem } from '@/types';
+import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const { can } = usePermissions();
 
