@@ -71,6 +71,14 @@
   - **REQUIRED**: UC007-MC (cần Customers)
 - **Output**: Order processing, inventory allocation
 
+### [UC014-MOD: Manage Order Details](UserCase/UC-014-MOD.md)
+- **Priority**: HIGH - Detailed order item management
+- **Dependencies**: 
+  - **REQUIRED**: UC008-MO (cần Orders và OrderDetails)
+  - **REQUIRED**: UC006-MP (cần Products, ProductItems, ProductTypes)
+  - **REQUIRED**: UC007-MC (cần Customers)
+- **Output**: OrderDetails management, status tracking, advanced filtering
+
 ## Phase 6: Advanced Features (MEDIUM - Tuần 9-10)
 ### [UC010-MI: Manage Inventory](UserCase/UC-010-MI.md)
 - **Priority**: MEDIUM - Advanced inventory management
@@ -113,6 +121,8 @@ UC002-LOG (Authentication)
                   ↓
              UC008-MO (Orders)
                   ↓
+           UC014-MOD (OrderDetails)
+                  ↓
              UC003-MOS (Site Config)
 ```
 
@@ -121,6 +131,7 @@ UC002-LOG (Authentication)
 ### ⚠️ BLOCKING DEPENDENCIES
 - **UC006 CANNOT START** until UC011, UC012, UC013 & UC009 are 100% complete
 - **UC008 CANNOT START** until UC006 & UC007 are complete
+- **UC014 CANNOT START** until UC008 is complete (requires OrderDetails data)
 - **UC010 CANNOT START** until UC006 is complete
 
 ### ✅ PARALLEL IMPLEMENTATION ALLOWED
@@ -134,7 +145,8 @@ UC002-LOG (Authentication)
 - **Sprint 2**: UC004, UC011, UC012, UC013, UC009 (Infrastructure & Prerequisites)
 - **Sprint 3**: UC005, UC006 (Locations & Products)
 - **Sprint 4**: UC007, UC008 (Customers & Orders)
-- **Sprint 5**: UC010, UC003 (Advanced Features)
+- **Sprint 5**: UC014, UC010 (Order Details & Inventory)
+- **Sprint 6**: UC003 (Site Configuration)
 
 ---
 
@@ -142,8 +154,9 @@ UC002-LOG (Authentication)
 
 ### Revenue Impact (HIGH)
 1. UC008-MO (Orders) - Direct revenue
-2. UC006-MP (Products) - Product catalog
-3. UC007-MC (Customers) - Customer base
+2. UC014-MOD (Order Details) - Order fulfillment tracking
+3. UC006-MP (Products) - Product catalog
+4. UC007-MC (Customers) - Customer base
 
 ### Operational Impact (HIGH)  
 1. UC001-REG, UC002-LOG (Authentication)
