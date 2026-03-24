@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Check, Plus, Trash2, AlertTriangle } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
+import QuickTagCreateDialog from '@/components/products/QuickTagCreateDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,9 +16,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import QuickTagCreateDialog from '@/components/products/QuickTagCreateDialog.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { create as ProductsCreate, index as ProductsIndex, store as ProductsStore } from '@/routes/products';
+import { index as ProductsIndex, store as ProductsStore } from '@/routes/products';
 
 interface Site {
     id: number;
@@ -47,9 +47,9 @@ interface AttributeOption {
     order: number;
 }
 
-interface TagOption extends Option {}
+type TagOption = Option;
 
-interface CategoryOption extends Option {}
+type CategoryOption = Option;
 
 interface Props {
     site?: Site;
@@ -190,32 +190,6 @@ const attributeOrder = computed(() => {
             return byName;
         }
         return ma.id - mb.id;
-    });
-});
-
-const previewSkus = computed(() => {
-    const code = (form.code || '').trim() || 'AUTO';
-
-    if (attributeOrder.value.length === 0) {
-        return [code];
-    }
-
-    const blocks = attributeOrder.value.map((b) => ({
-        attribute_id: b.attribute_id,
-        values: [...b.values].sort((x, y) => {
-            if (x.order !== y.order) {
-                return x.order - y.order;
-            }
-            return (x.code || '')
-                .toString()
-                .localeCompare((y.code || '').toString(), undefined, { sensitivity: 'base' });
-        }),
-    }));
-
-    const all = cartesian(blocks.map((b) => b.values));
-    return all.slice(0, 10).map((combo) => {
-        const suffix = combo.map((v) => (v.code || '').trim().toUpperCase()).join('-');
-        return `${code}-${suffix}`;
     });
 });
 
