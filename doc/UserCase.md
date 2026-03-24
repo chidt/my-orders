@@ -87,6 +87,15 @@
   - **REQUIRED**: UC004-MSW, UC005-MWL (cần Warehouses & Locations)
 - **Output**: Stock management, warehouse transactions
 
+### [UC015-POD: Manage Purchase Order Details](UserCase/UC-015-POD.md)
+- **Priority**: HIGH - Purchase order management and supplier coordination
+- **Dependencies**: 
+  - **REQUIRED**: UC009-MS (cần Suppliers)
+  - **REQUIRED**: UC006-MP (cần Products và ProductItems)
+  - **REQUIRED**: UC008-MO, UC014-MOD (cần pre-orders từ OrderDetails)
+  - **REQUIRED**: UC010-MI (cần WarehouseInventory integration)
+- **Output**: Purchase Request management, supplier coordination, pre-order fulfillment
+
 ### [UC003-MOS: Manage Own Site](UserCase/UC-003-MOS.md)
 - **Priority**: MEDIUM - Site customization
 - **Dependencies**: UC001, UC002 (cần authentication)
@@ -123,6 +132,8 @@ UC002-LOG (Authentication)
                   ↓
            UC014-MOD (OrderDetails)
                   ↓
+           UC015-POD (PurchaseOrders)
+                  ↓
              UC003-MOS (Site Config)
 ```
 
@@ -132,6 +143,7 @@ UC002-LOG (Authentication)
 - **UC006 CANNOT START** until UC011, UC012, UC013 & UC009 are 100% complete
 - **UC008 CANNOT START** until UC006 & UC007 are complete
 - **UC014 CANNOT START** until UC008 is complete (requires OrderDetails data)
+- **UC015 CANNOT START** until UC009, UC006, UC014 & UC010 are complete (requires Suppliers, Products, OrderDetails, Inventory)
 - **UC010 CANNOT START** until UC006 is complete
 
 ### ✅ PARALLEL IMPLEMENTATION ALLOWED
@@ -146,7 +158,8 @@ UC002-LOG (Authentication)
 - **Sprint 3**: UC005, UC006 (Locations & Products)
 - **Sprint 4**: UC007, UC008 (Customers & Orders)
 - **Sprint 5**: UC014, UC010 (Order Details & Inventory)
-- **Sprint 6**: UC003 (Site Configuration)
+- **Sprint 6**: UC015 (Purchase Order Management)
+- **Sprint 7**: UC003 (Site Configuration)
 
 ---
 
@@ -161,7 +174,8 @@ UC002-LOG (Authentication)
 ### Operational Impact (HIGH)  
 1. UC001-REG, UC002-LOG (Authentication)
 2. UC004-MSW, UC005-MWL (Warehouse operations)
-3. UC010-MI (Inventory management)
+3. UC015-POD (Purchase order management & supplier coordination)
+4. UC010-MI (Inventory management)
 
 ### Setup & Configuration (MEDIUM)
 1. UC011-MCT (Categories & Tags)

@@ -54,6 +54,9 @@ erDiagram
         bigint order_id FK "required"
         bigint site_id FK "required"
         bigint purchase_request_detail_id FK ""
+        %% UC-015-POD: Links OrderDetails to PurchaseRequestDetails for pre-order tracking
+        %% Set when OrderDetail status = WaitingForStock and Purchase Request is created
+        %% Reset to NULL when Purchase Request is deleted (hard delete only)
         datetime order_date  ""
         datetime expected_fulfillment_date  ""
         json extra_attributes  ""
@@ -163,6 +166,15 @@ erDiagram
         text notes ""
         text supplier_response ""
     }
+
+    %% UC-015-POD: Purchase Order Details Management
+    %% Status Values: 1=Draft, 2=Sent, 3=Confirmed, 4=PartiallyDelivered, 5=Delivered, 6=Cancelled
+    %% Business Rules:
+    %% - Only Draft status can be deleted (hard delete)
+    %% - Sent+ status can only be cancelled (soft delete)  
+    %% - Auto-transition to PartiallyDelivered/Delivered based on received_qty
+    %% - Integration with WarehouseReceiptDetails for goods receiving
+    %% - Auto-fulfillment of pre-orders when goods arrive
 
     PurchaseRequestDetails {
         bigint id PK "required"
@@ -274,6 +286,9 @@ erDiagram
         bigint location_id FK "required"
         bigint order_detail_id FK ""
         bigint purchase_request_detail_id FK ""
+        %% UC-015-POD: Links received goods to Purchase Request Details
+        %% Used to track which Purchase Request items have been received
+        %% Updates received_qty in PurchaseRequestDetails when goods arrive
         int qty  "required"
         decimal purchase_price  "required"
         decimal fee_price  ""
@@ -427,11 +442,16 @@ erDiagram
     Orders}o--||Customers:"  "
     PaymentRequests}o--||Customers:"  "
     OrderDetails||--||PaymentRequests:"  "
+    %% UC-015-POD Key Relationships:
+    %% Purchase Request Management
     PurchaseRequests}|--||Suppliers:"  "
     PurchaseRequests}|--||Sites:"  "
     PurchaseRequests||--|{PurchaseRequestDetails:"  "
     PurchaseRequestDetails}|--||ProductItems:"  "
+    %% Pre-order Integration - OrderDetails can be linked to PurchaseRequestDetails
     OrderDetails}o--||PurchaseRequestDetails:"  "
+    %% Goods Receiving Integration - WarehouseReceiptDetails tracks received goods
+    WarehouseReceiptDetails}o--||PurchaseRequestDetails:"  "
     Products}o--||Suppliers:"  "
     Products}o--||Units:"  "
     Products}o--||Locations:"  "
@@ -491,3 +511,60 @@ erDiagram
     ProductAttributeValues||--||Attributes:"  "
     Users}|--|{Sites:"  "
 ```
+
+---
+
+## UC-015-POD: Purchase Order Details Management
+
+### Data Flow Overview
+
+1. **Pre-order Creation**: When OrderDetails have status = WaitingForStock (6), they become eligible for Purchase Request creation
+
+2. **Purchase Request Creation**: 
+   - From Pre-orders: Group OrderDetails by Supplier, create PurchaseRequest and PurchaseRequestDetails
+   - Direct: Manually select ProductItems and create PurchaseRequest
+   - Link: Set OrderDetails.purchase_request_detail_id → PurchaseRequestDetails.id
+
+3. **Purchase Request Management**:
+   - Status progression: Draft → Sent → Confirmed → PartiallyDelivered/Delivered
+   - Supplier coordination via PDF export and email notifications
+   - Bulk operations for multiple Purchase Requests
+
+4. **Goods Receiving**:
+   - Create WarehouseReceipt and WarehouseReceiptDetails
+   - Link: WarehouseReceiptDetails.purchase_request_detail_id → PurchaseRequestDetails.id  
+   - Update: PurchaseRequestDetails.received_qty += received quantity
+   - Auto-transition: PurchaseRequest status based on received_qty vs requested_qty
+
+5. **Pre-order Fulfillment**:
+   - When goods arrive: Auto-fulfill linked OrderDetails
+   - Update: OrderDetails.status from WaitingForStock → Arrived
+   - Update: Order.status recalculated from all OrderDetails
+   - Notification: Customers informed about stock availability
+
+### Delete/Cancel Operations
+
+**Hard Delete (Draft status only)**:
+- Delete PurchaseRequest and all PurchaseRequestDetails
+- Reset OrderDetails.purchase_request_detail_id = NULL
+- Revert OrderDetails.status: WaitingForStock → Processing  
+- Recalculate Order.status from remaining OrderDetails
+- Notify affected customers
+
+**Soft Delete (Sent+ status)**:
+- Update PurchaseRequest.status = Cancelled (6)
+- Keep OrderDetails.purchase_request_detail_id for audit trail
+- Revert OrderDetails.status: WaitingForStock → Processing
+- Recalculate Order.status
+- Email notification to supplier
+- Notify affected customers about delays
+
+### Key Business Rules
+
+- **Site Isolation**: All entities filtered by site_id
+- **Supplier Constraint**: PurchaseRequest contains ProductItems from single supplier only
+- **Status Validation**: Only valid status transitions allowed
+- **Referential Integrity**: Cannot delete Suppliers/ProductItems with active PurchaseRequests
+- **Transaction Safety**: All delete/cancel operations wrapped in database transactions
+- **Audit Trail**: Complete logging of all status changes and delete/cancel operations
+
