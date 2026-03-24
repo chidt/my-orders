@@ -3,11 +3,16 @@
 namespace App\Providers;
 
 use App\Models\Location;
+use App\Models\Product;
+use App\Models\ProductItem;
+use App\Models\ProductType;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use App\Policies\LocationPolicy;
 use App\Policies\PermissionPolicy;
+use App\Policies\ProductPolicy;
+use App\Policies\ProductTypePolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SitePolicy;
 use App\Policies\SupplierPolicy;
@@ -18,8 +23,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\MediaLibrary\Support\PathGenerator\PathGeneratorFactory;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\MediaLibrary\SiteIdPathGenerator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configurePolicies();
         $this->configureGates();
+        $this->configureMediaLibraryPaths();
     }
 
     protected function configurePolicies(): void
@@ -50,6 +58,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Site::class, SitePolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Location::class, LocationPolicy::class);
+        Gate::policy(ProductType::class, ProductTypePolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Supplier::class, SupplierPolicy::class);
     }
 
@@ -78,5 +88,14 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null
         );
+    }
+
+    protected function configureMediaLibraryPaths(): void
+    {
+        // Store uploaded media files under: {site_id}/{media_key}/...
+        // This keeps media separated per site, while still allowing existing media (old paths)
+        // to work thanks to fallback logic in `SiteIdPathGenerator`.
+        PathGeneratorFactory::setCustomPathGenerators(Product::class, SiteIdPathGenerator::class);
+        PathGeneratorFactory::setCustomPathGenerators(ProductItem::class, SiteIdPathGenerator::class);
     }
 }
