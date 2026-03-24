@@ -26,6 +26,7 @@ import {
     Package,
     Settings,
     ShieldUser,
+    Boxes,
     Tag,
     ToggleLeftIcon,
     Warehouse,
@@ -77,6 +78,15 @@ const getProductTypesUrl = (): string | null => {
     const currentSite = (page.props.site as Site) || user?.site;
     if (currentSite) {
         return `/${currentSite.slug}/product-types`;
+    }
+    return null;
+};
+
+const getProductsUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return `/${currentSite.slug}/products`;
     }
     return null;
 };
@@ -147,6 +157,7 @@ const mainNavItems: NavItem[] = [
         href: '#', // Dummy href for parent item
         icon: Package,
         show:
+            (can('view_products') || can('manage_products')) && getProductsUrl() !== null ||
             (can('view_product_types') && getProductTypesUrl() !== null) ||
             (can('view_attributes') && getAttributesUrl() !== null) ||
             ((can('view_categories') || can('manage_categories')) &&
@@ -155,6 +166,12 @@ const mainNavItems: NavItem[] = [
                 getTagsUrl() !== null) ||
             (can('manage_suppliers') && getSupplierUrl() !== null),
         children: [
+            {
+                title: 'Sản phẩm',
+                href: getProductsUrl() || '',
+                icon: Boxes,
+                show: (can('view_products') || can('manage_products')) && getProductsUrl() !== null,
+            },
             {
                 title: 'Loại sản phẩm',
                 href: getProductTypesUrl() || '',

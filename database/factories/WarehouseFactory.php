@@ -82,10 +82,8 @@ class WarehouseFactory extends Factory
         return $this->state(function (array $attributes) use ($site) {
             return [
                 'site_id' => $site->id,
-            ];
-        })->sequence(function ($sequence) {
-            return [
-                'code' => 'W'.str_pad($sequence->index + 1, 3, '0', STR_PAD_LEFT),
+                // Avoid collisions in tests that create multiple warehouses for one site.
+                'code' => 'W'.str_pad((string) fake()->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT),
             ];
         });
     }

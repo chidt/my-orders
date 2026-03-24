@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tag\StoreTagRequest;
 use App\Http\Requests\Tag\UpdateTagRequest;
 use App\Models\Tag;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -107,6 +108,29 @@ class TagController extends Controller
                 ->with('success', 'Thẻ đã được tạo thành công.');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Có lỗi xảy ra: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Store a tag from product forms (JSON; no redirect).
+     */
+    public function quickStore(StoreTagRequest $request, CreateTag $createTag): JsonResponse
+    {
+        Gate::authorize('create', Tag::class);
+
+        try {
+            $tag = $createTag->handle($request->validated(), auth()->user()->site_id);
+
+            return response()->json([
+                'tag' => [
+                    'id' => $tag->id,
+                    'name' => $tag->name,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Có lỗi xảy ra: '.$e->getMessage(),
+            ], 500);
         }
     }
 

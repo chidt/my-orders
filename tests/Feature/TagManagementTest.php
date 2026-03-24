@@ -207,6 +207,30 @@ describe('Tag Create', function () {
     });
 });
 
+describe('Tag quick store', function () {
+    it('creates a tag and returns json for product forms', function () {
+        $response = $this->postJson(route('tags.quick-store', ['site' => $this->site->slug]), [
+            'name' => 'Quick Modal Tag',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('tag.name', 'Quick Modal Tag')
+            ->assertJsonStructure(['tag' => ['id', 'name']]);
+
+        $this->assertDatabaseHas('tags', [
+            'name' => 'Quick Modal Tag',
+            'site_id' => $this->site->id,
+        ]);
+    });
+
+    it('validates quick store with json errors', function () {
+        $response = $this->postJson(route('tags.quick-store', ['site' => $this->site->slug]), []);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['name']);
+    });
+});
+
 describe('Tag Update', function () {
     it('can display edit tag form', function () {
         $tag = Tag::factory()->forSite($this->site)->create();

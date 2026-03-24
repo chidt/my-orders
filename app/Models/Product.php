@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Product extends Model
+class Product extends Model implements HasMedia
 {
     use HasFactory;
+    use InteractsWithMedia;
 
     protected $fillable = [
         'name',
@@ -30,6 +32,7 @@ class Product extends Model
         'order_closing_date',
         'default_location_id',
         'site_id',
+        'media_id',
         'extra_attributes',
     ];
 
@@ -90,10 +93,5 @@ class Product extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class, 'product_tags');
-    }
-
-    public function media(): MorphMany
-    {
-        return $this->morphMany(Media::class, 'model');
     }
 }

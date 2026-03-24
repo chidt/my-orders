@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class ProductItem extends Model
+class ProductItem extends Model implements HasMedia
 {
     use HasFactory;
+    use InteractsWithMedia;
 
     protected $fillable = [
         'name',
@@ -21,6 +23,7 @@ class ProductItem extends Model
         'price',
         'partner_price',
         'purchase_price',
+        'media_id',
         'product_id',
         'site_id',
     ];
@@ -82,8 +85,4 @@ class ProductItem extends Model
         return $this->hasMany(WarehouseInventory::class);
     }
 
-    public function media(): MorphMany
-    {
-        return $this->morphMany(Media::class, 'model');
-    }
 }

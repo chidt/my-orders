@@ -3,6 +3,7 @@
 use App\Http\Controllers\Site\AttributeController;
 use App\Http\Controllers\Site\CategoryController;
 use App\Http\Controllers\Site\LocationController;
+use App\Http\Controllers\Site\ProductController;
 use App\Http\Controllers\Site\ProductTypeController;
 use App\Http\Controllers\Site\SupplierController;
 use App\Http\Controllers\Site\TagController;
@@ -40,6 +41,8 @@ Route::prefix('{site:slug}')->group(function () {
         ->name('tags.bulk-delete-unused');
     Route::get('tags-search', [TagController::class, 'search'])
         ->name('tags.search');
+    Route::post('tags/quick-store', [TagController::class, 'quickStore'])
+        ->name('tags.quick-store');
 
     // Tag management routes
     Route::resource('tags', TagController::class)->names([
@@ -66,6 +69,16 @@ Route::prefix('{site:slug}')->group(function () {
     // Product Type reordering route
     Route::post('product-types/reorder', [ProductTypeController::class, 'reorder'])
         ->name('product-types.reorder');
+
+    // Product management routes
+    Route::resource('products', ProductController::class)->names([
+        'index' => 'products.index',
+        'create' => 'products.create',
+        'store' => 'products.store',
+        'edit' => 'products.edit',
+        'update' => 'products.update',
+        'destroy' => 'products.destroy',
+    ]);
 
     // Warehouse management routes
     Route::resource('warehouses', WarehouseController::class)->names([

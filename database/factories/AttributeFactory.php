@@ -29,10 +29,11 @@ class AttributeFactory extends Factory
         ];
 
         $selectedAttribute = $this->faker->randomElement($attributes);
+        $uniqueSuffix = (string) $this->faker->unique()->numberBetween(1000, 999999);
 
         return [
-            'name' => $selectedAttribute['name'],
-            'code' => $selectedAttribute['code'],
+            'name' => $selectedAttribute['name'].' '.$uniqueSuffix,
+            'code' => $selectedAttribute['code'].'-'.$uniqueSuffix,
             'description' => $this->faker->optional(0.6)->sentence(),
             'order' => $this->faker->numberBetween(1, 100),
             'site_id' => Site::factory(),
