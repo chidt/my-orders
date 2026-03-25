@@ -30,7 +30,8 @@ beforeEach(function () {
     $this->user->assignRole('SiteAdmin');
 });
 
-function basePayloadForSite(Site $site): array {
+function basePayloadForSite(Site $site): array
+{
     $productType = ProductType::factory()->create(['site_id' => $site->id, 'order' => 1]);
     $supplier = Supplier::factory()->forSite($site)->create();
     $category = Category::factory()->forSite($site)->create();
@@ -267,4 +268,3 @@ test('creating product with uploaded variant image marks variant as custom sourc
     expect((bool) $customVariant->is_parent_slider_image)->toBeFalse();
     expect($customVariant->getMedia('variant_images')->count())->toBe(1);
 });
-

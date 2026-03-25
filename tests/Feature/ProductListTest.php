@@ -25,7 +25,8 @@ beforeEach(function () {
     $this->otherUser->assignRole('SiteAdmin');
 });
 
-function createProductForSiteForList(Site $site, array $overrides = []): Product {
+function createProductForSiteForList(Site $site, array $overrides = []): Product
+{
     $productType = ProductType::factory()->create(['site_id' => $site->id]);
     $supplier = Supplier::factory()->forSite($site)->create();
     $category = Category::factory()->forSite($site)->create();
@@ -101,4 +102,3 @@ test('user without products permissions cannot access products index', function 
 
     $response->assertForbidden();
 });
-

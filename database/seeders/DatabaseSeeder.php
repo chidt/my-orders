@@ -14,11 +14,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         Artisan::call('vnzone:import');
+
         // Always seed roles and permissions first
         $this->call([
             RolePermissionSeeder::class,
             ProductTypePermissionSeeder::class,
             ProductPermissionSeeder::class,
+            CustomerPermissionSeeder::class,
             CategoryTagPermissionSeeder::class,
             UnitsSeeder::class,
         ]);
@@ -37,6 +39,5 @@ class DatabaseSeeder extends Seeder
                 AttributeSeeder::class,
             ]);
         }
-
     }
 }

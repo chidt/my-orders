@@ -45,9 +45,11 @@ test('site admin can only manage their own site', function () {
 
     $this->actingAs($user1);
     $page = visit('/'.$site1->slug.'/dashboard');
-    $page->assertSee($site1->name);
+    $page->assertPathEndsWith('/'.$site1->slug.'/dashboard')
+        ->assertSee('Bảng điều khiển');
 
     $this->actingAs($user2);
     $page = visit('/'.$site2->slug.'/dashboard');
-    $page->assertSee($site2->name);
+    $page->assertPathEndsWith('/'.$site2->slug.'/dashboard')
+        ->assertSee('Bảng điều khiển');
 });

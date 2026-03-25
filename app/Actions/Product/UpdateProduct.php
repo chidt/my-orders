@@ -229,7 +229,7 @@ class UpdateProduct
     private function attachPreservedVariantMediaToItem(
         Product $product,
         ProductItem $item,
-        int|null $mediaId
+        ?int $mediaId
     ): void {
         if (! $mediaId) {
             return;
@@ -403,6 +403,7 @@ class UpdateProduct
                     $existing[$key] = $mainMediaId;
                 }
                 $sources[$key] = 'main';
+
                 continue;
             }
 
@@ -458,4 +459,3 @@ class UpdateProduct
         }
     }
 }
-

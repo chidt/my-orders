@@ -149,6 +149,7 @@ class UpdateProductRequest extends FormRequest
             // If marking to remove main image, must have a new main image to upload
             if ($removeMainImage && ! $mainImage) {
                 $validator->errors()->add('main_image', 'Ảnh chính là bắt buộc.');
+
                 return;
             }
 

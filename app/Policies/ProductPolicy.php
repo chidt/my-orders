@@ -40,4 +40,3 @@ class ProductPolicy
         return $user->site_id === $product->site_id;
     }
 }
-
