@@ -22,9 +22,25 @@ jobs:
         with:
           php-version: '8.5'
           extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, gd, iconv, json, mbstring, pdo
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
       - name: Install composer dependencies
         run: |
-          composer install --no-dev --optimize-autoloader --no-interaction
+          composer install --no-dev --optimize-autoloader --no-interaction --verbose
+      - name: Verify composer installation
+        run: |
+          ls -la vendor/
+          ls -la vendor/autoload.php
+          php -v
+      - name: Generate application key (if needed)
+        run: |
+          cp .env.example .env || true
+          php artisan key:generate --no-interaction || true
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
