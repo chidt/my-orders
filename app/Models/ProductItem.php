@@ -84,5 +84,4 @@ class ProductItem extends Model implements HasMedia
     {
         return $this->hasMany(WarehouseInventory::class);
     }
-
 }

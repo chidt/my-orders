@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\MediaLibrary\SiteIdPathGenerator;
+use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\ProductItem;
@@ -9,6 +11,7 @@ use App\Models\ProductType;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\Warehouse;
+use App\Policies\CustomerPolicy;
 use App\Policies\LocationPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\ProductPolicy;
@@ -26,7 +29,6 @@ use Illuminate\Validation\Rules\Password;
 use Spatie\MediaLibrary\Support\PathGenerator\PathGeneratorFactory;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use App\MediaLibrary\SiteIdPathGenerator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -61,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ProductType::class, ProductTypePolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Supplier::class, SupplierPolicy::class);
+        Gate::policy(Customer::class, CustomerPolicy::class);
     }
 
     protected function configureGates(): void

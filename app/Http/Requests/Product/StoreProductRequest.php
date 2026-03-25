@@ -153,6 +153,7 @@ class StoreProductRequest extends FormRequest
                 $values = $attribute['values'] ?? [];
                 if (! is_array($values) || count($values) === 0) {
                     $validator->errors()->add('attributes', 'Mỗi thuộc tính phải có ít nhất 1 giá trị.');
+
                     return;
                 }
 
@@ -176,4 +177,3 @@ class StoreProductRequest extends FormRequest
         });
     }
 }
-

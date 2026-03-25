@@ -560,6 +560,7 @@ const translatePaginationLabel = (label: string) => {
                 <DialogFooter>
                     <Button
                         variant="outline"
+                        class="cursor-pointer"
                         type="button"
                         @click="showDeleteDialog = false"
                         >Hủy</Button
@@ -571,7 +572,7 @@ const translatePaginationLabel = (label: string) => {
                         @click="confirmDelete"
                     >
                         <span v-if="isDeleting">Đang xóa...</span>
-                        <span v-else>Xóa nhà cung cấp</span>
+                        <span v-else class="cursor-pointer">Xóa nhà cung cấp</span>
                     </Button>
                 </DialogFooter>
             </DialogContent>

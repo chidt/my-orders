@@ -6,18 +6,21 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class ProductPermissionSeeder extends Seeder
+class CustomerPermissionSeeder extends Seeder
 {
     public function run(): void
     {
         $permissions = [
-            'manage_products' => 'Full product management - create, read, update, delete',
-            'view_products' => 'View products only',
+            'manage_customers',
+            'view_customers',
+            'create_customers',
+            'edit_customers',
+            'delete_customers',
         ];
 
-        foreach ($permissions as $name => $description) {
+        foreach ($permissions as $permission) {
             Permission::firstOrCreate([
-                'name' => $name,
+                'name' => $permission,
                 'guard_name' => 'web',
             ]);
         }
@@ -29,13 +32,10 @@ class ProductPermissionSeeder extends Seeder
 
         foreach ($roles as $role) {
             if ($role) {
-                $role->givePermissionTo([
-                    'manage_products',
-                    'view_products',
-                ]);
+                $role->givePermissionTo($permissions);
             }
         }
 
-        $this->command->info('Product permissions created and assigned to SiteAdmin role.');
+        $this->command->info('Customer permissions created and assigned to roles.');
     }
 }

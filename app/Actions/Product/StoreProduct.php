@@ -332,6 +332,7 @@ class StoreProduct
                     $existing[$key] = $mainMediaId;
                 }
                 $sources[$key] = 'main';
+
                 continue;
             }
 
@@ -387,4 +388,3 @@ class StoreProduct
         }
     }
 }
-

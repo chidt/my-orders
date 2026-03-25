@@ -79,14 +79,6 @@ class CustomerFactory extends Factory
     }
 
     /**
-     * Create a corporate customer.
-     */
-    public function corporate(): static
-    {
-        return $this->ofType(CustomerType::CORPORATE);
-    }
-
-    /**
      * Create customer with a specific site ID and validate it exists.
      */
     public function withSiteId(int $siteId): static

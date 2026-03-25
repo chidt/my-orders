@@ -38,11 +38,9 @@ test('customer factory creates new site when none exists', function () {
 test('customer factory type methods work', function () {
     $individual = Customer::factory()->individual()->create();
     $business = Customer::factory()->business()->create();
-    $corporate = Customer::factory()->corporate()->create();
 
-    expect($individual->type)->toBe(CustomerType::INDIVIDUAL->value);
-    expect($business->type)->toBe(CustomerType::BUSINESS->value);
-    expect($corporate->type)->toBe(CustomerType::CORPORATE->value);
+    expect($individual->type)->toBe(CustomerType::INDIVIDUAL);
+    expect($business->type)->toBe(CustomerType::BUSINESS);
 });
 
 test('address factory creates address with existing ward and addressable', function () {

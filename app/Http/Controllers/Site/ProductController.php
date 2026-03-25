@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Site;
 
+use App\Actions\Product\DestroyProduct;
 use App\Actions\Product\StoreProduct;
 use App\Actions\Product\UpdateProduct;
-use App\Actions\Product\DestroyProduct;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
@@ -13,8 +13,6 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\ProductAttributeValue;
-use App\Models\ProductItem;
-use App\Models\ProductItemAttributeValue;
 use App\Models\ProductType;
 use App\Models\Supplier;
 use App\Models\Tag;
@@ -245,6 +243,7 @@ class ProductController extends Controller
             );
         } catch (\Exception $e) {
             Log::error($e->getMessage());
+
             return back()->withInput()->with('error', 'Có lỗi xảy ra: '.$e->getMessage());
         }
 
@@ -368,4 +367,3 @@ class ProductController extends Controller
         ];
     }
 }
-
