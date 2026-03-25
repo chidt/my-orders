@@ -13,7 +13,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
 import { usePermissions } from '@/composables/usePermissions';
+import { formatVnd } from '@/lib/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
     create as ProductsCreate,
@@ -39,6 +41,9 @@ interface Product {
     code: string;
     supplier_code: string | null;
     price: string;
+    partner_price: string | null;
+    purchase_price: string;
+    thumbnail_url: string | null;
     qty_in_stock: number;
     product_items_count: number;
     category: RelatedEntity | null;
@@ -209,6 +214,12 @@ const deleteProduct = () => {
                                 scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                             >
+                                Ảnh
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                            >
                                 Sản phẩm
                             </th>
                             <th
@@ -256,6 +267,12 @@ const deleteProduct = () => {
                             :key="product.id"
                             class="hover:bg-gray-50"
                         >
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <ProductThumbnailPreview
+                                    :src="product.thumbnail_url"
+                                    :alt="product.name"
+                                />
+                            </td>
                             <td class="px-6 py-4">
                                 <div class="min-w-0">
                                     <div
@@ -297,11 +314,25 @@ const deleteProduct = () => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    {{ product.price }}
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    / {{ product.unit?.name || 'đơn vị' }}
+                                <div class="space-y-1 text-xs text-gray-600">
+                                    <div>
+                                        Giá nhập:
+                                        <span class="font-medium text-gray-900">
+                                            {{ formatVnd(product.purchase_price) }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        Giá đối tác:
+                                        <span class="font-medium text-gray-900">
+                                            {{ formatVnd(product.partner_price) }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        Giá bán:
+                                        <span class="font-medium text-gray-900">
+                                            {{ formatVnd(product.price) }}
+                                        </span>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -355,29 +386,36 @@ const deleteProduct = () => {
                     :key="product.id"
                     class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
                 >
-                    <div class="mb-2 flex items-start justify-between gap-2">
-                        <div class="min-w-0 flex-1">
-                            <h3 class="truncate text-lg font-medium text-gray-900">
-                                {{ product.name }}
-                            </h3>
-                            <div class="mt-1 flex flex-wrap items-center gap-2">
-                                <Badge variant="outline" class="text-xs">
-                                    {{ product.code }}
-                                </Badge>
-                                <Badge
-                                    v-if="product.supplier_code"
-                                    variant="secondary"
-                                    class="text-xs"
-                                >
-                                    {{ product.supplier_code }}
-                                </Badge>
-                                <Badge
-                                    v-if="product.product_type?.name"
-                                    variant="secondary"
-                                    class="text-xs"
-                                >
-                                    {{ product.product_type.name }}
-                                </Badge>
+                    <div class="mb-2 flex items-start justify-between gap-3">
+                        <div class="flex min-w-0 flex-1 gap-3">
+                            <ProductThumbnailPreview
+                                :src="product.thumbnail_url"
+                                :alt="product.name"
+                                size-class="h-14 w-14"
+                            />
+                            <div class="min-w-0 flex-1">
+                                <h3 class="truncate text-lg font-medium text-gray-900">
+                                    {{ product.name }}
+                                </h3>
+                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                    <Badge variant="outline" class="text-xs">
+                                        {{ product.code }}
+                                    </Badge>
+                                    <Badge
+                                        v-if="product.supplier_code"
+                                        variant="secondary"
+                                        class="text-xs"
+                                    >
+                                        {{ product.supplier_code }}
+                                    </Badge>
+                                    <Badge
+                                        v-if="product.product_type?.name"
+                                        variant="secondary"
+                                        class="text-xs"
+                                    >
+                                        {{ product.product_type.name }}
+                                    </Badge>
+                                </div>
                             </div>
                         </div>
 
@@ -431,12 +469,13 @@ const deleteProduct = () => {
                         </div>
                         <div class="space-y-3">
                             <div>
-                                <span class="text-sm text-gray-500">Giá:</span>
-                                <div class="font-medium text-gray-900">
-                                    {{ product.price }}
-                                    <span class="text-xs text-gray-500"
-                                        >/ {{ product.unit?.name || 'đv' }}</span
-                                    >
+                                <span class="text-sm text-gray-500">
+                                    Giá nhập / đối tác / bán:
+                                </span>
+                                <div class="space-y-1 text-sm text-gray-900">
+                                    <div>{{ formatVnd(product.purchase_price) }}</div>
+                                    <div>{{ formatVnd(product.partner_price) }}</div>
+                                    <div class="font-medium">{{ formatVnd(product.price) }}</div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">

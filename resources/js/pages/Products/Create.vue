@@ -16,6 +16,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { formatVnd } from '@/lib/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index as ProductsIndex, store as ProductsStore } from '@/routes/products';
 
@@ -63,6 +64,14 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const normalizeIntegerPrice = (value: unknown): number => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) {
+        return 0;
+    }
+    return Math.max(0, Math.trunc(parsed));
+};
 
 type AttributeValueInput = {
     code: string;
@@ -134,6 +143,7 @@ const form = useForm<{
 });
 
 const selectedAttributeId = ref<string>('none');
+const selectedAttributeQuickValues = ref('');
 const activeVariantTab = ref<'attributes' | 'preview'>('attributes');
 const showQuickTagDialog = ref(false);
 
@@ -193,11 +203,29 @@ const attributeOrder = computed(() => {
     });
 });
 
+const previewBasePrices = computed(() => ({
+    purchase: normalizeIntegerPrice(form.purchase_price),
+    partner: normalizeIntegerPrice(form.partner_price),
+    sale: normalizeIntegerPrice(form.price),
+}));
+
 const previewVariants = computed(() => {
     const code = (form.code || '').trim() || 'AUTO';
+    const basePurchasePrice = previewBasePrices.value.purchase;
+    const basePartnerPrice = previewBasePrices.value.partner;
+    const baseSalePrice = previewBasePrices.value.sale;
 
     if (attributeOrder.value.length === 0) {
-        return [{ key: '__default__', sku: code, label: 'Biến thể mặc định' }];
+        return [
+            {
+                key: '__default__',
+                sku: code,
+                label: 'Biến thể mặc định',
+                purchase_price: basePurchasePrice,
+                partner_price: basePartnerPrice,
+                sale_price: baseSalePrice,
+            },
+        ];
     }
 
     const blocks = attributeOrder.value.map((b) => ({
@@ -215,10 +243,23 @@ const previewVariants = computed(() => {
     return all.slice(0, 100).map((combo) => {
         const key = combo.map((v) => (v.code || '').trim().toUpperCase()).join('-');
         const suffix = combo.map((v) => (v.code || '').trim().toUpperCase()).join('-');
+        const purchaseAddition = combo.reduce(
+            (sum, value) => sum + Number(value.purchase_addition_value ?? 0),
+            0,
+        );
+        const partnerAddition = combo.reduce(
+            (sum, value) => sum + Number(value.partner_addition_value ?? 0),
+            0,
+        );
+        const saleAddition = combo.reduce((sum, value) => sum + Number(value.addition_value ?? 0), 0);
+
         return {
             key,
             sku: `${code}-${suffix}`,
             label: combo.map((v) => v.value).join(' / '),
+            purchase_price: basePurchasePrice + purchaseAddition,
+            partner_price: basePartnerPrice + partnerAddition,
+            sale_price: baseSalePrice + saleAddition,
         };
     });
 });
@@ -383,27 +424,81 @@ const previewVariantRows = computed(() =>
     })),
 );
 
+const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): void => {
+    const block = form.attributes.find((a) => a.attribute_id === attributeId);
+    if (!block) return;
+
+    const items = rawInput
+        .split(/[,\n;]+/)
+        .map((x) => x.trim())
+        .filter((x) => x.length > 0);
+    if (items.length === 0) return;
+
+    if (block.values.length === 1 && !block.values[0].value.trim() && !block.values[0].code.trim()) {
+        block.values = [];
+    }
+
+    let nextOrder = Math.max(0, ...block.values.map((v) => Number(v.order) || 0)) + 1;
+
+    items.forEach((item) => {
+        const parsed = parseQuickAttributeValueItem(item);
+        if (!parsed.displayValue) {
+            return;
+        }
+
+        let code = normalizeValueCode(parsed.displayValue);
+        if (!code) {
+            code = `V${nextOrder}`;
+        }
+
+        const existingValue = block.values.find(
+            (v) => (v.code || '').toString().trim().toUpperCase() === code,
+        );
+        if (existingValue) {
+            existingValue.value = parsed.displayValue;
+            existingValue.purchase_addition_value = parsed.purchase_addition_value;
+            existingValue.partner_addition_value = parsed.partner_addition_value;
+            existingValue.addition_value = parsed.addition_value;
+            return;
+        }
+
+        block.values.push({
+            code,
+            value: parsed.displayValue,
+            order: nextOrder,
+            addition_value: parsed.addition_value,
+            partner_addition_value: parsed.partner_addition_value,
+            purchase_addition_value: parsed.purchase_addition_value,
+        });
+        nextOrder += 1;
+    });
+};
+
 const addAttribute = () => {
     if (selectedAttributeId.value === 'none') return;
     const id = Number(selectedAttributeId.value);
     if (Number.isNaN(id)) return;
-    if (form.attributes.some((a) => a.attribute_id === id)) return;
 
-    form.attributes.push({
-        attribute_id: id,
-        values: [
-            {
-                code: '',
-                value: '',
-                order: 1,
-                addition_value: 0,
-                partner_addition_value: 0,
-                purchase_addition_value: 0,
-            },
-        ],
-    });
+    if (!form.attributes.some((a) => a.attribute_id === id)) {
+        form.attributes.push({
+            attribute_id: id,
+            values: [
+                {
+                    code: '',
+                    value: '',
+                    order: 1,
+                    addition_value: 0,
+                    partner_addition_value: 0,
+                    purchase_addition_value: 0,
+                },
+            ],
+        });
+    }
+
+    applyQuickValuesToAttribute(id, selectedAttributeQuickValues.value);
 
     selectedAttributeId.value = 'none';
+    selectedAttributeQuickValues.value = '';
 };
 
 const removeAttribute = (attributeId: number) => {
@@ -436,46 +531,46 @@ const addValue = (attributeId: number) => {
     });
 };
 
-const addValuesFromQuickInput = (attributeId: number) => {
-    const block = form.attributes.find((a) => a.attribute_id === attributeId);
-    if (!block) return;
+function parseQuickAttributeValueItem(rawItem: string): {
+    displayValue: string;
+    purchase_addition_value: number;
+    partner_addition_value: number;
+    addition_value: number;
+} {
+    const item = rawItem.trim();
+    const zeros = { purchase_addition_value: 0, partner_addition_value: 0, addition_value: 0 };
 
-    const raw = quickValuesByAttribute.value[attributeId] ?? '';
-    const items = raw
-        .split(/[,\n;|]+/)
-        .map((x) => x.trim())
-        .filter((x) => x.length > 0);
-    if (items.length === 0) return;
-
-    if (block.values.length === 1 && !block.values[0].value.trim() && !block.values[0].code.trim()) {
-        block.values = [];
+    const firstPipe = item.indexOf('|');
+    if (firstPipe === -1) {
+        return { displayValue: item, ...zeros };
     }
 
-    let nextOrder = Math.max(0, ...block.values.map((v) => Number(v.order) || 0)) + 1;
-    const existedCodes = new Set(
-        block.values.map((v) => (v.code || '').toString().trim().toUpperCase()).filter(Boolean),
-    );
+    if (item.indexOf('|', firstPipe + 1) !== -1) {
+        return { displayValue: item, ...zeros };
+    }
 
-    items.forEach((item) => {
-        let code = normalizeValueCode(item);
-        if (!code) {
-            code = `V${nextOrder}`;
-        }
-        if (existedCodes.has(code)) {
-            return;
-        }
-        existedCodes.add(code);
+    const label = item.slice(0, firstPipe).trim();
+    const priceText = item.slice(firstPipe + 1).trim();
+    if (!label || !priceText) {
+        return { displayValue: label || item, ...zeros };
+    }
+    const price = Number.parseFloat(priceText.replace(/\s/g, ''));
+    if (Number.isNaN(price)) {
+        return { displayValue: label, ...zeros };
+    }
+    const normalizedPrice = Math.max(0, Math.trunc(price));
 
-        block.values.push({
-            code,
-            value: item,
-            order: nextOrder,
-            addition_value: 0,
-            partner_addition_value: 0,
-            purchase_addition_value: 0,
-        });
-        nextOrder += 1;
-    });
+    return {
+        displayValue: label,
+        purchase_addition_value: normalizedPrice,
+        partner_addition_value: normalizedPrice,
+        addition_value: normalizedPrice,
+    };
+}
+
+const addValuesFromQuickInput = (attributeId: number) => {
+    const raw = quickValuesByAttribute.value[attributeId] ?? '';
+    applyQuickValuesToAttribute(attributeId, raw);
 
     quickValuesByAttribute.value = {
         ...quickValuesByAttribute.value,
@@ -857,44 +952,59 @@ function cartesian<T>(sets: T[][]): T[][] {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="price">Giá bán *</Label>
+                            <Label for="purchase_price">Giá nhập *</Label>
                             <Input
-                                id="price"
-                                v-model.number="form.price"
+                                id="purchase_price"
+                                :model-value="form.purchase_price ?? ''"
                                 type="number"
                                 min="0"
-                                step="0.01"
+                                step="1"
                                 placeholder="0"
                                 required
+                                @change="
+                                    form.purchase_price = normalizeIntegerPrice(
+                                        ($event.target as HTMLInputElement).value,
+                                    )
+                                "
                             />
-                            <InputError :message="form.errors.price" />
+                            <InputError :message="form.errors.purchase_price" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="partner_price">Giá đối tác</Label>
                             <Input
                                 id="partner_price"
-                                v-model.number="form.partner_price"
+                                :model-value="form.partner_price ?? ''"
                                 type="number"
                                 min="0"
-                                step="0.01"
+                                step="1"
                                 placeholder="0"
+                                @change="
+                                    form.partner_price = normalizeIntegerPrice(
+                                        ($event.target as HTMLInputElement).value,
+                                    )
+                                "
                             />
                             <InputError :message="form.errors.partner_price" />
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="purchase_price">Giá nhập *</Label>
+                            <Label for="price">Giá bán *</Label>
                             <Input
-                                id="purchase_price"
-                                v-model.number="form.purchase_price"
+                                id="price"
+                                :model-value="form.price ?? ''"
                                 type="number"
                                 min="0"
-                                step="0.01"
+                                step="1"
                                 placeholder="0"
                                 required
+                                @change="
+                                    form.price = normalizeIntegerPrice(
+                                        ($event.target as HTMLInputElement).value,
+                                    )
+                                "
                             />
-                            <InputError :message="form.errors.purchase_price" />
+                            <InputError :message="form.errors.price" />
                         </div>
 
                         <div class="space-y-2">
@@ -1114,7 +1224,7 @@ function cartesian<T>(sets: T[][]): T[][] {
 
                     <div v-if="activeVariantTab === 'attributes'">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                            <div class="flex-1 space-y-2">
+                            <div class="w-full space-y-2 sm:max-w-xs">
                                 <Label>Thêm thuộc tính</Label>
                                 <Select v-model="selectedAttributeId">
                                     <SelectTrigger>
@@ -1135,6 +1245,22 @@ function cartesian<T>(sets: T[][]): T[][] {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                            <div
+                                v-if="selectedAttributeId !== 'none'"
+                                class="w-full flex-1 space-y-2"
+                            >
+                                <Label>
+                                    Thêm nhanh values (phân tách bằng dấu phẩy và phân tách giá bằng |)
+                                </Label>
+                                <Input
+                                    :model-value="selectedAttributeQuickValues"
+                                    placeholder="VD: Xanh|200, Đỏ|100"
+                                    @update:model-value="
+                                        selectedAttributeQuickValues = ($event as string) ?? ''
+                                    "
+                                    @keydown.enter.prevent="addAttribute"
+                                />
                             </div>
                             <Button
                                 type="button"
@@ -1184,12 +1310,12 @@ function cartesian<T>(sets: T[][]): T[][] {
                             <div class="mt-4 space-y-3">
                             <div class="rounded-md border border-dashed border-gray-300 p-3">
                                     <Label class="mb-2 block text-xs text-gray-600">
-                                        Thêm nhanh values (phân tách bằng dấu phẩy)
+                                        Thêm nhanh values (phân tách bằng dấu phẩy và phân tách giá bằng |)
                                     </Label>
                                     <div class="flex flex-col gap-2 sm:flex-row">
                                         <Input
                                             :model-value="quickValuesByAttribute[attr.id] ?? ''"
-                                            placeholder="Ví dụ: Xanh, Đỏ, Vàng"
+                                            placeholder="Ví dụ: Xanh|200, Đỏ|100"
                                             @update:model-value="
                                                 quickValuesByAttribute = {
                                                     ...quickValuesByAttribute,
@@ -1256,7 +1382,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                             v-model.number="value.purchase_addition_value"
                                             type="number"
                                             min="0"
-                                            step="0.01"
+                                            step="1"
                                             placeholder="0"
                                         />
                                     </div>
@@ -1265,7 +1391,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                             v-model.number="value.partner_addition_value"
                                             type="number"
                                             min="0"
-                                            step="0.01"
+                                            step="1"
                                             placeholder="0"
                                         />
                                     </div>
@@ -1274,7 +1400,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                             v-model.number="value.addition_value"
                                             type="number"
                                             min="0"
-                                            step="0.01"
+                                            step="1"
                                             placeholder="0"
                                         />
                                     </div>
@@ -1358,6 +1484,20 @@ function cartesian<T>(sets: T[][]): T[][] {
                                             </div>
                                             <div class="text-xs text-gray-500">
                                                 {{ row.variant.label }}
+                                            </div>
+                                            <div class="space-y-1 pt-1 text-xs text-gray-600">
+                                                <div>
+                                                    Giá nhập:
+                                                    <b>{{ formatVnd(row.variant.purchase_price) }}</b>
+                                                </div>
+                                                <div>
+                                                    Giá đối tác:
+                                                    <b>{{ formatVnd(row.variant.partner_price) }}</b>
+                                                </div>
+                                                <div>
+                                                    Giá bán:
+                                                    <b>{{ formatVnd(row.variant.sale_price) }}</b>
+                                                </div>
                                             </div>
                                         </div>
 
