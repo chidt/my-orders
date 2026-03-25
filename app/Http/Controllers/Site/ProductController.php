@@ -37,6 +37,7 @@ class ProductController extends Controller
                 'supplier:id,name',
                 'unit:id,name',
                 'productType:id,name',
+                'media',
             ])
             ->withCount('productItems')
             ->latest('id');
@@ -50,7 +51,35 @@ class ProductController extends Controller
             });
         }
 
-        $products = $query->paginate(20)->withQueryString();
+        $products = $query->paginate(20)->withQueryString()
+            ->through(function (Product $product) {
+                $mainImage = $product->getFirstMedia('main_image');
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code,
+                    'supplier_code' => $product->supplier_code,
+                    'price' => $product->price,
+                    'partner_price' => $product->partner_price,
+                    'purchase_price' => $product->purchase_price,
+                    'qty_in_stock' => $product->qty_in_stock,
+                    'product_items_count' => $product->product_items_count,
+                    'thumbnail_url' => $mainImage?->getUrl(),
+                    'category' => $product->category
+                        ? ['id' => $product->category->id, 'name' => $product->category->name]
+                        : null,
+                    'supplier' => $product->supplier
+                        ? ['id' => $product->supplier->id, 'name' => $product->supplier->name]
+                        : null,
+                    'unit' => $product->unit
+                        ? ['id' => $product->unit->id, 'name' => $product->unit->name]
+                        : null,
+                    'product_type' => $product->productType
+                        ? ['id' => $product->productType->id, 'name' => $product->productType->name]
+                        : null,
+                ];
+            });
 
         return Inertia::render('Products/Index', [
             'site' => auth()->user()->site,
