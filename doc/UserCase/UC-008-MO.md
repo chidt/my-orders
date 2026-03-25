@@ -53,8 +53,8 @@
 | 19   | Hệ thống   | **Kiểm tra WarehouseInventory.available_qty** cho từng sản phẩm |
 | 20   | Hệ thống   | Tạo đơn hàng với **status = New (1)** |
 | 21   | Hệ thống   | Tạo OrderDetails với **status = New (1)** cho từng sản phẩm |
-| 22   | Hệ thống   | **Nếu đủ hàng**: Reserve stock (cập nhật reserved_qty) |
-| 23   | Hệ thống   | **Nếu không đủ hàng**: Tạo pre-order (cập nhật pre_order_qty) |
+| 22   | Hệ thống   | **Nếu đủ hàng**: Reserve stock (cập nhật reserved_qty), set status = Ordered (5) |
+| 23   | Hệ thống   | **Nếu không đủ hàng**: Set status = PreOrder (6), cập nhật pre_order_qty |
 | 24   | Hệ thống   | Gán site_id cho đơn hàng và OrderDetails |
 | 25   | Hệ thống   | **Tự động cập nhật Order status** dựa trên OrderDetails status |
 | 26   | Hệ thống   | Thông báo thành công |
@@ -81,10 +81,11 @@
 | Bước | Actor      | Hành động |
 |------|------------|-----------|
 | 39   | Hệ thống   | **Khi OrderDetail = Ordered (5)**: Reserve stock nếu chưa reserve |
-| 40   | Hệ thống   | **Khi OrderDetail = WaitingForStock (6)**: Tạo pre-order nếu không đủ hàng |
-| 41   | Hệ thống   | **Khi OrderDetail = Delivering (9)**: Trừ stock thực tế từ WarehouseInventory |
-| 42   | Hệ thống   | **Khi OrderDetail = Cancelled (11)**: Release reserved stock |
-| 43   | Hệ thống   | Cập nhật WarehouseInventory tương ứng |
+| 40   | Hệ thống   | **Khi OrderDetail = PreOrder (6)**: Tạo pre-order, không reserve stock |
+| 41   | Hệ thống   | **Khi OrderDetail = WaitingForStock (7)**: Hàng đã về từ supplier, sẵn sàng nhập kho |
+| 42   | Hệ thống   | **Khi OrderDetail = Delivering (10)**: Trừ stock thực tế từ WarehouseInventory |
+| 43   | Hệ thống   | **Khi OrderDetail = Cancelled (12)**: Release reserved stock và pre_order_qty |
+| 44   | Hệ thống   | Cập nhật WarehouseInventory tương ứng |
 
 ---
 
@@ -93,13 +94,13 @@
 | Mã   | Điều kiện                    | Kết quả                       |
 |------|------------------------------|-------------------------------|
 | AF-01| Không có quyền **manage_orders** | Không hiển thị menu quản lý đơn hàng |
-| AF-02| Sản phẩm không đủ hàng (available_qty < qty) | Tự động tạo pre-order, OrderDetail = WaitingForStock (6) |
+| AF-02| Sản phẩm không đủ hàng (available_qty < qty) | Tự động tạo pre-order, OrderDetail = PreOrder (6) |
 | AF-03| Khách hàng chưa có địa chỉ   | Yêu cầu tạo địa chỉ trước     |
-| AF-04| OrderDetail status = Completed (10) hoặc Cancelled (11) | Không cho phép chỉnh sửa |
+| AF-04| OrderDetail status = Completed (11) hoặc Cancelled (12) | Không cho phép chỉnh sửa |
 | AF-05| Cập nhật trạng thái không hợp lệ | Hiển thị lỗi và rollback |
-| AF-06| Order đã = Completed (10) hoặc Cancelled (11) | Chỉ cho phép xem, không chỉnh sửa |
-| AF-07| Hủy OrderDetail khi đã Delivering (9) | Cần hoàn trả stock và xử lý đặc biệt |
-| AF-08| Tất cả OrderDetails = Cancelled (11) | Order tự động = Cancelled (11) |
+| AF-06| Order đã = Completed (11) hoặc Cancelled (12) | Chỉ cho phép xem, không chỉnh sửa |
+| AF-07| Hủy OrderDetail khi đã Delivering (10) | Cần hoàn trả stock và xử lý đặc biệt |
+| AF-08| Tất cả OrderDetails = Cancelled (12) | Order tự động = Cancelled (12) |
 
 ---
 
@@ -122,6 +123,7 @@
 - **Chiết khấu** (discount): Decimal, tùy chọn
 - **Phí bổ sung** (addition_price): Decimal, tùy chọn
 - **Tổng tiền** (total): Decimal, tự động tính
+- **Trạng thái thanh toán** (payment_status): Enum (1-5), mặc định Unpaid (1)
 
 ### Dữ liệu ra (Output)
 - **Số đơn hàng** (order_number): Tự động generate
@@ -132,20 +134,36 @@
 
 ## Trạng thái đơn hàng và chi tiết đơn hàng
 
-### ENUM Status Values (1-11)
+### ENUM Status Values (1-12)
 | Value | Status | Vietnamese | Mô tả | Hành động cho phép |
 |-------|--------|------------|-------|-------------------|
 | 1 | New | Tạo mới | Đơn hàng mới được tạo | Chỉnh sửa, hủy |
 | 2 | Processing | Đang xử lý | Đang xử lý đơn hàng | Chuyển sang các trạng thái khác |
 | 3 | ClosingOrder | Chốt đơn | Đơn hàng đã được chốt | Chuyển sang AddToCart |
 | 4 | AddToCart | Thêm giỏ hàng | Sản phẩm đã được thêm vào giỏ | Chuyển sang Ordered |
-| 5 | Ordered | Đã order | Đã đặt hàng chính thức | Chuyển sang WaitingForStock |
-| 6 | WaitingForStock | Chờ nhập kho | Chờ hàng nhập về kho | Chuyển sang Arrived |
-| 7 | Arrived | Hàng về | Hàng đã về kho | Chuyển sang Invoiced |
-| 8 | Invoiced | Đã báo đơn | Đã tạo hóa đơn | Chuyển sang Delivering |
-| 9 | Delivering | Đang giao hàng | Đang trong quá trình giao hàng | Chuyển sang Completed |
-| 10 | Completed | Hoàn thành | Đã giao hàng thành công | Không thể thay đổi |
-| 11 | Cancelled | Huỷ | Đơn hàng bị hủy | Không thể thay đổi |
+| 5 | Ordered | Đã order | Đã đặt hàng chính thức | Chuyển sang PreOrder hoặc WaitingForStock |
+| 6 | PreOrder | Pre-order | Không đủ hàng, cần đặt hàng với supplier | Chuyển sang WaitingForStock khi hàng về |
+| 7 | WaitingForStock | Chờ nhập kho | Hàng đã về từ supplier, chờ nhập kho | Chuyển sang Arrived |
+| 8 | Arrived | Hàng về | Hàng đã nhập kho thành công | Chuyển sang Invoiced |
+| 9 | Invoiced | Đã báo đơn | Đã tạo hóa đơn | Chuyển sang Delivering |
+| 10 | Delivering | Đang giao hàng | Đang trong quá trình giao hàng | Chuyển sang Completed |
+| 11 | Completed | Hoàn thành | Đã giao hàng thành công | Không thể thay đổi |
+| 12 | Cancelled | Huỷ | Đơn hàng bị hủy | Không thể thay đổi |
+
+### ENUM Payment Status Values (1-5) - New Integration
+| Value | Status | Vietnamese | Description |
+|-------|--------|------------|-------------|
+| 1 | Unpaid | Chưa thanh toán | Chưa có yêu cầu thanh toán |
+| 2 | PaymentRequested | Yêu cầu thanh toán | Đã gửi yêu cầu thanh toán cho khách |
+| 3 | Paid | Đã thanh toán | Khách hàng đã thanh toán |
+| 4 | Processing | Đang xử lý | Đang xử lý thanh toán |
+| 5 | PendingConfirmation | Chờ xác nhận | Chờ xác nhận thanh toán |
+
+### Business Rules cho Payment Status
+- **Default value**: OrderDetails.payment_status = Unpaid (1) khi tạo mới
+- **Status progression**: Unpaid → PaymentRequested → Processing/PendingConfirmation → Paid
+- **Warehouse Out eligibility**: Status = Invoiced AND Payment_Status = Paid (UC-017-MWO integration)
+- **Independent management**: Payment status quản lý độc lập với order status
 
 ### Quy tắc đồng bộ trạng thái Order và OrderDetail
 
@@ -191,11 +209,11 @@ OrderDetail 3: Ordered (5)
 | BR-02 | Kiểm tra WarehouseInventory.available_qty trước khi tạo đơn hàng                     |
 | BR-03 | Tự động reserve stock (reserved_qty) khi OrderDetail = Ordered (5)                   |
 | BR-04 | Tự động release stock khi OrderDetail = Cancelled (11)                               |
-| BR-05 | Không cho phép chỉnh sửa OrderDetail khi status = Completed (10) hoặc Cancelled (11)|
+| BR-05 | Không cho phép chỉnh sửa OrderDetail khi status = Completed (11) hoặc Cancelled (12)|
 | BR-06 | Ghi log mọi thay đổi trạng thái OrderDetail và Order                                 |
 | BR-07 | Tổng tiền đơn hàng = Σ(qty × price - discount + addition_price)                      |
 | BR-08 | Chỉ cho phép chọn sản phẩm thuộc site hiện tại                                       |
 | BR-09 | **Order status tự động cập nhật** dựa trên OrderDetails status theo quy tắc đồng bộ  |
-| BR-10 | Khi không đủ hàng, tự động tạo pre-order và set OrderDetail = WaitingForStock (6)    |
-| BR-11 | **Status values từ 1-11** theo ENUM đã định nghĩa                                    |
+| BR-10 | Khi không đủ hàng, tự động tạo pre-order và set OrderDetail = PreOrder (6)           |
+| BR-11 | **Status values từ 1-12** theo ENUM đã định nghĩa                                    |
 | BR-12 | OrderDetail có thể cập nhật độc lập, Order status sẽ tự động sync                     |

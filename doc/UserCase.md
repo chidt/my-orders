@@ -11,6 +11,12 @@
 - **Dependencies**: UC001-REG (cần Users và Sites)
 - **Output**: Session management, role-based routing
 
+### [UC003-MOS: Manage Own Site](UserCase/UC-003-MOS.md)
+- **Priority**: CRITICAL - Site configuration foundation
+- **Dependencies**: UC001-REG, UC002-LOG (cần authentication và site access)
+- **Output**: Site configuration, product prefix settings, delivery rules, business rules
+- **⚠️ CRITICAL**: Product code prefixes needed for UC006-MP, delivery info needed for warehouse operations
+
 ## Phase 2: Infrastructure Setup (HIGH - Tuần 3-4)
 ### [UC004-MSW: Manage Site Warehouse](UserCase/UC-004-MSW.md)
 - **Priority**: HIGH - Infrastructure cho inventory
@@ -87,7 +93,7 @@
   - **REQUIRED**: UC004-MSW, UC005-MWL (cần Warehouses & Locations)
 - **Output**: Stock management, warehouse transactions
 
-### [UC015-POD: Manage Purchase Order Details](UserCase/UC-015-POD.md)
+### [UC015-PO: Manage Purchase Order](UserCase/UC-015-PO.md)
 - **Priority**: HIGH - Purchase order management and supplier coordination
 - **Dependencies**: 
   - **REQUIRED**: UC009-MS (cần Suppliers)
@@ -96,10 +102,34 @@
   - **REQUIRED**: UC010-MI (cần WarehouseInventory integration)
 - **Output**: Purchase Request management, supplier coordination, pre-order fulfillment
 
-### [UC003-MOS: Manage Own Site](UserCase/UC-003-MOS.md)
-- **Priority**: MEDIUM - Site customization
-- **Dependencies**: UC001, UC002 (cần authentication)
-- **Output**: Site configuration, product prefix settings
+### [UC016-MWI: Manage Warehouse In](UserCase/UC-016-MWI.md)
+- **Priority**: HIGH - Warehouse receipt management and inventory updates
+- **Dependencies**: 
+  - **REQUIRED**: UC004-MSW, UC005-MWL (cần Warehouses & Locations)
+  - **REQUIRED**: UC006-MP (cần Products và ProductItems)
+  - **REQUIRED**: UC015-PO (cần Purchase Requests integration)
+  - **REQUIRED**: UC010-MI (cần WarehouseInventory)
+- **Output**: Warehouse receipt processing, inventory updates, purchase request fulfillment
+
+### [UC017-MWO: Manage Warehouse Out](UserCase/UC-017-MWO.md)
+- **Priority**: HIGH - Warehouse out management and order fulfillment
+- **Dependencies**: 
+  - **REQUIRED**: UC004-MSW, UC005-MWL (cần Warehouses & Locations)
+  - **REQUIRED**: UC006-MP (cần Products và ProductItems)
+  - **REQUIRED**: UC008-MO, UC014-MOD (cần Orders với payment_status integration)
+  - **REQUIRED**: UC010-MI (cần WarehouseInventory)
+  - **REQUIRED**: UC007-MC (cần Customers cho shipping info)
+- **Output**: Warehouse out processing, order fulfillment, delivery management
+
+### [UC018-MPR: Manage Payment Request](UserCase/UC-018-MPR.md)
+- **Priority**: HIGH - Payment request management and customer billing
+- **Dependencies**: 
+  - **REQUIRED**: UC014-MOD (cần OrderDetails với status = Arrived)
+  - **REQUIRED**: UC008-MO (cần Orders và Order information)
+  - **REQUIRED**: UC007-MC (cần Customers cho payment info)
+  - **REQUIRED**: UC017-MWO (payment status validation for warehouse eligibility)
+- **Output**: Payment request processing, payment status tracking, customer billing management
+
 
 ---
 
@@ -109,6 +139,8 @@
 UC001-REG (Users & Sites)
     ↓
 UC002-LOG (Authentication)
+    ↓
+UC003-MOS (Site Config)
     ↓
 ┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
 │   UC004-MSW     │   UC011-MCT     │   UC012-MA      │   UC013-MPT     │   UC009-MS
@@ -132,34 +164,46 @@ UC002-LOG (Authentication)
                   ↓
            UC014-MOD (OrderDetails)
                   ↓
-           UC015-POD (PurchaseOrders)
+           UC015-PO (Purchase Orders)
                   ↓
-             UC003-MOS (Site Config)
+           UC016-MWI (WarehouseIn)
+                  ↓
+         ┌─────────┴─────────┐
+         │                   │
+    UC018-MPR              UC017-MWO
+   (Payment)            (WarehouseOut)
 ```
 
 ## Critical Implementation Rules
 
 ### ⚠️ BLOCKING DEPENDENCIES
-- **UC006 CANNOT START** until UC011, UC012, UC013 & UC009 are 100% complete
+- **UC003 CANNOT START** until UC001, UC002 are complete (needs authentication and site access)
+- **UC006 CANNOT START** until UC011, UC012, UC013, UC009 & UC003 are 100% complete (needs product code prefixes from site config)
 - **UC008 CANNOT START** until UC006 & UC007 are complete
 - **UC014 CANNOT START** until UC008 is complete (requires OrderDetails data)
 - **UC015 CANNOT START** until UC009, UC006, UC014 & UC010 are complete (requires Suppliers, Products, OrderDetails, Inventory)
+- **UC016 CANNOT START** until UC004, UC005, UC006, UC015 & UC010 are complete (requires Warehouses, Locations, Products, Purchase Requests, Inventory)
+- **UC018 CANNOT START** until UC016 is complete (requires OrderDetails with status=Arrived from warehouse receipts)
+- **UC017 CANNOT START** until UC004, UC005, UC006, UC008, UC014, UC018, UC010 & UC007 are complete (requires Warehouses, Locations, Products, Orders with payment_status=Paid, OrderDetails, Payment validation, Inventory, Customers)
 - **UC010 CANNOT START** until UC006 is complete
+- **UC004, UC005 MAY NEED** UC003 for delivery/warehouse configuration settings
 
 ### ✅ PARALLEL IMPLEMENTATION ALLOWED
-- UC004 & UC011 & UC012 & UC013 & UC009 can be developed in parallel (Week 3-5)
+- UC003 should complete early as it provides foundational site configuration
+- UC004 & UC011 & UC012 & UC013 & UC009 can be developed in parallel after UC003 (Week 3-5)  
 - UC005 can start after UC004 is complete
 - UC007 can be developed in parallel with UC006 completion
-- UC003 can be developed anytime after UC002
+- UC015 can start after UC014 is complete
+- UC018 & UC017 can be developed in parallel after UC016 is complete
 
 ### 🎯 SPRINT PLANNING RECOMMENDATION
-- **Sprint 1**: UC001, UC002 (Authentication Foundation)
+- **Sprint 1**: UC001, UC002, UC003 (Authentication & Site Configuration Foundation)
 - **Sprint 2**: UC004, UC011, UC012, UC013, UC009 (Infrastructure & Prerequisites)
 - **Sprint 3**: UC005, UC006 (Locations & Products)
 - **Sprint 4**: UC007, UC008 (Customers & Orders)
 - **Sprint 5**: UC014, UC010 (Order Details & Inventory)
 - **Sprint 6**: UC015 (Purchase Order Management)
-- **Sprint 7**: UC003 (Site Configuration)
+- **Sprint 7**: UC016, UC017, UC018 (Warehouse & Payment Management)
 
 ---
 
@@ -168,14 +212,17 @@ UC002-LOG (Authentication)
 ### Revenue Impact (HIGH)
 1. UC008-MO (Orders) - Direct revenue
 2. UC014-MOD (Order Details) - Order fulfillment tracking
-3. UC006-MP (Products) - Product catalog
-4. UC007-MC (Customers) - Customer base
+3. UC018-MPR (Payment Requests) - Customer billing & payment tracking
+4. UC006-MP (Products) - Product catalog
+5. UC007-MC (Customers) - Customer base
 
 ### Operational Impact (HIGH)  
 1. UC001-REG, UC002-LOG (Authentication)
 2. UC004-MSW, UC005-MWL (Warehouse operations)
-3. UC015-POD (Purchase order management & supplier coordination)
-4. UC010-MI (Inventory management)
+3. UC015-PO (Purchase order management & supplier coordination)
+4. UC016-MWI (Warehouse receipt processing & inventory updates)
+5. UC017-MWO (Warehouse out processing & order fulfillment)
+6. UC010-MI (Inventory management)
 
 ### Setup & Configuration (MEDIUM)
 1. UC011-MCT (Categories & Tags)

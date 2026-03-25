@@ -1,12 +1,12 @@
 ````markdown
-# UC015: Manage Purchase Order Details
+# UC015: Manage Purchase Order (Quản lý đặt hàng nhà cung cấp)
 
 ## Thông tin Use Case
 
 | Thuộc tính      | Nội dung                                   |
 |----------------|--------------------------------------------|
 | Use Case ID    | UC-015-POD                                 |
-| Tên Use Case   | Quản lý chi tiết đơn đặt hàng              |
+| Tên Use Case   | Quản lý đặt hàng nhà cung cấp              |
 | Actor          | SiteAdmin (người dùng có quyền hạn manage_purchases) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật và quản lý chi tiết đơn đặt hàng (PurchaseRequestDetails) gửi cho supplier, bao gồm tạo từ pre-order hoặc tạo trực tiếp cho bất kỳ sản phẩm nào |
 | Độ ưu tiên     | Cao                                        |
@@ -42,7 +42,7 @@
 | Bước | Actor      | Hành động |
 |------|------------|-----------|
 | 9    | SiteAdmin  | Nhấn vào **"Tạo từ Pre-order"** |
-| 10   | Hệ thống   | Hiển thị danh sách OrderDetails có status = WaitingForStock (6) |
+| 10   | Hệ thống   | Hiển thị danh sách OrderDetails có status = PreOrder (6) |
 | 11   | Hệ thống   | Group OrderDetails theo **Product và Supplier** |
 | 12   | SiteAdmin  | Chọn supplier cần tạo Purchase Request |
 | 13   | Hệ thống   | Hiển thị danh sách ProductItems theo supplier được chọn |
@@ -137,6 +137,21 @@
 | 75   | Hệ thống   | Cập nhật Purchase Request status (PartiallyDelivered/Delivered) |
 | 76   | Hệ thống   | Thông báo khách hàng có pre-order rằng hàng đã về |
 
+### Luồng cập nhật trạng thái khi hàng về từ supplier
+
+| Bước | Actor      | Hành động |
+|------|------------|-----------|
+| 117  | SiteAdmin  | Nhận thông báo hàng về từ supplier |
+| 118  | SiteAdmin  | Truy cập **"Quản lý Purchase Requests"** |
+| 119  | SiteAdmin  | Tìm Purchase Request tương ứng |
+| 120  | SiteAdmin  | Xem danh sách PurchaseRequestDetails |
+| 121  | SiteAdmin  | Kiểm tra hàng về có đúng theo OrderDetail không |
+| 122  | SiteAdmin  | **Cập nhật OrderDetails status**: PreOrder (6) → WaitingForStock (7) |
+| 123  | Hệ thống   | **Validate**: Chỉ OrderDetails có liên kết PurchaseRequestDetail mới được cập nhật |
+| 124  | Hệ thống   | Cập nhật trạng thái và ghi log |
+| 125  | Hệ thống   | **Tự động cập nhật Order status** nếu tất cả OrderDetails thay đổi |
+| 126  | Hệ thống   | **Enable tạo phiếu nhập kho** từ OrderDetails có status = WaitingForStock |
+
 ### Luồng bulk operations
 
 | Bước | Actor      | Hành động |
@@ -203,11 +218,11 @@
 | AF-03| Không có OrderDetails pre-order | "Tạo từ Pre-order" bị disable |
 | AF-04| ProductItem không có supplier | Không thể tạo Purchase Request, yêu cầu gán supplier |
 | AF-05| Status = Sent/Confirmed/Delivered | Chỉ cho phép xem, không chỉnh sửa |
-| AF-06| Status transition không hợp lệ | Hiển thị lỗi và danh sách status được phép |
+| AF-06| Status transition không hợp lệ | Hiển thị lỗi và danh sách trạng thái được phép |
 | AF-07| Supplier từ chối Purchase Request | Cập nhật status = Cancelled, tìm supplier khác |
 | AF-08| Hàng về không đúng số lượng | Cập nhật received_qty khác requested_qty, ghi chú lý do |
 | AF-09| Giao hàng từng phần nhiều lần | Cho phép nhập kho nhiều lần với received_qty tích lũy |
-| AF-10| Hủy Purchase Request đã gửi | Thông báo supplier, cập nhật OrderDetails status về Processing |
+| AF-10| Hủy Purchase Request đã gửi | Revert OrderDetails status về PreOrder (6) |
 | AF-11| Xóa ProductItem có Purchase Request | Không cho phép xóa, hiển thị warning |
 | AF-12| Concurrent update Purchase Request | Hiển thị conflict warning, yêu cầu refresh |
 | AF-13| Nhập kho không liên kết Purchase Request | Cho phép tạo WarehouseReceipt độc lập |

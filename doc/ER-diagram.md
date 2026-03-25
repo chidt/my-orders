@@ -41,7 +41,10 @@ erDiagram
     OrderDetails {
         bigint id PK ""
         tinyInt payment_status  "required"
-        bigint payment_request_id  ""
+        bigint payment_request_detail_id FK ""
+        %% UC-018-MPR: Links OrderDetails to PaymentRequestDetails for payment tracking
+        %% Set when OrderDetail is included in a PaymentRequest
+        %% Used to prevent OrderDetail from being included in multiple PaymentRequests
         tinyInt status  "required"
         tinyInt fulfillment_status  "default 0"
         int qty  "required"
@@ -54,7 +57,7 @@ erDiagram
         bigint order_id FK "required"
         bigint site_id FK "required"
         bigint purchase_request_detail_id FK ""
-        %% UC-015-POD: Links OrderDetails to PurchaseRequestDetails for pre-order tracking
+        %% UC-015-PO: Links OrderDetails to PurchaseRequestDetails for pre-order tracking
         %% Set when OrderDetail status = WaitingForStock and Purchase Request is created
         %% Reset to NULL when Purchase Request is deleted (hard delete only)
         datetime order_date  ""
@@ -146,11 +149,32 @@ erDiagram
 
     PaymentRequests {
         bigint id PK "required"
+        string payment_request_number UK "required"
         bigint customer_id FK "required"
+        datetime request_date "required"
+        datetime due_date "required"
+        datetime paid_date ""
         decimal total  "required"
         tinyInt payment_status  "required"
         text note  ""
         bigint site_id FK "required"
+    }
+
+    %% UC-018-MPR: Payment Request Management
+    %% Payment Status Values: 1=Unpaid, 2=PaymentRequested, 3=Paid, 4=Processing, 5=PendingConfirmation, 6=Cancelled
+    %% Business Rules:
+    %% - Only OrderDetails with status=Arrived(7) eligible for payment requests
+    %% - One OrderDetail can only belong to one PaymentRequest at a time
+    %% - PaymentRequest contains OrderDetails from single Customer only
+    %% - Auto-calculate total from PaymentRequestDetails.amount
+    %% - Auto-generate payment_request_number: PR-{YYYYMMDD}-{sequence}
+
+    PaymentRequestDetails {
+        bigint id PK "required"
+        bigint payment_request_id FK "required"
+        bigint order_detail_id FK "required"
+        decimal amount "required"
+        text note ""
     }
 
     PurchaseRequests {
@@ -440,8 +464,12 @@ erDiagram
     Tags||--o{ProductTags:"  "
     Orders}o--||Addresses:"  "
     Orders}o--||Customers:"  "
+    %% UC-018-MPR: Payment Request Management Relationships
     PaymentRequests}o--||Customers:"  "
-    OrderDetails||--||PaymentRequests:"  "
+    PaymentRequests||--|{PaymentRequestDetails:"  "
+    PaymentRequestDetails}|--||OrderDetails:"  "
+    %% OrderDetails link to PaymentRequestDetails for payment tracking
+    OrderDetails}o--||PaymentRequestDetails:"  "
     %% UC-015-POD Key Relationships:
     %% Purchase Request Management
     PurchaseRequests}|--||Suppliers:"  "
@@ -567,4 +595,113 @@ erDiagram
 - **Referential Integrity**: Cannot delete Suppliers/ProductItems with active PurchaseRequests
 - **Transaction Safety**: All delete/cancel operations wrapped in database transactions
 - **Audit Trail**: Complete logging of all status changes and delete/cancel operations
+
+---
+
+## UC-016-MWI & UC-017-MWO: Warehouse In/Out Management
+
+### Data Flow Overview
+
+**UC-016-MWI: Warehouse In Management**
+1. **Receipt Creation**: Create WarehouseReceipt with multiple WarehouseReceiptDetails
+2. **Purchase Request Integration**: Link WarehouseReceiptDetails to PurchaseRequestDetails
+3. **Inventory Updates**: Auto-update WarehouseInventory.current_qty += received quantity
+4. **Cost Calculation**: Recalculate avg_cost for ProductItem-Location combinations
+5. **Pre-order Fulfillment**: Auto-fulfill OrderDetails when sufficient stock arrives
+
+**UC-017-MWO: Warehouse Out Management**  
+1. **Direct Creation**: Create warehouse out slips for any customer/purpose
+2. **Order Integration**: Create warehouse outs from OrderDetails (Status=Invoiced, Payment_Status=Paid)
+3. **Auto-Location Selection**: Automatically select locations based on available stock
+4. **Inventory Deduction**: Auto-update WarehouseInventory.current_qty -= shipped quantity
+5. **Order Fulfillment**: Update OrderDetails status from Invoiced → Delivering
+
+### Payment Status Integration (UC-008-MO & UC-014-MOD)
+
+**Payment Status Values (1-5)**:
+- 1=Unpaid, 2=PaymentRequested, 3=Paid, 4=Processing, 5=PendingConfirmation
+
+**Warehouse Out Eligibility**:
+- OrderDetails must have: Status = Invoiced (8) AND Payment_Status = Paid (3)
+- UC-017-MWO filters and groups OrderDetails by Customer for batch processing
+- Auto-fills shipping information from Customer and Order data
+
+### Key Integration Points
+
+**UC-016-MWI Integrations**:
+- **UC-015-PO**: Purchase Request fulfillment and received_qty updates
+- **UC-010-MI**: WarehouseInventory real-time updates and pre-order auto-fulfillment
+- **UC-008-MO/UC-014-MOD**: OrderDetails status updates when pre-orders are fulfilled
+
+**UC-017-MWO Integrations**:
+- **UC-014-MOD**: OrderDetails filtering and bulk warehouse out creation
+- **UC-008-MO**: Payment status validation and order status progression
+- **UC-007-MC**: Customer information and shipping address auto-population
+- **UC-010-MI**: Real-time inventory deduction and stock validation
+
+### Business Rules
+
+- **Transaction Safety**: All warehouse operations wrapped in database transactions
+- **Real-time Inventory**: WarehouseInventory updated immediately on receipt/shipment
+- **Location Auto-selection**: UC-017 automatically selects optimal locations based on stock levels
+- **Customer Grouping**: Multiple OrderDetails for same customer grouped into single warehouse out
+- **Status Synchronization**: OrderDetails and Order status automatically updated on warehouse operations
+
+---
+
+## UC-018-MPR: Payment Request Management
+
+### Data Flow Overview
+
+1. **Payment Request Creation**: Create PaymentRequest from OrderDetails with status = Arrived (7)
+2. **Customer Grouping**: Automatically group OrderDetails by Customer for efficient payment processing
+3. **PaymentRequestDetail Creation**: Create individual PaymentRequestDetails linking each OrderDetail
+4. **Status Management**: Manage payment status progression from PaymentRequested to Paid
+5. **Payment Tracking**: Complete audit trail of payment status changes and customer communications
+
+### Payment Request Structure
+
+**PaymentRequest (Master)**:
+- Contains header information: customer, dates, total amount, payment status
+- Auto-generated payment_request_number with format: PR-{YYYYMMDD}-{sequence}
+- Groups multiple OrderDetails for single customer into one payment request
+
+**PaymentRequestDetail (Detail)**:
+- Links individual OrderDetails to PaymentRequest
+- Stores amount and notes specific to each OrderDetail
+- Enables granular tracking and audit trail for each item
+
+### Key Integration Points
+
+**UC-014-MOD Integration**:
+- OrderDetails with status = Arrived (7) become eligible for payment requests
+- OrderDetails.payment_request_detail_id links to PaymentRequestDetails
+- Payment status synchronization between PaymentRequest and OrderDetails
+
+**UC-017-MWO Integration**:
+- OrderDetails with status = Invoiced (8) AND payment_status = Paid (3) eligible for warehouse out
+- Payment verification required before goods can be shipped
+
+**UC-008-MO Integration**:
+- Payment status affects overall Order management workflow
+- Customer information used for payment request generation
+
+### Payment Status Flow (1-6)
+
+1. **Unpaid (1)**: OrderDetail has no payment request
+2. **PaymentRequested (2)**: OrderDetail included in PaymentRequest 
+3. **Paid (3)**: Customer has paid, enables warehouse out eligibility
+4. **Processing (4)**: Payment being processed by admin/system
+5. **PendingConfirmation (5)**: Waiting for payment confirmation
+6. **Cancelled (6)**: Payment request cancelled, OrderDetail reverts to Unpaid
+
+### Business Rules
+
+- **Eligibility**: Only OrderDetails with status = Arrived (7) can be included in PaymentRequest
+- **Customer Isolation**: PaymentRequest contains OrderDetails from single Customer only
+- **Site Isolation**: All entities filtered by site_id for multi-tenant support
+- **Unique Assignment**: OrderDetail can only belong to one PaymentRequest at a time
+- **Auto-calculation**: PaymentRequest.total auto-calculated from PaymentRequestDetails
+- **Status Synchronization**: PaymentRequest status changes propagate to all linked OrderDetails
+- **Audit Trail**: Complete logging of payment status changes with timestamps and reasons
 
