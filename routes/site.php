@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Site\AttributeController;
 use App\Http\Controllers\Site\CategoryController;
+use App\Http\Controllers\Site\CustomerController;
 use App\Http\Controllers\Site\LocationController;
 use App\Http\Controllers\Site\ProductController;
 use App\Http\Controllers\Site\ProductTypeController;
@@ -122,5 +123,16 @@ Route::prefix('{site:slug}')->group(function () {
         'edit' => 'site.attributes.edit',
         'update' => 'site.attributes.update',
         'destroy' => 'site.attributes.destroy',
+    ]);
+
+    // Customer management routes
+    Route::resource('customers', CustomerController::class)->names([
+        'index' => 'site.customers.index',
+        'create' => 'site.customers.create',
+        'store' => 'site.customers.store',
+        'show' => 'site.customers.show',
+        'edit' => 'site.customers.edit',
+        'update' => 'site.customers.update',
+        'destroy' => 'site.customers.destroy',
     ]);
 });

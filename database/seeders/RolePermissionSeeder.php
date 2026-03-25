@@ -15,9 +15,11 @@ class RolePermissionSeeder extends Seeder
     {
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         // Create roles (using firstOrCreate to prevent duplicates)
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
         $siteAdminRole = Role::firstOrCreate(['name' => 'SiteAdmin']);
+
         // Create permissions
         $permissions = [
             // Dashboard access
@@ -93,7 +95,8 @@ class RolePermissionSeeder extends Seeder
 
         // Assign all permissions to admin role
         $adminRole->syncPermissions($permissions);
-        // remove permission manage_own_site for admin role
+
+        // Remove permission manage_own_site for admin role
         $adminRole->revokePermissionTo('manage_own_site');
 
         $siteAdminRole->givePermissionTo([
@@ -123,6 +126,5 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         $this->command->info('Roles, permissions, and admin user role assignment completed.');
-
     }
 }

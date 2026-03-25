@@ -61,4 +61,3 @@ class SiteIdPathGenerator implements PathGenerator
         return $withSite;
     }
 }
-

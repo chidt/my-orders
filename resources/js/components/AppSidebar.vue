@@ -1,4 +1,21 @@
 <script setup lang="ts">
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    FolderTree,
+    Handshake,
+    Layers,
+    LayoutGrid,
+    LucideUserKey,
+    Package,
+    Settings,
+    ShieldUser,
+    Boxes,
+    ContactRound,
+    Tag,
+    ToggleLeftIcon,
+    Warehouse,
+} from 'lucide-vue-next';
+import AppLogo from './AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -16,22 +33,6 @@ import { index as PermissionsIndex } from '@/routes/admin/permissions';
 import { index as RolesIndex } from '@/routes/admin/roles';
 import site, { edit as SiteEdit } from '@/routes/site';
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
-import {
-    FolderTree,
-    Handshake,
-    Layers,
-    LayoutGrid,
-    LucideUserKey,
-    Package,
-    Settings,
-    ShieldUser,
-    Boxes,
-    Tag,
-    ToggleLeftIcon,
-    Warehouse,
-} from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 const { can } = usePermissions();
@@ -126,6 +127,14 @@ const getAttributesUrl = (): string | null => {
     }
     return null;
 };
+const getCustomerUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return `/${currentSite.slug}/customers`;
+    }
+    return null;
+};
 
 const mainNavItems: NavItem[] = [
     {
@@ -208,6 +217,12 @@ const mainNavItems: NavItem[] = [
                 show: can('manage_suppliers') && getSupplierUrl() !== null,
             },
         ],
+            },
+            {
+        title: 'Quản lý khách hàng',
+                href: getCustomerUrl() || '',
+                icon: ContactRound,
+                show: (can('view_customers') || can('manage_customers')) && getCustomerUrl() !== null,
     },
     {
         title: 'Quản lý trang web',

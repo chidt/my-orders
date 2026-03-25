@@ -1,5 +1,7 @@
 <?php
 
+use App\Actions\Customer\StoreCustomer;
+use App\Actions\Customer\UpdateCustomer;
 use App\Enums\CustomerType;
 use App\Models\Address;
 use App\Models\Customer;
@@ -38,10 +40,10 @@ beforeEach(function () {
 test('customer can be created with factory', function () {
     $customer = Customer::factory()->create();
 
-    expect($customer)->toBeInstanceOf(Customer::class);
-    expect($customer->name)->not->toBeEmpty();
-    expect($customer->email)->not->toBeEmpty();
-    expect($customer->phone)->not->toBeEmpty();
+    expect($customer)->toBeInstanceOf(Customer::class)
+        ->and($customer->name)->not->toBeEmpty()
+        ->and($customer->email)->not->toBeEmpty()
+        ->and($customer->phone)->not->toBeEmpty();
 });
 
 test('customer has relationships', function () {
@@ -57,15 +59,15 @@ test('customer has relationships', function () {
     $customer = Customer::with(['user', 'addresses', 'site'])->find($customer->id);
 
     // Test User relationship
-    expect($customer->user)->toBeInstanceOf(User::class);
-    expect($customer->user->customer_id)->toBe($customer->id);
+    expect($customer->user)->toBeInstanceOf(User::class)
+        ->and($customer->user->customer_id)->toBe($customer->id)
+        ->and($customer->addresses)->toHaveCount(2)
+        ->and($customer->addresses->first())->toBeInstanceOf(Address::class)
+        ->and($customer->site)->toBeInstanceOf(Site::class);
 
     // Test Addresses relationship
-    expect($customer->addresses)->toHaveCount(2);
-    expect($customer->addresses->first())->toBeInstanceOf(Address::class);
 
     // Test Site relationship
-    expect($customer->site)->toBeInstanceOf(Site::class);
 });
 
 test('customer type enum works correctly', function () {
@@ -73,8 +75,8 @@ test('customer type enum works correctly', function () {
         'type' => CustomerType::BUSINESS->value,
     ]);
 
-    expect($customer->type)->toBe(CustomerType::BUSINESS->value);
-    expect(CustomerType::from($customer->type))->toBe(CustomerType::BUSINESS);
+    expect($customer->type)->toBe(CustomerType::BUSINESS)
+        ->and(CustomerType::from($customer->type->value))->toBe(CustomerType::BUSINESS);
 });
 
 test('address has relationships', function () {
@@ -88,12 +90,12 @@ test('address has relationships', function () {
 
     $address = Address::with(['addressable', 'ward.province'])->find($address->id);
 
-    expect($address->addressable)->toBeInstanceOf(Customer::class);
-    expect($address->ward)->toBeInstanceOf(Ward::class);
-    expect($address->ward->province)->toBeInstanceOf(Province::class);
-    expect($address->addressable_id)->toBe($customer->id);
-    expect($address->addressable_type)->toBe(Customer::class);
-    expect($address->ward_id)->toBe($ward->id);
+    expect($address->addressable)->toBeInstanceOf(Customer::class)
+        ->and($address->ward)->toBeInstanceOf(Ward::class)
+        ->and($address->ward->province)->toBeInstanceOf(Province::class)
+        ->and($address->addressable_id)->toBe($customer->id)
+        ->and($address->addressable_type)->toBe(Customer::class)
+        ->and($address->ward_id)->toBe($ward->id);
 });
 
 test('user has customer relationship', function () {
@@ -129,8 +131,8 @@ test('customer factory creates site when none exists', function () {
 
     $customer = Customer::factory()->create();
 
-    expect($customer->site_id)->not->toBeNull();
-    expect($customer->site)->toBeInstanceOf(Site::class);
+    expect($customer->site_id)->not->toBeNull()
+        ->and($customer->site)->toBeInstanceOf(Site::class);
 });
 
 test('user factory handles customer assignment correctly', function () {
@@ -169,11 +171,77 @@ test('customer factory methods work correctly', function () {
 
     // Test ofType methods
     $individualCustomer = Customer::factory()->individual()->create();
-    expect($individualCustomer->type)->toBe(CustomerType::INDIVIDUAL->value);
+    expect($individualCustomer->type)->toBe(CustomerType::INDIVIDUAL);
 
     $businessCustomer = Customer::factory()->business()->create();
-    expect($businessCustomer->type)->toBe(CustomerType::BUSINESS->value);
+    expect($businessCustomer->type)->toBe(CustomerType::BUSINESS);
+});
 
-    $corporateCustomer = Customer::factory()->corporate()->create();
-    expect($corporateCustomer->type)->toBe(CustomerType::CORPORATE->value);
+test('store customer action enforces single default for business addresses', function () {
+    $site = Site::factory()->create();
+    $ward1 = Ward::first();
+    $ward2 = Ward::query()->where('id', '!=', $ward1->id)->first() ?? $ward1;
+
+    $customer = app(StoreCustomer::class)->execute([
+        'name' => 'Biz Customer',
+        'phone' => '0901234567',
+        'email' => 'biz.customer@example.com',
+        'type' => CustomerType::BUSINESS->value,
+        'description' => null,
+        'addresses' => [
+            [
+                'address' => 'Address 1',
+                'ward_id' => $ward1->id,
+                'is_default' => 0,
+            ],
+            [
+                'address' => 'Address 2',
+                'ward_id' => $ward2->id,
+                'is_default' => 0,
+            ],
+        ],
+    ], $site);
+
+    $customer->load('addresses');
+
+    expect($customer->addresses)->toHaveCount(2)
+        ->and($customer->addresses->where('is_default', 1))->toHaveCount(1)
+        ->and($customer->addresses->firstWhere('is_default', 1)?->address)->toBe('Address 1');
+});
+
+test('update customer action keeps exactly one address for individual type', function () {
+    $customer = Customer::factory()->business()->create();
+
+    $ward1 = Ward::first();
+    $ward2 = Ward::query()->where('id', '!=', $ward1->id)->first() ?? $ward1;
+
+    Address::factory()->forCustomer($customer)->forWard($ward1)->create(['is_default' => 1]);
+    Address::factory()->forCustomer($customer)->forWard($ward2)->create(['is_default' => 0]);
+
+    app(UpdateCustomer::class)->execute($customer, [
+        'name' => 'Updated Individual',
+        'phone' => '0912345678',
+        'email' => 'updated.individual@example.com',
+        'type' => CustomerType::INDIVIDUAL->value,
+        'description' => 'Updated',
+        'addresses' => [
+            [
+                'address' => 'Only Address',
+                'ward_id' => $ward2->id,
+                'is_default' => 0,
+            ],
+            [
+                'address' => 'Ignored Address',
+                'ward_id' => $ward1->id,
+                'is_default' => 1,
+            ],
+        ],
+    ]);
+
+    $customer->refresh()->load('addresses');
+
+    expect($customer->type)->toBe(CustomerType::INDIVIDUAL)
+        ->and($customer->addresses)->toHaveCount(1)
+        ->and($customer->addresses->first()->is_default)->toBeTrue()
+        ->and($customer->addresses->first()->address)->toBe('Only Address');
 });
