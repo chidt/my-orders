@@ -1,0 +1,38 @@
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'resources/js/**'
+      - '.github/workflows/frontend_build.yml'
+name: Build fronted to staging
+jobs:
+  build_and_deploy_bc:
+    name: Deploy fronted to staging
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 25.x ]
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install node packages inside the directory
+        run: |
+          npm install
+      - name: Run build view file
+        run: |
+          npm run build
+      - name: Upload UI build folders to server
+        env:
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.SSH_HOST }}
+          USER_NAME: ${{ secrets.USER_NAME }}
+          PORT_NUMBER: ${{ secrets.PORT_NUMBER }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -i private_key -p ${PORT_NUMBER}" public/build/ ${USER_NAME}@${HOSTNAME}:/var/www/my-orders.order-kids.com/public/build
