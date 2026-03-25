@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { onMounted, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -11,12 +14,9 @@ import SelectTrigger from '@/components/ui/select/SelectTrigger.vue';
 import SelectValue from '@/components/ui/select/SelectValue.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { edit } from '@/routes/profile';
+import { edit, update } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import axios from 'axios';
-import { onMounted, ref } from 'vue';
 
 type Props = {
     mustVerifyEmail: boolean;
@@ -40,21 +40,26 @@ type Props = {
 
 defineProps<Props>();
 
+const page = usePage();
+const user = page.props.auth.user;
+const profileAddress = page.props.address;
+console.log(user);
+
+const form = useForm({
+    ...update.form(),
+    name: user.name,
+    email: user.email,
+    address: profileAddress ? profileAddress.address : '',
+    province_id: profileAddress ? String(profileAddress.ward.province.id) : '',
+    ward_id: profileAddress ? String(profileAddress.ward.id) : '',
+});
+
 const breadcrumbItems: BreadcrumbItem[] = [
     {
         title: 'Cài đặt tài khoản',
         href: edit().url,
     },
 ];
-
-const page = usePage();
-const user = page.props.auth.user;
-const profileAddress = page.props.address;
-const defaultAddress = profileAddress ? profileAddress.address : '';
-const defaultProvinceId = profileAddress
-    ? String(profileAddress.ward.province.id)
-    : '';
-const defaultWardId = ref(profileAddress ? String(profileAddress.ward.id) : '');
 
 const provinces = ref([]);
 const wards = ref([]);
@@ -83,13 +88,18 @@ const fetchWards = async (provinceId: number): Promise<void> => {
 };
 
 const onProvinceChange = (provinceId: string): void => {
-    defaultWardId.value = '';
+    form.ward_id = '';
     fetchWards(Number(provinceId));
 };
+
+const submitForm = (): void => {
+    form.patch(update().url);
+};
+
 onMounted(() => {
     fetchProvinces();
-    if (defaultProvinceId) {
-        fetchWards(Number(defaultProvinceId));
+    if (form.province_id) {
+        fetchWards(Number(form.province_id));
     }
 });
 </script>
@@ -145,12 +155,15 @@ onMounted(() => {
                             type="text"
                             class="mt-1 block w-full"
                             name="address"
-                            :default-value="defaultAddress"
                             required
                             autocomplete="address"
                             placeholder="Địa chỉ"
+                            v-model="form.address"
                         />
-                        <InputError class="mt-2" :message="errors.address" />
+                        <InputError
+                            class="mt-2"
+                            :message="form.errors.address"
+                        />
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2">
@@ -160,7 +173,7 @@ onMounted(() => {
                                 id="province_id"
                                 name="province_id"
                                 @update:modelValue="onProvinceChange"
-                                :default-value="defaultProvinceId"
+                                v-model="form.province_id"
                             >
                                 <SelectTrigger>
                                     <SelectValue
@@ -177,7 +190,7 @@ onMounted(() => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="errors.province_id" />
+                            <InputError :message="form.errors.province_id" />
                         </div>
 
                         <div class="grid gap-2">
@@ -185,7 +198,7 @@ onMounted(() => {
                             <Select
                                 id="ward_id"
                                 name="ward_id"
-                                :default-value="defaultWardId"
+                                v-model="form.ward_id"
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Chọn phường/xã" />
@@ -200,7 +213,7 @@ onMounted(() => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="errors.ward_id" />
+                            <InputError :message="form.errors.ward_id" />
                         </div>
                     </div>
 
