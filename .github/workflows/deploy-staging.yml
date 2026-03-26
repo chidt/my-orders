@@ -1,0 +1,39 @@
+name: Deploy code to staging
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy_code_to_staging:
+    name: Deploy code staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Execute remote deployment commands
+        env:
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.SSH_HOST }}
+          USER_NAME: ${{ secrets.USER_NAME }}
+          PORT_NUMBER: ${{ secrets.PORT_NUMBER }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${PORT_NUMBER} -H ${HOSTNAME} >> ~/.ssh/known_hosts
+
+          ssh -o BatchMode=yes -i ~/.ssh/id_rsa -p ${PORT_NUMBER} ${USER_NAME}@${HOSTNAME} '
+            set -e
+            cd /var/www/my-orders.order-kids.com
+
+            git fetch origin
+            git reset --hard origin/main
+
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --classmap-authoritative
+
+            php artisan optimize:clear
+            php artisan queue:restart || true
+          '
