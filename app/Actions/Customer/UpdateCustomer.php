@@ -2,6 +2,7 @@
 
 namespace App\Actions\Customer;
 
+use App\Enums\AddressDefaultStatus;
 use App\Enums\CustomerType;
 use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
@@ -25,19 +26,25 @@ class UpdateCustomer
             $type = (int) $data['type'];
 
             if ($type === CustomerType::INDIVIDUAL->value) {
-                $first = $addresses[0] ?? ['address' => $data['address'] ?? '', 'ward_id' => (int) ($data['ward_id'] ?? 0), 'is_default' => 1];
+                $first = $addresses[0] ?? [
+                    'address' => $data['address'] ?? '',
+                    'ward_id' => (int) ($data['ward_id'] ?? 0),
+                    'is_default' => AddressDefaultStatus::DEFAULT->value,
+                ];
 
                 $customer->addresses()->delete();
                 $customer->addresses()->create([
                     'address' => $first['address'],
                     'ward_id' => (int) $first['ward_id'],
-                    'is_default' => 1,
+                    'is_default' => AddressDefaultStatus::DEFAULT->value,
                 ]);
 
                 return $customer;
             }
 
-            $defaultIndex = collect($addresses)->search(fn (array $address) => ($address['is_default'] ?? 0) === 1);
+            $defaultIndex = collect($addresses)->search(
+                fn (array $address) => ($address['is_default'] ?? AddressDefaultStatus::NOT_DEFAULT->value) === AddressDefaultStatus::DEFAULT->value,
+            );
             if ($defaultIndex === false) {
                 $defaultIndex = 0;
             }
@@ -49,7 +56,9 @@ class UpdateCustomer
                     [
                         'address' => $address['address'],
                         'ward_id' => (int) $address['ward_id'],
-                        'is_default' => $index === $defaultIndex ? 1 : 0,
+                        'is_default' => $index === $defaultIndex
+                            ? AddressDefaultStatus::DEFAULT->value
+                            : AddressDefaultStatus::NOT_DEFAULT->value,
                     ],
                 );
 
@@ -70,7 +79,7 @@ class UpdateCustomer
                     'id' => isset($item['id']) ? (int) $item['id'] : null,
                     'address' => (string) ($item['address'] ?? ''),
                     'ward_id' => (int) ($item['ward_id'] ?? 0),
-                    'is_default' => $this->toBinary($item['is_default'] ?? 0),
+                    'is_default' => $this->toBinary($item['is_default'] ?? AddressDefaultStatus::NOT_DEFAULT->value),
                 ];
             }, array_filter($data['addresses'], fn ($item) => ! empty($item['address']) && ! empty($item['ward_id']))));
         }
@@ -79,12 +88,14 @@ class UpdateCustomer
             'id' => null,
             'address' => (string) ($data['address'] ?? ''),
             'ward_id' => (int) ($data['ward_id'] ?? 0),
-            'is_default' => 1,
+            'is_default' => AddressDefaultStatus::DEFAULT->value,
         ]];
     }
 
     private function toBinary(mixed $value): int
     {
-        return in_array($value, [1, '1', true, 'true', 'on'], true) ? 1 : 0;
+        return in_array($value, [1, '1', true, 'true', 'on'], true)
+            ? AddressDefaultStatus::DEFAULT->value
+            : AddressDefaultStatus::NOT_DEFAULT->value;
     }
 }

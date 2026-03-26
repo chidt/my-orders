@@ -163,6 +163,7 @@ const translatePaginationLabel = (label: string) => {
                     <Input
                         v-model="search"
                         placeholder="Tìm tên, người phụ trách, điện thoại..."
+                        class="text-sm placeholder:text-sm"
                         @keyup.enter="applyFilters"
                     >
                         <template #prefix>
@@ -410,29 +411,29 @@ const translatePaginationLabel = (label: string) => {
                         </table>
                     </div>
 
-                    <div class="space-y-3 p-3 md:hidden">
+                    <div class="space-y-3 bg-slate-50/70 p-4 md:hidden">
                         <div
                             v-for="supplier in suppliers.data"
                             :key="`mobile-${supplier.id}`"
-                            class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+                            class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
                         >
                             <div
                                 class="mb-3 flex items-start justify-between gap-3"
                             >
                                 <div class="min-w-0 flex-1">
                                     <h3
-                                        class="truncate text-lg font-semibold text-gray-900"
+                                        class="truncate text-base font-semibold leading-tight text-gray-900"
                                     >
                                         {{ supplier.name }}
                                     </h3>
                                     <p
                                         v-if="supplier.address"
-                                        class="mt-1 text-sm text-gray-500"
+                                        class="mt-1 line-clamp-1 text-sm text-gray-500"
                                     >
                                         {{ supplier.address }}
                                     </p>
                                 </div>
-                                <div class="flex items-center gap-1">
+                                <div class="flex shrink-0 items-center gap-1">
                                     <Button
                                         v-if="can('edit_suppliers')"
                                         :as="Link"
@@ -471,33 +472,31 @@ const translatePaginationLabel = (label: string) => {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div class="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <p class="text-gray-500">Người phụ trách</p>
-                                    <p class="font-medium text-gray-900">
+                                    <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Người phụ trách</span>
+                                    <div class="mt-1 text-sm font-medium leading-tight text-gray-900">
                                         {{ supplier.person_in_charge || '-' }}
-                                    </p>
+                                    </div>
                                 </div>
                                 <div>
-                                    <p class="text-gray-500">Số SP</p>
-                                    <p class="font-medium text-gray-900">
+                                    <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Số SP</span>
+                                    <div class="mt-1 text-sm font-medium leading-tight text-gray-900">
                                         {{
                                             (supplier as any).products_count ??
                                             0
                                         }}
-                                    </p>
+                                    </div>
                                 </div>
                                 <div class="col-span-2">
-                                    <p class="text-gray-500">Liên hệ</p>
-                                    <p
-                                        class="flex items-center gap-1 font-medium text-gray-900"
-                                    >
+                                    <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Liên hệ</span>
+                                    <div class="mt-1 flex items-center gap-1 text-sm font-medium leading-tight text-gray-900">
                                         <Phone
                                             v-if="supplier.phone"
                                             class="h-3 w-3 text-gray-400"
                                         />
                                         <span>{{ supplier.phone || '-' }}</span>
-                                    </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

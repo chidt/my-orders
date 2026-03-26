@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import axios from 'axios';
 import { Plus, Edit, Trash2, Search, ContactRound, UserRound } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -34,7 +35,45 @@ const breadcrumbs = [
 
 const search = ref(props.filters.search ?? '');
 const type = ref(props.filters.type ?? 'all');
+const provinceId = ref(props.filters.province_id ?? 'all');
+const wardId = ref(props.filters.ward_id ?? 'all');
 const sortBy = ref(props.filters.sort_by ?? 'name');
+
+const wards = ref<Array<{ id: number; name: string }>>([]);
+
+const loadWards = async (selectedProvince: string) => {
+  if (selectedProvince === 'all') {
+    wards.value = [];
+    return;
+  }
+
+  try {
+    const response = await axios.get(`/api/provinces/${selectedProvince}/wards`);
+    wards.value = response.data ?? [];
+  } catch {
+    wards.value = [];
+  }
+};
+
+watch(
+  provinceId,
+  async (newValue) => {
+    if (newValue === 'all') {
+      wardId.value = 'all';
+      await loadWards(newValue);
+      return;
+    }
+
+    await loadWards(newValue);
+
+    const exists = wards.value.some((ward) => String(ward.id) === String(wardId.value));
+
+    if (!exists) {
+      wardId.value = 'all';
+    }
+  },
+  { immediate: true },
+);
 const isDeleting = ref<number | null>(null);
 const showDeleteDialog = ref(false);
 const customerToDelete = ref<null | CustomerListProps['customers']['data'][number]>(null);
@@ -47,6 +86,8 @@ const applyFilters = () => {
     {
       search: search.value || undefined,
       type: type.value === 'all' ? undefined : type.value,
+      province_id: provinceId.value === 'all' ? undefined : provinceId.value,
+      ward_id: wardId.value === 'all' ? undefined : wardId.value,
       sort_by: sortBy.value || 'name',
       sort_direction: 'asc',
     },
@@ -61,6 +102,8 @@ const applyFilters = () => {
 const clearFilters = () => {
   search.value = '';
   type.value = 'all';
+  provinceId.value = 'all';
+  wardId.value = 'all';
   sortBy.value = 'name';
   applyFilters();
 };
@@ -139,24 +182,42 @@ const formatDate = (value: string) => {
         </div>
       </div>
 
-      <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-5">
-          <Input v-model="search" placeholder="Tìm theo tên, email, số điện thoại" @keyup.enter="applyFilters">
-            <template #prefix>
-              <Search class="h-4 w-4 text-gray-400" />
-            </template>
-          </Input>
+      <div class="mb-6 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+        <div class="grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <div class="md:col-span-2 xl:col-span-2">
+            <Input v-model="search" placeholder="Tìm theo tên, email, SĐT, địa chỉ" class="h-11 text-sm placeholder:text-sm" @keyup.enter="applyFilters">
+              <template #prefix>
+                <Search class="h-4 w-4 text-gray-400" />
+              </template>
+            </Input>
+          </div>
 
           <Select v-model="type">
-            <SelectTrigger><SelectValue placeholder="Loại khách hàng" /></SelectTrigger>
+            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Loại khách hàng" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả loại</SelectItem>
               <SelectItem v-for="(label, key) in customerTypes" :key="key" :value="String(key)">{{ label }}</SelectItem>
             </SelectContent>
           </Select>
 
+          <Select v-model="provinceId">
+            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Tỉnh/Thành phố" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả tỉnh/thành</SelectItem>
+              <SelectItem v-for="province in provinces" :key="province.id" :value="String(province.id)">{{ province.name }}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select v-model="wardId">
+            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Phường/Xã" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả phường/xã</SelectItem>
+              <SelectItem v-for="ward in wards" :key="ward.id" :value="String(ward.id)">{{ ward.name }}</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Select v-model="sortBy">
-            <SelectTrigger><SelectValue placeholder="Sắp xếp" /></SelectTrigger>
+            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Sắp xếp" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="name">Tên</SelectItem>
               <SelectItem value="type">Loại</SelectItem>
@@ -164,9 +225,9 @@ const formatDate = (value: string) => {
             </SelectContent>
           </Select>
 
-          <div class="flex flex-col gap-2 sm:flex-row md:col-span-2">
-            <Button class="w-full cursor-pointer sm:flex-1" @click="applyFilters">Lọc</Button>
-            <Button class="w-full cursor-pointer sm:flex-1" variant="outline" @click="clearFilters">Xóa lọc</Button>
+          <div class="grid grid-cols-2 gap-2 pt-1 md:col-span-2 xl:col-span-6">
+            <Button class="h-11 w-full cursor-pointer" @click="applyFilters">Lọc</Button>
+            <Button class="h-11 w-full cursor-pointer" variant="outline" @click="clearFilters">Xóa lọc</Button>
           </div>
         </div>
       </div>
