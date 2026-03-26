@@ -43,7 +43,6 @@ defineProps<Props>();
 const page = usePage();
 const user = page.props.auth.user;
 const profileAddress = page.props.address;
-console.log(user);
 
 const form = useForm({
     ...update.form(),
