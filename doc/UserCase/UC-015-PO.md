@@ -1,4 +1,3 @@
-````markdown
 # UC015: Manage Purchase Order (Quản lý đặt hàng nhà cung cấp)
 
 ## Thông tin Use Case
@@ -146,7 +145,7 @@
 | 119  | SiteAdmin  | Tìm Purchase Request tương ứng |
 | 120  | SiteAdmin  | Xem danh sách PurchaseRequestDetails |
 | 121  | SiteAdmin  | Kiểm tra hàng về có đúng theo OrderDetail không |
-| 122  | SiteAdmin  | **Cập nhật OrderDetails status**: PreOrder (6) → WaitingForStock (7) |
+| 122  | SiteAdmin  | **Cập nhật OrderDetails status**: Ordered (5) → WaitingForStock (7) |
 | 123  | Hệ thống   | **Validate**: Chỉ OrderDetails có liên kết PurchaseRequestDetail mới được cập nhật |
 | 124  | Hệ thống   | Cập nhật trạng thái và ghi log |
 | 125  | Hệ thống   | **Tự động cập nhật Order status** nếu tất cả OrderDetails thay đổi |
@@ -235,6 +234,11 @@
 | AF-20| OrderDetails orphaned sau khi xóa PR | Auto-revert về status trước WaitingForStock |
 | AF-21| Order status conflict sau xóa PR | Tính toán lại Order status từ tất cả OrderDetails |
 | AF-22| Bulk delete với mixed status | Chỉ xóa/hủy những PR hợp lệ, báo cáo chi tiết |
+| AF-23| **UC-014 Integration**: Không có OrderDetails PreOrder được chọn | Hiển thị thông báo "Vui lòng chọn ít nhất một OrderDetail có status PreOrder" |
+| AF-24| **UC-014 Integration**: OrderDetails thuộc nhiều suppliers | Auto-group và tạo multiple Purchase Requests theo supplier |
+| AF-25| **UC-014 Integration**: ProductItem không có supplier được gán | Hiển thị warning và yêu cầu gán supplier trước khi tạo PR |
+| AF-26| **UC-014 Integration**: OrderDetails đã được link với PR khác | Hiển thị warning và không cho phép tạo PR duplicate |
+| AF-27| **UC-014 Integration**: Lỗi khi redirect về UC-014-MOD | Hiển thị Purchase Request đã tạo với option manual redirect |
 
 ---
 
@@ -350,6 +354,13 @@
 | BR-28 | **Hủy PR đã gửi phải thông báo supplier qua email**                                |
 | BR-29 | **Database transaction bắt buộc cho mọi delete/cancel operations**                 |
 | BR-30 | **Thông báo customers có pre-order khi PR bị xóa/hủy**                             |
+| BR-31 | **UC-014 Integration**: OrderDetails PreOrder có thể được chuyển trực tiếp từ UC-014-MOD |
+| BR-32 | **Auto-grouping**: Tự động group OrderDetails theo supplier khi tạo từ UC-014-MOD |
+| BR-33 | **Data pre-population**: Auto-fill quantities và prices từ OrderDetails context  |
+| BR-34 | **Status synchronization**: Auto-update OrderDetails status PreOrder → Ordered khi tạo PR thành công |
+| BR-35 | **Seamless workflow**: UC-014-MOD → UC-015-PO → back to UC-014-MOD với context preservation |
+| BR-36 | **Supplier validation**: Kiểm tra tất cả OrderDetails phải có supplier được gán |
+| BR-37 | **Duplicate prevention**: Không cho phép tạo PR cho OrderDetails đã có purchase_request_detail_id |
 
 ---
 
@@ -404,7 +415,11 @@
 - **UC-009-MS**: Supplier management - supplier selection và info
 - **UC-006-MP**: Product management - product selection và pricing
 - **UC-008-MO**: Order management - pre-order identification
-- **UC-014-MOD**: Order Details - pre-order tracking và fulfillment
+- **UC-014-MOD**: **PRIMARY INTEGRATION** - OrderDetails PreOrder management và fulfillment tracking
+  - **Inbound**: Receive OrderDetails với status PreOrder từ UC-014-MOD
+  - **Processing**: Tạo Purchase Requests cho selected OrderDetails
+  - **Outbound**: Update OrderDetails status và redirect back với success info
+  - **Data Flow**: OrderDetails → PurchaseRequestDetails → Status Updates → Order Sync
 - **UC-010-MI**: Inventory - stock updates và warehouse operations
 
 ### Với External Systems
@@ -413,5 +428,3 @@
 - **Notification system**: Real-time updates cho status changes
 - **Audit system**: Activity logging cho compliance
 - **Reporting system**: Business intelligence và analytics
-
-````
