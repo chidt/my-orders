@@ -55,10 +55,13 @@ export interface CustomerListProps {
   filters: {
     search?: string | null
     type?: string | null
+    province_id?: string | null
+    ward_id?: string | null
     sort_by?: string | null
     sort_direction?: string | null
   }
   customerTypes: Record<string, string>
+  provinces: Array<{ id: number; name: string }>
 }
 
 export interface CustomerFormProps {

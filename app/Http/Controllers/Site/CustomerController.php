@@ -12,6 +12,7 @@ use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\Province;
 use App\Models\Site;
+use App\Models\Ward;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -27,9 +28,18 @@ class CustomerController extends Controller
         $filters = [
             'search' => (string) $request->query('search', ''),
             'type' => (string) $request->query('type', ''),
+            'province_id' => (string) $request->query('province_id', ''),
+            'ward_id' => (string) $request->query('ward_id', ''),
             'sort_by' => (string) $request->query('sort_by', 'name'),
             'sort_direction' => (string) $request->query('sort_direction', 'asc'),
         ];
+
+        if ($filters['province_id'] === '' && $filters['ward_id'] !== '') {
+            $ward = Ward::query()->select('province_id')->find((int) $filters['ward_id']);
+            if ($ward) {
+                $filters['province_id'] = (string) $ward->province_id;
+            }
+        }
 
         $customers = $action->execute($site, $filters);
 
@@ -51,6 +61,7 @@ class CustomerController extends Controller
             'statistics' => $statistics,
             'filters' => $filters,
             'customerTypes' => Customer::typeOptions(),
+            'provinces' => Province::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

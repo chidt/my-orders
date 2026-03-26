@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed users only in development or when explicitly requested
         // In production, you can run: php artisan db:seed --class=UserSeeder
-        if (app()->environment('local', 'testing')) {
+        if (app()->environment('local', 'testing', 'staging')) {
             $this->call([
                 UserSeeder::class,
                 CategorySeeder::class,
@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
                 WarehouseSeeder::class,
                 LocationSeeder::class,
                 AttributeSeeder::class,
+                CustomerSeeder::class,
             ]);
         }
     }
