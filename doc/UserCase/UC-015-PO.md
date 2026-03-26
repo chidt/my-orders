@@ -5,7 +5,7 @@
 
 | Thuộc tính      | Nội dung                                   |
 |----------------|--------------------------------------------|
-| Use Case ID    | UC-015-POD                                 |
+| Use Case ID    | UC-015-PO                                  |
 | Tên Use Case   | Quản lý đặt hàng nhà cung cấp              |
 | Actor          | SiteAdmin (người dùng có quyền hạn manage_purchases) |
 | Mô tả          | Người dùng có thể tạo, xem, cập nhật và quản lý chi tiết đơn đặt hàng (PurchaseRequestDetails) gửi cho supplier, bao gồm tạo từ pre-order hoặc tạo trực tiếp cho bất kỳ sản phẩm nào |

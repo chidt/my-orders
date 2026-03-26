@@ -1,4 +1,3 @@
-````markdown
 # UC014: Manage Order Details
 
 ## Thông tin Use Case
@@ -42,7 +41,7 @@
 |------|------------|-----------|
 | 8    | SiteAdmin  | Nhập từ khóa tìm kiếm (Order Number, Customer Name, Product Name) |
 | 9    | Hệ thống   | Tìm kiếm theo từ khóa trong các trường liên quan |
-| 10   | SiteAdmin  | Chọn lọc theo **Customer** (dropdown list) |
+| 10   | Hệ thống   | **Hiển thị danh sách OrderDetails có status = PreOrder** sau khi chốt đơn thiếu hàng |
 | 11   | SiteAdmin  | Chọn lọc theo **Product** (dropdown với search) |
 | 12   | SiteAdmin  | Chọn lọc theo **ProductItem** (dropdown phụ thuộc Product) |
 | 13   | SiteAdmin  | Chọn lọc theo **ProductType** (dropdown list) |
@@ -150,11 +149,13 @@
 | 80   | SiteAdmin  | Review và điều chỉnh thông tin nếu cần |
 | 81   | SiteAdmin  | Nhấn **"Xác nhận tạo yêu cầu thanh toán"** |
 | 82   | Hệ thống   | **Chuyển sang UC-018-MPR**: Tạo PaymentRequest và PaymentRequestDetails |
-| 83   | Hệ thống   | **Liên kết OrderDetails** với PaymentRequestDetails (payment_request_detail_id) |
-| 84   | Hệ thống   | **Cập nhật OrderDetails.payment_status**: Unpaid → PaymentRequested |
-| 85   | Hệ thống   | **Gửi notification** đến customers về payment request |
-| 86   | Hệ thống   | Hiển thị summary kết quả tạo payment request |
-| 87   | Hệ thống   | **Link đến UC-018-MPR** để quản lý payment requests
+| 83   | Hệ thống   | **Cập nhật PaymentRequest.status**: PaymentRequested |
+| 84   | Hệ thống   | **Liên kết OrderDetails** với PaymentRequestDetails (payment_request_detail_id) |
+| 85   | Hệ thống   | **Cập nhật OrderDetails.payment_status**: Unpaid → PaymentRequested |
+| 86   | Hệ thống   | **Gửi notification** đến customers về payment request |
+| 87   | Hệ thống   | **Cập nhật PaymentRequest.status**: PaymentRequested → Processing |
+| 88   | Hệ thống   | Hiển thị summary kết quả tạo payment request |
+| 89   | Hệ thống   | **Link đến UC-018-MPR** để quản lý payment requests
 
 ---
 
@@ -255,9 +256,11 @@
 ### Business Rules cho Status Transition
 - **Forward only**: Chỉ cho phép chuyển tiến (trừ Cancelled)
 - **Skip allowed**: Có thể bỏ qua một số trạng thái trung gian
-- **PreOrder logic**: Status 6 (PreOrder) khi không đủ hàng, chuyển sang WaitingForStock khi hàng về
-- **WaitingForStock logic**: Status 7 khi hàng về từ supplier, chờ nhập kho
-- **Inventory impact**: Status 5, 10, 12 ảnh hưởng đến WarehouseInventory
+- **ClosingOrder trigger**: Status 3 (ClosingOrder) là điểm khóa đơn hàng, tự động trigger stock check
+- **Auto-transition từ ClosingOrder**: Tự động chuyển sang Arrived (8) nếu đủ hàng, PreOrder (6) nếu thiếu hàng
+- **PreOrder logic**: Chỉ xảy ra từ ClosingOrder khi available_qty < qty, cần tạo PO trước khi chuyển sang Ordered (5)
+- **WaitingForStock logic**: Status 7 khi hàng về từ supplier, chờ nhập kho trước khi thành Arrived (8)
+- **Inventory impact**: Status 5, 8, 10, 12 ảnh hưởng đến WarehouseInventory
 - **Final status**: Status 11, 12 không thể thay đổi
 
 ### ENUM Payment Status Values (1-5)
@@ -274,6 +277,310 @@
 - **Warehouse Out eligibility**: Status = Invoiced AND Payment_Status = Paid
 - **Payment tracking**: Log tất cả thay đổi payment status
 - **Customer notification**: Thông báo khi payment status thay đổi
+
+---
+
+## Sơ đồ trình tự (Sequence Diagram) - Complete OrderDetail Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant SA as SiteAdmin
+    participant UI as Frontend UI
+    participant BE as Backend System
+    participant DB as Database
+    participant INV as WarehouseInventory
+    participant LOG as AuditLog
+    participant NOTI as Notification
+    participant EXT as External Systems
+    participant CUST as Customer
+
+    Note over SA,CUST: Complete OrderDetail Lifecycle: New → Completed
+
+    %% Phase 1: Order Creation and Initial Processing
+    rect rgb(240, 248, 255)
+        Note over SA,DB: Phase 1: Tạo đơn hàng và xử lý ban đầu
+        SA->>UI: Tạo OrderDetail mới
+        UI->>BE: POST /order-details
+        BE->>DB: Create OrderDetail.status = New (1)
+        BE->>LOG: Log tạo OrderDetail mới
+        BE-->>UI: Return OrderDetail created
+        UI-->>SA: Hiển thị OrderDetail.status = New (1)
+
+        SA->>UI: Cập nhật sang "Đang xử lý"
+        UI->>BE: PATCH /order-details/{id}/status = Processing (2)
+        BE->>DB: Update OrderDetail.status = Processing (2)
+        BE->>LOG: Log chuyển New → Processing
+        BE-->>UI: Status updated successfully
+        UI-->>SA: Hiển thị OrderDetail.status = Processing (2)
+    end
+
+    %% Phase 2: Closing Order - Critical Decision Point
+    rect rgb(255, 248, 220)
+        Note over SA,NOTI: Phase 2: Chốt đơn - Điểm quyết định quan trọng
+        SA->>UI: Chọn "Chốt đơn hàng"
+        UI->>BE: PATCH /order-details/{id}/status = ClosingOrder (3)
+        
+        BE->>DB: Validate OrderDetail có thể chốt đơn
+        BE->>BE: Check permission (manage_orders)
+        BE->>DB: Update OrderDetail.status = ClosingOrder (3)
+        BE->>LOG: Log chuyển Processing → ClosingOrder
+        
+        Note over BE,INV: Tự động kiểm tra stock và quyết định trạng thái tiếp theo
+        BE->>INV: Kiểm tra available_qty cho ProductItem
+        INV-->>BE: Return stock availability
+        
+        alt Đủ hàng (available_qty >= qty)
+            BE->>DB: Update OrderDetail.status = Arrived (8)
+            BE->>INV: Update reserved_qty += qty, available_qty -= qty
+            BE->>NOTI: Thông báo customer hàng sẵn sàng
+            Note over BE: Direct path: ClosingOrder → Arrived (skip pre-order)
+        else Không đủ hàng (available_qty < qty)
+            BE->>DB: Update OrderDetail.status = PreOrder (6)
+            BE->>INV: Update pre_order_qty += qty
+            BE->>NOTI: Thông báo customer về pre-order
+            Note over BE: Pre-order path: cần tạo Purchase Order
+        end
+    end
+
+    %% Phase 3A: Pre-Order Path (nếu thiếu hàng)
+    rect rgb(255, 245, 245)
+        Note over SA,EXT: Phase 3A: Pre-Order Path - Đặt hàng nhà cung cấp
+        
+        opt Nếu PreOrder (6)
+            SA->>UI: Tạo Purchase Order (UC-015-PO)
+            UI->>BE: Create Purchase Order cho ProductItems thiếu
+            BE->>EXT: Gửi PO cho Supplier
+            
+            alt PO gửi thành công
+                BE->>DB: Update OrderDetail.status = Ordered (5)
+                BE->>LOG: Log chuyển PreOrder → Ordered
+                BE->>NOTI: Thông báo customer PO đã gửi
+                
+                Note over EXT: Supplier xử lý đơn hàng và giao hàng
+                EXT-->>BE: Thông báo hàng đã giao
+                BE->>DB: Update OrderDetail.status = WaitingForStock (7)
+                BE->>LOG: Log chuyển Ordered → WaitingForStock
+                
+                Note over SA: Kiểm tra hàng về và nhập kho (UC-016-MWI)
+                SA->>UI: Xác nhận hàng về và nhập kho
+                UI->>BE: Warehouse receipt confirmation
+                BE->>DB: Update OrderDetail.status = Arrived (8)
+                BE->>INV: Update available_qty += qty, pre_order_qty -= qty
+                BE->>LOG: Log chuyển WaitingForStock → Arrived
+                BE->>NOTI: Thông báo customer hàng đã về
+            end
+        end
+    end
+
+    %% Phase 4: Payment Request and Invoicing
+    rect rgb(245, 255, 245)
+        Note over SA,CUST: Phase 4: Yêu cầu thanh toán và lập hóa đơn
+        
+        Note over SA: OrderDetail.status = Arrived (8) từ path A hoặc B
+        SA->>UI: Tạo Payment Request (UC-018-MPR)
+        UI->>BE: Create PaymentRequest for eligible OrderDetails
+        BE->>DB: Create PaymentRequest và PaymentRequestDetails
+        BE->>DB: Update PaymentRequest.status = PaymentRequested
+        BE->>DB: Link OrderDetails với PaymentRequestDetails
+        BE->>DB: Update OrderDetail.status = Invoiced (9)
+        BE->>DB: Update OrderDetail.payment_status = PaymentRequested (2)
+        BE->>LOG: Log chuyển Arrived → Invoiced và tạo PaymentRequest
+        
+        Note over BE: Gửi payment request cho customer
+        BE->>NOTI: Gửi payment request cho customer
+        BE->>DB: Update PaymentRequest.status = Processing
+        BE->>LOG: Log PaymentRequest status: PaymentRequested → Processing
+        NOTI->>CUST: Email/SMS payment request
+        
+        Note over CUST: Customer thực hiện thanh toán
+        CUST->>EXT: Payment via gateway/transfer
+        EXT-->>BE: Payment confirmation webhook
+        BE->>DB: Update OrderDetail.payment_status = Paid (3)
+        BE->>LOG: Log payment status change
+        BE->>NOTI: Thông báo payment successful
+    end
+
+    %% Phase 5: Warehouse Out and Delivery
+    rect rgb(255, 250, 240)
+        Note over SA,CUST: Phase 5: Xuất kho và giao hàng
+        
+        Note over SA: OrderDetails với status=Invoiced và payment_status=Paid
+        SA->>UI: Tạo phiếu xuất kho (UC-017-MWO)
+        UI->>BE: Create WarehouseOut for paid OrderDetails
+        BE->>DB: Validate stock availability
+        BE->>INV: Check available_qty >= reserved_qty
+        BE->>DB: Create WarehouseOut và WarehouseOutDetails
+        BE->>DB: Update OrderDetail.status = Delivering (10)
+        BE->>INV: Update reserved_qty -= qty, available_qty không thay đổi
+        BE->>LOG: Log chuyển Invoiced → Delivering
+        BE->>NOTI: Thông báo customer hàng đã xuất kho
+        
+        Note over EXT: Logistics/Delivery service
+        EXT->>CUST: Giao hàng đến customer
+        CUST-->>EXT: Xác nhận nhận hàng
+        EXT-->>BE: Delivery confirmation
+        BE->>DB: Update OrderDetail.status = Completed (11)
+        BE->>LOG: Log chuyển Delivering → Completed
+        BE->>NOTI: Thông báo delivery completed
+    end
+
+    %% Final Status Update
+    rect rgb(240, 255, 240)
+        Note over SA,CUST: Final: Order hoàn thành
+        BE->>DB: Check tất cả OrderDetails của Order
+        BE->>DB: Update Order.status = Completed nếu tất cả OrderDetails completed
+        BE->>LOG: Log Order completion
+        BE-->>UI: Final status update
+        UI-->>SA: Hiển thị OrderDetail.status = Completed (11)
+        Note over SA,CUST: OrderDetail lifecycle hoàn thành ✅
+    end
+
+    %% Error/Cancellation handling
+    rect rgb(255, 240, 240)
+        Note over SA,CUST: Exception: Hủy đơn hàng (có thể xảy ra ở bất kỳ giai đoạn nào)
+        opt Cancellation at any stage
+            SA->>UI: Hủy OrderDetail
+            UI->>BE: PATCH /order-details/{id}/status = Cancelled (12)
+            BE->>DB: Update OrderDetail.status = Cancelled (12)
+            BE->>INV: Rollback inventory changes (reserved_qty, pre_order_qty)
+            BE->>LOG: Log cancellation với reason
+            BE->>NOTI: Thông báo customer về cancellation
+            BE-->>UI: Cancellation completed
+            Note over SA,CUST: OrderDetail cancelled ❌
+        end
+    end
+```
+
+---
+
+## Sơ đồ trạng thái (State Diagram) - OrderDetail Status Transitions
+
+```mermaid
+stateDiagram-v2
+    [*] --> New : Tạo OrderDetail mới
+    
+    New --> Processing : Manual update
+    New --> ClosingOrder : Chốt đơn hàng
+    New --> Cancelled : Hủy đơn hàng
+    
+    Processing --> ClosingOrder : Chốt đơn hàng
+    Processing --> Cancelled : Hủy đơn hàng
+    
+    state "ClosingOrder (Chốt đơn)" as ClosingOrder {
+        state "Stock Check Process" as StockCheck
+        [*] --> StockCheck : Tự động kiểm tra stock
+    }
+    
+    state "Stock Decision Fork" as fork1 <<fork>>
+    ClosingOrder --> fork1 : Tự động sau khi chốt đơn
+    fork1 --> Arrived : available_qty >= qty (Đủ hàng - Reserve stock)
+    fork1 --> PreOrder : available_qty < qty (Thiếu hàng - Need PO)
+    
+    state "PreOrder (Thiếu hàng)" as PreOrder {
+        state "Cần tạo Purchase Order" as NeedPO
+        state "PO đã tạo" as POCreated
+        state "PO đã gửi supplier" as POSent
+        
+        [*] --> NeedPO
+        NeedPO --> POCreated : Tạo PO (UC-015-PO)
+        POCreated --> POSent : Gửi PO thành công
+    }
+    
+    PreOrder --> Ordered : PO gửi thành công
+    PreOrder --> Cancelled : Hủy pre-order
+    
+    Ordered --> WaitingForStock : Chờ hàng từ supplier
+    Ordered --> Cancelled : Hủy đơn hàng
+    
+    WaitingForStock --> Arrived : Hàng về và nhập kho (UC-016-MWI)
+    WaitingForStock --> Cancelled : Hủy đơn hàng
+    
+    Arrived --> Invoiced : Tạo Payment Request (UC-018-MPR)
+    Arrived --> Cancelled : Hủy đơn hàng
+    
+    Invoiced --> Delivering : Xuất kho giao hàng (UC-017-MWO)
+    Invoiced --> Cancelled : Hủy trước khi giao
+    
+    Delivering --> Completed : Giao hàng thành công
+    Delivering --> Cancelled : Hủy trong quá trình giao
+    
+    Cancelled --> [*] : Kết thúc
+    Completed --> [*] : Kết thúc
+    
+    note right of ClosingOrder : Điểm quan trọng - Khóa không cho customer chỉnh sửa - Tự động check stock và transition - Quyết định Arrived vs PreOrder
+    
+    note right of fork1 : Điểm quyết định tự động - Kiểm tra WarehouseInventory available_qty vs qty yêu cầu - Không can thiệp thủ công
+    
+    note right of PreOrder : Quy trình PreOrder - 1. Tự động từ ClosingOrder - 2. Tạo PO manual (UC-015-PO) - 3. Gửi PO tới Ordered - 4. Chờ hàng tới WaitingForStock
+    
+    note right of Arrived : Arrived có thể từ 2 nguồn - 1. Trực tiếp từ ClosingOrder (đủ stock) - 2. Từ WaitingForStock (hàng mới về)
+```
+
+---
+
+## Sơ đồ luồng nghiệp vụ PreOrder (Business Process Flow)
+
+```mermaid
+flowchart TD
+    A[Tạo OrderDetail mới] --> B[Status = New]
+    B --> C[User chọn 'Chốt đơn']
+    C --> D[Status = ClosingOrder<br>Khóa không cho customer sửa]
+
+    D --> E{Tự động kiểm tra Stock}
+
+    E -->|available_qty >= qty| F[Status = Arrived<br>Reserve Stock]
+    E -->|available_qty < qty| G[Status = PreOrder<br>Update pre_order_qty]
+
+    F --> H[Cập nhật WarehouseInventory<br>reserved_qty += qty<br>available_qty -= qty]
+    H --> I[Thông báo Customer <br> Hàng sẵn sàng]
+    I --> J[Sẵn sàng tạo Payment Request<br>UC-018-MPR]
+
+    G --> K[Thông báo Customer<br>về Pre-order]
+    K --> L[User tạo Purchase Order<br>UC-015-PO]
+    L --> M{PO Status}
+
+    M -->|PO Draft/Pending| L
+    M -->|PO Sent Success| N[Status = Ordered<br>Đã gửi supplier]
+
+    N --> O[Chờ hàng từ Supplier]
+    O --> P{Hàng về từ Supplier?}
+    P -->|Chưa| O
+    P -->|Có| Q[Status = WaitingForStock<br>Cần kiểm tra hàng]
+
+    Q --> R[Nhập kho UC-016-MWI<br>Kiểm tra chất lượng]
+    R --> S[Status = Arrived<br>Hàng đã về và ok]
+
+    S --> T[Cập nhật WarehouseInventory<br>available_qty += qty<br>pre_order_qty -= qty]
+    T --> U[Thông báo Customer<br>Hàng đã sẵn sàng]
+
+    J --> V[Tạo Payment Request<br>UC-018-MPR]
+    U --> V
+
+    V --> V1[PaymentRequest.status = PaymentRequested<br>OrderDetail.status = Invoiced<br>OrderDetail.payment_status = PaymentRequested]
+    V1 --> V2[Gửi payment request cho customer<br>PaymentRequest.status = Processing]
+    V2 --> W[Chờ customer thanh toán<br>PaymentRequest.status = Processing]
+    W --> X{Customer thanh toán?}
+    X -->|Chưa| W
+    X -->|Có| Y[PaymentRequest.status = Paid<br>payment_status = Paid]
+
+    Y --> Z[Xuất kho UC-017-MWO<br>Status = Delivering]
+    Z --> AA[Status = Completed]
+
+    style D fill:#ff9800,stroke:#e65100,stroke-width:3px
+    style E fill:#ffeb3b,stroke:#f57f17,stroke-width:3px
+    style G fill:#f44336,stroke:#d32f2f,stroke-width:2px
+    style F fill:#4caf50,stroke:#388e3c,stroke-width:2px
+    style L fill:#9c27b0,stroke:#7b1fa2,stroke-width:2px
+    style Q fill:#2196f3,stroke:#1976d2,stroke-width:2px
+
+    classDef critical fill:#ffcdd2,stroke:#d32f2f,stroke-width:2px
+    classDef success fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    classDef process fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+
+    class G,L,Q critical
+    class F,S,Y success
+    class D,E,V process
+```
 
 ---
 
@@ -307,6 +614,7 @@
 | BR-24 | **PaymentRequestDetail linking**: OrderDetails.payment_request_detail_id links to PaymentRequestDetails |
 | BR-25 | **Customer notification**: Thông báo khi OrderDetails được include vào PaymentRequest |
 | BR-26 | **Payment request validation**: Validate customer info trước khi tạo payment request |
+| BR-27 | **PaymentRequest status flow**: PaymentRequested (sau khi tạo) → Processing (sau khi gửi customer) → Paid (khi customer thanh toán) |
 
 ---
 
@@ -342,5 +650,3 @@
 - **Payment request status**: Display links to existing PaymentRequests
 - **Bulk actions UI**: Clear indication of payment request vs warehouse out actions
 - **Integration navigation**: Seamless navigation to UC-018-MPR payment management
-
-````

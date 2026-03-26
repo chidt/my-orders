@@ -191,7 +191,7 @@ erDiagram
         text supplier_response ""
     }
 
-    %% UC-015-POD: Purchase Order Details Management
+    %% UC-015-PO: Purchase Order Details Management
     %% Status Values: 1=Draft, 2=Sent, 3=Confirmed, 4=PartiallyDelivered, 5=Delivered, 6=Cancelled
     %% Business Rules:
     %% - Only Draft status can be deleted (hard delete)
@@ -310,7 +310,7 @@ erDiagram
         bigint location_id FK "required"
         bigint order_detail_id FK ""
         bigint purchase_request_detail_id FK ""
-        %% UC-015-POD: Links received goods to Purchase Request Details
+        %% UC-015-PO: Links received goods to Purchase Request Details
         %% Used to track which Purchase Request items have been received
         %% Updates received_qty in PurchaseRequestDetails when goods arrive
         int qty  "required"
@@ -470,7 +470,7 @@ erDiagram
     PaymentRequestDetails}|--||OrderDetails:"  "
     %% OrderDetails link to PaymentRequestDetails for payment tracking
     OrderDetails}o--||PaymentRequestDetails:"  "
-    %% UC-015-POD Key Relationships:
+    %% UC-015-PO Key Relationships:
     %% Purchase Request Management
     PurchaseRequests}|--||Suppliers:"  "
     PurchaseRequests}|--||Sites:"  "
@@ -542,7 +542,7 @@ erDiagram
 
 ---
 
-## UC-015-POD: Purchase Order Details Management
+## UC-015-PO: Purchase Order Details Management
 
 ### Data Flow Overview
 
