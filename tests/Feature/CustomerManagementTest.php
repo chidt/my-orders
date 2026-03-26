@@ -159,6 +159,93 @@ test('validation fails when individual customer has multiple addresses', functio
     $response->assertSessionHasErrors('addresses');
 });
 
+test('can search customers by address through index endpoint', function () {
+    $provinceCanTho = Province::factory()->create(['name' => 'Thành phố Cần Thơ']);
+    $provinceHcm = Province::factory()->create(['name' => 'Thành phố Hồ Chí Minh']);
+
+    $wardNinhKieu = Ward::factory()->create([
+        'name' => 'Phường Ninh Kiều',
+        'province_id' => $provinceCanTho->id,
+    ]);
+    $wardTanDinh = Ward::factory()->create([
+        'name' => 'Phường Tân Định',
+        'province_id' => $provinceHcm->id,
+    ]);
+
+    $customerCanTho = Customer::factory()->forSite($this->site)->create([
+        'name' => 'Khách Cần Thơ',
+        'email' => 'cantho.index@example.com',
+    ]);
+    Address::factory()->forCustomer($customerCanTho)->forWard($wardNinhKieu)->create([
+        'address' => '123 Nguyễn Trãi',
+    ]);
+
+    $customerHcm = Customer::factory()->forSite($this->site)->create([
+        'name' => 'Khách Hồ Chí Minh',
+        'email' => 'hcm.index@example.com',
+    ]);
+    Address::factory()->forCustomer($customerHcm)->forWard($wardTanDinh)->create([
+        'address' => '456 Hai Bà Trưng',
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->get(route('site.customers.index', $this->site->slug).'?search=Cần+Thơ');
+
+    $response->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('site/customers/Index')
+            ->where('customers.total', 1)
+            ->where('customers.data.0.email', 'cantho.index@example.com')
+            ->where('filters.search', 'Cần Thơ')
+        );
+});
+
+test('can filter customers by province and ward through index endpoint', function () {
+    $provinceCanTho = Province::factory()->create(['name' => 'Thành phố Cần Thơ']);
+    $provinceHcm = Province::factory()->create(['name' => 'Thành phố Hồ Chí Minh']);
+
+    $wardNinhKieu = Ward::factory()->create([
+        'name' => 'Phường Ninh Kiều',
+        'province_id' => $provinceCanTho->id,
+    ]);
+    $wardTanDinh = Ward::factory()->create([
+        'name' => 'Phường Tân Định',
+        'province_id' => $provinceHcm->id,
+    ]);
+
+    $customerCanTho = Customer::factory()->forSite($this->site)->create([
+        'email' => 'cantho.filter.index@example.com',
+    ]);
+    Address::factory()->forCustomer($customerCanTho)->forWard($wardNinhKieu)->create();
+
+    $customerHcm = Customer::factory()->forSite($this->site)->create([
+        'email' => 'hcm.filter.index@example.com',
+    ]);
+    Address::factory()->forCustomer($customerHcm)->forWard($wardTanDinh)->create();
+
+    $responseByProvince = $this->actingAs($this->user)
+        ->get(route('site.customers.index', $this->site->slug).'?province_id='.$provinceCanTho->id);
+
+    $responseByProvince->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('site/customers/Index')
+            ->where('customers.total', 1)
+            ->where('customers.data.0.email', 'cantho.filter.index@example.com')
+            ->where('filters.province_id', (string) $provinceCanTho->id)
+        );
+
+    $responseByWard = $this->actingAs($this->user)
+        ->get(route('site.customers.index', $this->site->slug).'?ward_id='.$wardNinhKieu->id);
+
+    $responseByWard->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('site/customers/Index')
+            ->where('customers.total', 1)
+            ->where('customers.data.0.email', 'cantho.filter.index@example.com')
+            ->where('filters.ward_id', (string) $wardNinhKieu->id)
+        );
+});
+
 test('cannot delete customer when customer already has orders', function () {
     $customer = Customer::factory()->forSite($this->site)->create();
 
