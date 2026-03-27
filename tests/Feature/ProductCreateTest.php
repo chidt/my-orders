@@ -115,6 +115,66 @@ test('creating product with attributes generates combinations and sku order foll
     expect($skus)->toContain('ABC-M-BLUE');
 });
 
+test('variant partner price includes partner_addition when product partner price is null or zero', function () {
+    $payload = basePayloadForSite($this->site);
+    $payload['partner_price'] = null;
+    $payload['code'] = 'NOPART';
+
+    $size = Attribute::factory()->forSite($this->site)->create(['name' => 'Size', 'code' => 'size', 'order' => 1]);
+
+    $payload['attributes'] = [
+        [
+            'attribute_id' => $size->id,
+            'values' => [
+                [
+                    'code' => 'S',
+                    'value' => 'Small',
+                    'order' => 1,
+                    'addition_value' => 0,
+                    'partner_addition_value' => 0,
+                    'purchase_addition_value' => 0,
+                ],
+                [
+                    'code' => 'M',
+                    'value' => 'Medium',
+                    'order' => 2,
+                    'addition_value' => 0,
+                    'partner_addition_value' => 15000,
+                    'purchase_addition_value' => 0,
+                ],
+            ],
+        ],
+    ];
+
+    $response = $this->actingAs($this->user)
+        ->post(route('products.store', ['site' => $this->site->slug]), $payload);
+
+    $response->assertRedirect(route('products.index', ['site' => $this->site->slug]))
+        ->assertSessionHas('success');
+
+    $product = Product::query()->where('code', 'NOPART')->firstOrFail();
+
+    $itemS = $product->productItems()->where('sku', 'NOPART-S')->firstOrFail();
+    $itemM = $product->productItems()->where('sku', 'NOPART-M')->firstOrFail();
+
+    expect($itemS->partner_price)->toBeNull();
+    expect((float) $itemM->partner_price)->toBe(15000.0);
+
+    $payloadZero = basePayloadForSite($this->site);
+    $payloadZero['partner_price'] = 0;
+    $payloadZero['code'] = 'PART0';
+    $payloadZero['attributes'] = $payload['attributes'];
+
+    $this->actingAs($this->user)
+        ->post(route('products.store', ['site' => $this->site->slug]), $payloadZero)
+        ->assertRedirect(route('products.index', ['site' => $this->site->slug]))
+        ->assertSessionHas('success');
+
+    $productZero = Product::query()->where('code', 'PART0')->firstOrFail();
+    $itemMZero = $productZero->productItems()->where('sku', 'PART0-M')->firstOrFail();
+    expect((float) $itemMZero->partner_price)->toBe(15000.0);
+});
+
 test('rejects creating product when combinations exceed 100', function () {
     $payload = basePayloadForSite($this->site);
 
@@ -137,6 +197,32 @@ test('rejects creating product when combinations exceed 100', function () {
         ->post(route('products.store', ['site' => $this->site->slug]), $payload);
 
     $response->assertSessionHasErrors('attributes');
+});
+
+test('shows field errors when duplicate attribute value codes are submitted on create', function () {
+    $payload = basePayloadForSite($this->site);
+    $size = Attribute::factory()->forSite($this->site)->create(['name' => 'Size', 'code' => 'size', 'order' => 1]);
+
+    $payload['attributes'] = [
+        [
+            'attribute_id' => $size->id,
+            'values' => [
+                ['code' => 'S', 'value' => 'Small', 'order' => 1, 'addition_value' => 0],
+                ['code' => 's', 'value' => 'Small Duplicate', 'order' => 2, 'addition_value' => 0],
+            ],
+        ],
+    ];
+
+    $response = $this->actingAs($this->user)
+        ->from(route('products.create', ['site' => $this->site->slug]))
+        ->post(route('products.store', ['site' => $this->site->slug]), $payload);
+
+    $response
+        ->assertRedirect(route('products.create', ['site' => $this->site->slug]))
+        ->assertSessionHasErrors([
+            'attributes.0.values.0.code',
+            'attributes.0.values.1.code',
+        ]);
 });
 
 test('when sku already exists it auto adds suffix', function () {

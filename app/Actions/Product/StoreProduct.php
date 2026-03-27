@@ -164,9 +164,7 @@ class StoreProduct
                     'is_parent_slider_image' => ($variantSourceMap[$variantKey] ?? null) === 'slide',
                     'qty_in_stock' => 0,
                     'price' => ((float) $product->price) + $addition,
-                    'partner_price' => $product->partner_price === null
-                        ? null
-                        : ((float) $product->partner_price) + $partnerAddition,
+                    'partner_price' => $this->resolveVariantPartnerPrice($product->partner_price, $partnerAddition),
                     'purchase_price' => ((float) $product->purchase_price) + $purchaseAddition,
                     'media_id' => $variantExistingMediaMap[$variantKey] ?? null,
                     'product_id' => $product->id,
@@ -222,6 +220,15 @@ class StoreProduct
         }
 
         return $sku;
+    }
+
+    private function resolveVariantPartnerPrice(mixed $productPartnerPrice, float $partnerAddition): ?float
+    {
+        if (blank($productPartnerPrice) && $partnerAddition == 0.0) {
+            return null;
+        }
+
+        return (float) ($productPartnerPrice ?? 0) + $partnerAddition;
     }
 
     /**

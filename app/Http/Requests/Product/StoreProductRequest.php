@@ -147,9 +147,10 @@ class StoreProductRequest extends FormRequest
             }
 
             $totalCombinations = 1;
-            $allValueCodes = [];
+            $seenCodePaths = [];
+            $duplicateCodePaths = [];
 
-            foreach ($attributes as $attribute) {
+            foreach ($attributes as $attributeIndex => $attribute) {
                 $values = $attribute['values'] ?? [];
                 if (! is_array($values) || count($values) === 0) {
                     $validator->errors()->add('attributes', 'Mỗi thuộc tính phải có ít nhất 1 giá trị.');
@@ -159,10 +160,20 @@ class StoreProductRequest extends FormRequest
 
                 $totalCombinations *= count($values);
 
-                foreach ($values as $value) {
-                    if (isset($value['code'])) {
-                        $allValueCodes[] = (string) $value['code'];
+                foreach ($values as $valueIndex => $value) {
+                    $normalizedCode = strtoupper(trim((string) ($value['code'] ?? '')));
+                    if ($normalizedCode === '') {
+                        continue;
                     }
+
+                    $codePath = "attributes.$attributeIndex.values.$valueIndex.code";
+                    if (array_key_exists($normalizedCode, $seenCodePaths)) {
+                        $duplicateCodePaths[$seenCodePaths[$normalizedCode]] = true;
+                        $duplicateCodePaths[$codePath] = true;
+                        continue;
+                    }
+
+                    $seenCodePaths[$normalizedCode] = $codePath;
                 }
             }
 
@@ -170,9 +181,10 @@ class StoreProductRequest extends FormRequest
                 $validator->errors()->add('attributes', 'Quá nhiều combinations (> 100). Vui lòng giảm số lượng giá trị thuộc tính.');
             }
 
-            $normalized = array_map(fn ($c) => strtoupper(trim($c)), $allValueCodes);
-            if (count($normalized) !== count(array_unique($normalized))) {
-                $validator->errors()->add('attributes', 'Mã attribute values (code) phải unique trong phạm vi Product.');
+            if (count($duplicateCodePaths) > 0) {
+                foreach (array_keys($duplicateCodePaths) as $duplicateCodePath) {
+                    $validator->errors()->add($duplicateCodePath, 'Mã giá trị thuộc tính đã bị trùng.');
+                }
             }
         });
     }

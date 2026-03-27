@@ -6,6 +6,7 @@ use App\Actions\Product\DestroyProduct;
 use App\Actions\Product\StoreProduct;
 use App\Actions\Product\UpdateProduct;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Product\SyncChildProductsRequest;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Models\Attribute;
@@ -13,6 +14,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\ProductAttributeValue;
+use App\Models\ProductItem;
 use App\Models\ProductType;
 use App\Models\Supplier;
 use App\Models\Tag;
@@ -124,6 +126,13 @@ class ProductController extends Controller
             'tags' => fn ($q) => $q->where('site_id', $siteId),
             'productAttributeValues.attribute',
             'productItems.productItemAttributeValues.productAttributeValue.attribute',
+            'productItems.orderDetails',
+            // TODO: bật lại eager-load các relation dưới khi DB/model đã sẵn sàng.
+            // 'productItems.purchaseRequestDetails',
+            // 'productItems.shoppingCartItems',
+            // 'productItems.warehouseOutDetails',
+            // 'productItems.warehouseReceiptDetails',
+            // 'productItems.warehouseInventory',
         ]);
         $productModel->loadCount('productItems');
 
@@ -150,43 +159,8 @@ class ProductController extends Controller
             ->map(fn ($index) => (int) $index)
             ->all();
 
-        $variantUploadImages = $productModel
-            ->productItems
-            ->flatMap(function ($item) {
-                $codes = $item->productItemAttributeValues
-                    ->map(function ($pivot) {
-                        $pv = $pivot->productAttributeValue;
-                        if (! $pv) {
-                            return null;
-                        }
-
-                        $attrOrder = (int) ($pv->attribute?->order ?? 0);
-
-                        return [
-                            'order' => $attrOrder,
-                            'code' => strtoupper(trim((string) $pv->code)),
-                        ];
-                    })
-                    ->filter()
-                    ->sortBy(fn ($row) => $row['order'])
-                    ->pluck('code')
-                    ->values();
-
-                $variantKey = $codes->count() > 0 ? $codes->implode('-') : '__default__';
-
-                return $item->getMedia('variant_images')->map(function ($m) use ($variantKey) {
-                    return [
-                        'id' => $m->id,
-                        'url' => $m->getUrl(),
-                        'key' => $variantKey,
-                    ];
-                });
-            })
-            ->values()
-            ->all();
-
-        $variantImages = $productModel->productItems
-            ->map(function ($item) use ($slideIdToIndex, $mainMedia) {
+        $productItemKeys = $productModel->productItems
+            ->mapWithKeys(function ($item) {
                 $codes = $item->productItemAttributeValues
                     ->map(function ($pivot) {
                         $pv = $pivot->productAttributeValue;
@@ -208,6 +182,30 @@ class ProductController extends Controller
 
                 $key = $codes->count() > 0 ? $codes->implode('-') : '__default__';
 
+                return [(int) $item->id => $key];
+            })
+            ->all();
+
+        $variantUploadImages = $productModel
+            ->productItems
+            ->flatMap(function ($item) {
+                $imageKey = 'item-'.(int) $item->id;
+
+                return $item->getMedia('variant_images')->map(function ($m) use ($imageKey) {
+                    return [
+                        'id' => $m->id,
+                        'url' => $m->getUrl(),
+                        'key' => $imageKey,
+                    ];
+                });
+            })
+            ->values()
+            ->all();
+
+        $variantImages = $productModel->productItems
+            ->map(function ($item) use ($slideIdToIndex, $mainMedia) {
+                $key = 'item-'.(int) $item->id;
+
                 return [
                     'key' => $key,
                     'media_id' => $item->media_id ? (int) $item->media_id : null,
@@ -219,7 +217,29 @@ class ProductController extends Controller
                         : true,
                 ];
             })
-            ->unique('key')
+            ->values()
+            ->all();
+
+        $childProducts = $productModel->productItems
+            ->map(fn ($item) => [
+                'id' => (int) $item->id,
+                'key' => $productItemKeys[(int) $item->id] ?? '__default__',
+                'image_key' => 'item-'.(int) $item->id,
+                'can_delete' => $this->canDeleteChildProduct($item),
+                'sku' => (string) $item->sku,
+                'name' => (string) $item->name,
+                'purchase_price' => (float) $item->purchase_price,
+                'partner_price' => (float) ($item->partner_price ?? 0),
+                'sale_price' => (float) $item->price,
+            ])
+            ->values()
+            ->all();
+
+        $lockedProductAttributeValueIds = $productModel->productItems
+            ->flatMap(fn ($item) => $item->productItemAttributeValues)
+            ->map(fn ($pivot) => (int) ($pivot->product_attribute_value_id ?? 0))
+            ->filter(fn (int $productAttributeValueId) => $productAttributeValueId > 0)
+            ->unique()
             ->values()
             ->all();
 
@@ -230,6 +250,8 @@ class ProductController extends Controller
             'slideImages' => $slideImages,
             'variantUploadImages' => $variantUploadImages,
             'variantImages' => $variantImages,
+            'childProducts' => $childProducts,
+            'lockedProductAttributeValueIds' => $lockedProductAttributeValueIds,
             'categories' => $formOptions['categories'],
             'suppliers' => $formOptions['suppliers'],
             'productTypes' => $formOptions['productTypes'],
@@ -246,6 +268,7 @@ class ProductController extends Controller
                         'values' => $values
                             ->sortBy('order')
                             ->map(fn (ProductAttributeValue $v) => [
+                                'id' => $v->id,
                                 'code' => $v->code,
                                 'value' => $v->value,
                                 'order' => $v->order,
@@ -276,8 +299,80 @@ class ProductController extends Controller
             return back()->withInput()->with('error', 'Có lỗi xảy ra: '.$e->getMessage());
         }
 
-        return redirect()->route('products.index', ['site' => auth()->user()->site->slug])
+        return redirect()->route('products.edit', [
+            'site' => auth()->user()->site->slug,
+            'product' => $productModel->id,
+        ])
             ->with('success', 'Sản phẩm đã được cập nhật thành công.');
+    }
+
+    public function syncChildProducts(SyncChildProductsRequest $request, $site, $product, UpdateProduct $updateProduct)
+    {
+        $productModel = $this->findProductForSite((int) $product);
+        Gate::authorize('update', $productModel);
+
+        try {
+            $updateProduct->syncChildProductsOnly(
+                $productModel,
+                (int) auth()->user()->site_id,
+                $request,
+            );
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return back()->with('error', 'Không thể đồng bộ sản phẩm con: '.$e->getMessage());
+        }
+
+        return back()->with('success', 'Đã đồng bộ sản phẩm con thành công.');
+    }
+
+    public function destroyChildProduct($site, $product, $productItem)
+    {
+        $productModel = $this->findProductForSite((int) $product);
+        Gate::authorize('update', $productModel);
+
+        $childProduct = ProductItem::query()
+            ->where('id', (int) $productItem)
+            ->where('product_id', $productModel->id)
+            ->first();
+
+        if (! $childProduct) {
+            abort(404);
+        }
+
+        $isInUse = ! $this->canDeleteChildProduct($childProduct);
+
+        if ($isInUse) {
+            return back()->with('error', 'Không thể xóa sản phẩm con đã phát sinh dữ liệu.');
+        }
+
+        try {
+            $childProduct->productItemAttributeValues()->delete();
+            $childProduct->clearMediaCollection('variant_images');
+            $childProduct->delete();
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return back()->with('error', 'Không thể xóa sản phẩm con: '.$e->getMessage());
+        }
+
+        return back()->with('success', 'Đã xóa sản phẩm con thành công.');
+    }
+
+    private function canDeleteChildProduct(ProductItem $childProduct): bool
+    {
+        $hasOrderDetails = $childProduct->relationLoaded('orderDetails')
+            ? $childProduct->orderDetails->isNotEmpty()
+            : $childProduct->orderDetails()->exists();
+
+        // TODO: Bật lại các check liên quan khác sau khi DB/model hoàn thiện:
+        // - purchaseRequestDetails
+        // - shoppingCartItems
+        // - warehouseOutDetails
+        // - warehouseReceiptDetails
+        // - warehouseInventory
+
+        return ! $hasOrderDetails;
     }
 
     public function destroy($site, $product, DestroyProduct $destroyProduct)
