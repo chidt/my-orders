@@ -1,29 +1,19 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { Plus, Edit, Trash2, Search, ContactRound, UserRound } from 'lucide-vue-next';
+import { Plus, Edit, Trash2, Search, ContactRound, UserRound, CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import siteRoute from '@/routes/site';
 import type { CustomerListProps } from '@/types/customer';
+import { cn } from '@/lib/utils';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const props = defineProps<CustomerListProps>();
 const { can } = usePermissions();
@@ -38,6 +28,8 @@ const type = ref(props.filters.type ?? 'all');
 const provinceId = ref(props.filters.province_id ?? 'all');
 const wardId = ref(props.filters.ward_id ?? 'all');
 const sortBy = ref(props.filters.sort_by ?? 'name');
+const open = ref(false);
+const openWard = ref(false);
 
 const wards = ref<Array<{ id: number; name: string }>>([]);
 
@@ -147,6 +139,7 @@ const formatDate = (value: string) => {
 </script>
 
 <template>
+
   <Head :title="`Quản lý khách hàng - ${site.name}`" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
@@ -156,12 +149,8 @@ const formatDate = (value: string) => {
           <h1 class="text-2xl font-bold text-gray-900">Quản lý khách hàng</h1>
           <p class="mt-2 text-sm text-gray-700">Quản lý danh sách khách hàng cho {{ site.name }}</p>
         </div>
-        <Button
-          v-if="can('create_customers')"
-          :as="Link"
-          :href="`/${site.slug}/customers/create`"
-          class="w-full cursor-pointer sm:w-auto"
-        >
+        <Button v-if="can('create_customers')" :as="Link" :href="`/${site.slug}/customers/create`"
+          class="w-full cursor-pointer sm:w-auto">
           <Plus class="mr-2 h-4 w-4" />
           Thêm khách hàng mới
         </Button>
@@ -185,7 +174,8 @@ const formatDate = (value: string) => {
       <div class="mb-6 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div class="grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2 xl:grid-cols-6">
           <div class="md:col-span-2 xl:col-span-2">
-            <Input v-model="search" placeholder="Tìm theo tên, email, SĐT, địa chỉ" class="h-11 text-sm placeholder:text-sm" @keyup.enter="applyFilters">
+            <Input v-model="search" placeholder="Tìm theo tên, email, SĐT, địa chỉ"
+              class="h-11 text-sm placeholder:text-sm" @keyup.enter="applyFilters">
               <template #prefix>
                 <Search class="h-4 w-4 text-gray-400" />
               </template>
@@ -193,31 +183,87 @@ const formatDate = (value: string) => {
           </div>
 
           <Select v-model="type">
-            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Loại khách hàng" /></SelectTrigger>
+            <SelectTrigger class="h-11 w-full">
+              <SelectValue placeholder="Loại khách hàng" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả loại</SelectItem>
               <SelectItem v-for="(label, key) in customerTypes" :key="key" :value="String(key)">{{ label }}</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select v-model="provinceId">
-            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Tỉnh/Thành phố" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả tỉnh/thành</SelectItem>
-              <SelectItem v-for="province in provinces" :key="province.id" :value="String(province.id)">{{ province.name }}</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover v-model:open="open">
+            <PopoverTrigger as-child>
+              <Button variant="outline" role="combobox" :aria-expanded="open"
+                class="w-full justify-between font-normal">
+                {{
+                  provinceId
+                    ? provinces.find((p) => String(p.id) === provinceId)?.name
+                    : 'Chọn tỉnh/thành phố'
+                }}
+                <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-[--radix-popover-trigger-width] p-0">
+              <Command>
+                <CommandInput placeholder="Tìm kiếm tỉnh..." />
+                <CommandList>
+                  <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem v-for="province in provinces" :key="province.id" :value="province.name" @select="() => {
+                      provinceId = provinceId === String(province.id) ? '' : String(province.id)
+                      open = false
+                    }">
+                      <CheckIcon :class="cn(
+                        'mr-2 h-4 w-4',
+                        provinceId === String(province.id) ? 'opacity-100' : 'opacity-0'
+                      )" />
+                      {{ province.name }}
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
 
-          <Select v-model="wardId">
-            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Phường/Xã" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả phường/xã</SelectItem>
-              <SelectItem v-for="ward in wards" :key="ward.id" :value="String(ward.id)">{{ ward.name }}</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover v-model:open="openWard">
+            <PopoverTrigger as-child>
+              <Button variant="outline" role="combobox" :aria-expanded="openWard"
+                class="w-full justify-between font-normal">
+                {{
+                  wardId != 'all'
+                    ? wards.find((w) => String(w.id) === wardId)?.name
+                    : 'Chọn phường/xã'
+                }}
+                <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-[--radix-popover-trigger-width] p-0">
+              <Command>
+                <CommandInput placeholder="Tìm kiếm phường/xã..." />
+                <CommandList>
+                  <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem v-for="ward in wards" :key="ward.id" :value="ward.name" @select="() => {
+                      wardId = wardId === String(ward.id) ? '' : String(ward.id)
+                      openWard = false
+                    }">
+                      <CheckIcon :class="cn(
+                        'mr-2 h-4 w-4',
+                        wardId === String(ward.id) ? 'opacity-100' : 'opacity-0'
+                      )" />
+                      {{ ward.name }}
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
 
           <Select v-model="sortBy">
-            <SelectTrigger class="h-11 w-full"><SelectValue placeholder="Sắp xếp" /></SelectTrigger>
+            <SelectTrigger class="h-11 w-full">
+              <SelectValue placeholder="Sắp xếp" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="name">Tên</SelectItem>
               <SelectItem value="type">Loại</SelectItem>
@@ -232,41 +278,39 @@ const formatDate = (value: string) => {
         </div>
       </div>
 
-        <div
-            v-if="$page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 p-4"
-        >
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.53a.75.75 0 00-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-green-800">
-                        {{ $page.props.flash.success }}
-                    </p>
-                </div>
-            </div>
+      <div v-if="$page.props.flash?.success" class="mb-4 rounded-md bg-green-50 p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.53a.75.75 0 00-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm font-medium text-green-800">
+              {{ $page.props.flash.success }}
+            </p>
+          </div>
         </div>
+      </div>
 
-        <div
-            v-if="$page.props.flash?.error"
-            class="mb-4 rounded-md bg-red-50 p-4"
-        >
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-red-800">
-                        {{ $page.props.flash.error }}
-                    </p>
-                </div>
-            </div>
+      <div v-if="$page.props.flash?.error" class="mb-4 rounded-md bg-red-50 p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm font-medium text-red-800">
+              {{ $page.props.flash.error }}
+            </p>
+          </div>
         </div>
+      </div>
 
       <div v-if="showSummary" class="mb-4 text-sm text-gray-600">
         Hiển thị {{ customers.data.length }} trong tổng số {{ customers.total }} khách hàng
@@ -284,11 +328,15 @@ const formatDate = (value: string) => {
             <table class="w-full min-w-[900px] divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Khách hàng</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Liên hệ</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Khách hàng
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Liên hệ
+                  </th>
                   <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Loại</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Địa chỉ</th>
-                  <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Hành động</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Địa chỉ
+                  </th>
+                  <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Hành động
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
@@ -305,25 +353,16 @@ const formatDate = (value: string) => {
                   <td class="px-6 py-4 text-sm text-gray-700">{{ customer.address || '-' }}</td>
                   <td class="px-6 py-4 text-right text-sm whitespace-nowrap">
                     <div class="flex items-center justify-end gap-2">
-                      <Button
-                        v-if="can('edit_customers')"
-                        :as="Link"
-                        :href="`/${site.slug}/customers/${customer.id}/edit`"
-                        variant="ghost"
-                        size="sm"
-                        class="p-2"
-                        title="Chỉnh sửa"
-                      >
+                      <Button v-if="can('edit_customers')" :as="Link"
+                        :href="`/${site.slug}/customers/${customer.id}/edit`" variant="ghost" size="sm" class="p-2"
+                        title="Chỉnh sửa">
                         <Edit class="h-4 w-4" />
                       </Button>
-                      <button
-                        v-if="can('delete_customers')"
-                        type="button"
+                      <button v-if="can('delete_customers')" type="button"
                         class="inline-flex cursor-pointer items-center rounded p-1 text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                         :disabled="isDeleting === customer.id || customer.can_delete === false"
                         @click="openDeleteDialog(customer)"
-                        :title="customer.can_delete === false ? 'Không thể xóa khách hàng đã có đơn hàng' : 'Xóa'"
-                      >
+                        :title="customer.can_delete === false ? 'Không thể xóa khách hàng đã có đơn hàng' : 'Xóa'">
                         <Trash2 class="h-4 w-4" />
                       </button>
                     </div>
@@ -334,11 +373,8 @@ const formatDate = (value: string) => {
           </div>
 
           <div class="space-y-3 bg-slate-50/70 p-4 md:hidden">
-            <div
-              v-for="customer in customers.data"
-              :key="`mobile-${customer.id}`"
-              class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-            >
+            <div v-for="customer in customers.data" :key="`mobile-${customer.id}`"
+              class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-2">
@@ -348,23 +384,14 @@ const formatDate = (value: string) => {
                   <p class="mt-1 truncate text-sm text-gray-500">{{ customer.email || '-' }}</p>
                 </div>
                 <div class="flex shrink-0 items-center gap-1">
-                  <Button
-                    v-if="can('edit_customers')"
-                    :as="Link"
-                    :href="`/${site.slug}/customers/${customer.id}/edit`"
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 w-8 p-2"
-                  >
+                  <Button v-if="can('edit_customers')" :as="Link" :href="`/${site.slug}/customers/${customer.id}/edit`"
+                    variant="ghost" size="sm" class="h-8 w-8 p-2">
                     <Edit class="h-4 w-4" />
                   </Button>
-                  <button
-                    v-if="can('delete_customers')"
-                    type="button"
+                  <button v-if="can('delete_customers')" type="button"
                     class="inline-flex h-8 w-8 items-center justify-center rounded text-red-600 hover:bg-red-50 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="isDeleting === customer.id || customer.can_delete === false"
-                    @click="openDeleteDialog(customer)"
-                  >
+                    @click="openDeleteDialog(customer)">
                     <Trash2 class="h-4 w-4" />
                   </button>
                 </div>
@@ -379,11 +406,15 @@ const formatDate = (value: string) => {
                 </div>
                 <div>
                   <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Ngày tạo</span>
-                  <div class="mt-1 text-sm font-medium leading-tight text-gray-900">{{ formatDate(customer.created_at) }}</div>
+                  <div class="mt-1 text-sm font-medium leading-tight text-gray-900">{{ formatDate(customer.created_at)
+                  }}
+                  </div>
                 </div>
                 <div class="col-span-2">
                   <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Địa chỉ</span>
-                  <div class="mt-1 break-words text-sm font-medium leading-tight text-gray-900">{{ customer.address || '-' }}</div>
+                  <div class="mt-1 break-words text-sm font-medium leading-tight text-gray-900">{{ customer.address ||
+                    '-' }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -393,14 +424,8 @@ const formatDate = (value: string) => {
         <div v-if="customers.last_page > 1" class="border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
           <div class="flex flex-wrap justify-center gap-1">
             <template v-for="(link, index) in customers.links" :key="index">
-              <Button
-                v-if="link.url"
-                :as="Link"
-                :href="link.url"
-                :variant="link.active ? 'default' : 'outline'"
-                size="sm"
-                class="h-9 min-w-10"
-              >
+              <Button v-if="link.url" :as="Link" :href="link.url" :variant="link.active ? 'default' : 'outline'"
+                size="sm" class="h-9 min-w-10">
                 <span>{{ translatePaginationLabel(link.label) }}</span>
               </Button>
               <Button v-else variant="outline" size="sm" disabled class="h-9 min-w-10">
