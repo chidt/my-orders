@@ -417,41 +417,6 @@ const combinationsCount = computed(() => {
 
 const combinationsTooMany = computed(() => combinationsCount.value > 100);
 
-/** Giống DB/BE: orderBy(order) rồi orderBy(name) — SKU preview theo đúng thứ tự này */
-const attributeOrder = computed(() => {
-    const meta = new Map(
-        props.attributes.map((a) => [
-            a.id,
-            {
-                order: Number(a.order) || 0,
-                name: (a.name ?? '').toString(),
-                id: a.id,
-            },
-        ]),
-    );
-
-    return [...form.attributes].sort((a, b) => {
-        const ma = meta.get(a.attribute_id) ?? {
-            order: Number.MAX_SAFE_INTEGER,
-            name: '',
-            id: a.attribute_id,
-        };
-        const mb = meta.get(b.attribute_id) ?? {
-            order: Number.MAX_SAFE_INTEGER,
-            name: '',
-            id: b.attribute_id,
-        };
-        if (ma.order !== mb.order) {
-            return ma.order - mb.order;
-        }
-        const byName = ma.name.localeCompare(mb.name, undefined, { sensitivity: 'base' });
-        if (byName !== 0) {
-            return byName;
-        }
-        return ma.id - mb.id;
-    });
-});
-
 const variantUploadObjectUrls = ref<Record<string, string>>({});
 const variantFileInputRefs = ref<Record<string, HTMLInputElement | null>>({});
 const variantUploadOptionKeys = ref<Set<string>>(new Set());
