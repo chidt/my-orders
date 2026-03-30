@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Check, Plus, Trash2, AlertTriangle } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { ArrowLeft, Plus, Trash2, AlertTriangle } from 'lucide-vue-next';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
+import ProductTagsMultiselect from '@/components/products/ProductTagsMultiselect.vue';
 import QuickTagCreateDialog from '@/components/products/QuickTagCreateDialog.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,8 +16,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { formatVnd } from '@/lib/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatVnd } from '@/lib/utils';
 import { index as ProductsIndex, store as ProductsStore } from '@/routes/products';
 
 interface Site {
@@ -141,6 +141,7 @@ const form = useForm<{
     main_image: null,
     slide_images: [],
 });
+const createFormRef = ref<HTMLElement | null>(null);
 
 const selectedAttributeId = ref<string>('none');
 const selectedAttributeQuickValues = ref('');
@@ -584,14 +585,6 @@ const removeValue = (attributeId: number, index: number) => {
     block.values.splice(index, 1);
 };
 
-const toggleTag = (tagId: number) => {
-    if (form.tags.includes(tagId)) {
-        form.tags = form.tags.filter((id) => id !== tagId);
-        return;
-    }
-    form.tags.push(tagId);
-};
-
 const errorFor = (path: string): string | undefined => {
     return (form.errors as Record<string, string | undefined>)[path];
 };
@@ -756,12 +749,36 @@ const attributeBlockIndex = (attributeId: number): number => {
     return form.attributes.findIndex((a) => a.attribute_id === attributeId);
 };
 
+const scrollToFirstInputErrorMessage = async (): Promise<void> => {
+    await nextTick();
+    const errorMessages = Array.from(createFormRef.value?.querySelectorAll('p.text-red-600') ?? []);
+    const firstVisibleErrorMessage = errorMessages.find((el) => {
+        if (!(el instanceof HTMLElement)) {
+            return false;
+        }
+
+        return el.offsetParent !== null && el.getClientRects().length > 0;
+    });
+
+    if (!(firstVisibleErrorMessage instanceof HTMLElement)) {
+        return;
+    }
+
+    firstVisibleErrorMessage.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+    });
+};
+
 const submit = () => {
     if (!props.site?.slug) return;
     form.post(ProductsStore.url({ site: props.site.slug }), {
         preserveScroll: true,
         forceFormData: true,
         onSuccess: () => form.reset(),
+        onError: () => {
+            void scrollToFirstInputErrorMessage();
+        },
     });
 };
 
@@ -805,7 +822,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                 </div>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-8">
+            <form ref="createFormRef" @submit.prevent="submit" class="space-y-8">
                 <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6">
                         <h2 class="text-lg font-semibold text-gray-900">
@@ -1152,42 +1169,14 @@ function cartesian<T>(sets: T[][]): T[][] {
                         </Button>
                     </div>
                     <p class="mt-1 text-sm text-gray-600">
-                        Gắn thẻ để lọc và tìm kiếm nhanh
+                        Gắn thẻ để lọc và tìm kiếm nhanh — có thể gõ để lọc danh sách.
                     </p>
 
-                    <div
-                        v-if="props.tags.length === 0"
-                        class="text-sm text-gray-600"
-                    >
-                        Chưa có tag nào.
-                    </div>
-                    <div
-                        v-else
-                        class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4"
-                    >
-                        <button
-                            v-for="tag in props.tags"
-                            :key="tag.id"
-                            type="button"
-                            @click="toggleTag(tag.id)"
-                            class="flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm hover:bg-gray-50"
-                        >
-                            <span class="truncate">{{ tag.name }}</span>
-                            <Badge
-                                variant="secondary"
-                                :class="
-                                    form.tags.includes(tag.id)
-                                        ? 'border border-green-200 bg-green-50 text-green-700'
-                                        : 'text-gray-600'
-                                "
-                            >
-                                <Check
-                                    v-if="form.tags.includes(tag.id)"
-                                    class="h-4 w-4 text-green-600"
-                                />
-                                <span v-else>—</span>
-                            </Badge>
-                        </button>
+                    <div class="mt-4 max-w-xl">
+                        <ProductTagsMultiselect
+                            v-model="form.tags"
+                            :options="props.tags"
+                        />
                     </div>
                     <InputError :message="tagsError" />
                 </div>

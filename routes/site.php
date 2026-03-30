@@ -72,6 +72,10 @@ Route::prefix('{site:slug}')->group(function () {
         ->name('product-types.reorder');
 
     // Product management routes
+    Route::post('products/{product}/sync-child-products', [ProductController::class, 'syncChildProducts'])
+        ->name('products.sync-child-products');
+    Route::delete('products/{product}/child-products/{productItem}', [ProductController::class, 'destroyChildProduct'])
+        ->name('products.child-products.destroy');
     Route::resource('products', ProductController::class)->names([
         'index' => 'products.index',
         'create' => 'products.create',

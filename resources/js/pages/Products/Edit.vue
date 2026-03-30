@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { AlertTriangle, ArrowLeft, Check, Plus, Trash2 } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
+import ProductTagsMultiselect from '@/components/products/ProductTagsMultiselect.vue';
 import QuickTagCreateDialog from '@/components/products/QuickTagCreateDialog.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,8 +16,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { formatVnd } from '@/lib/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatVnd } from '@/lib/utils';
 import { index as ProductsIndex, update as ProductsUpdate } from '@/routes/products';
 
 interface Site {
@@ -53,6 +53,7 @@ interface AttributeOption {
 }
 
 type AttributeValueInput = {
+    id?: number | null;
     code: string;
     value: string;
     order: number;
@@ -101,6 +102,17 @@ interface Props {
     slideImages?: { id: number; url: string }[];
     variantUploadImages?: { id: number; url: string; key?: string }[];
     variantImages?: VariantImageInput[];
+    childProducts?: {
+        id: number;
+        key: string;
+        image_key: string;
+        can_delete: boolean;
+        sku: string;
+        name: string;
+        purchase_price: number;
+        partner_price: number;
+        sale_price: number;
+    }[];
     categories: CategoryOption[];
     suppliers: Option[];
     productTypes: Option[];
@@ -109,9 +121,11 @@ interface Props {
     tags: TagOption[];
     attributes: AttributeOption[];
     productAttributes: AttributeBlockInput[];
+    lockedProductAttributeValueIds?: number[];
 }
 
 const props = defineProps<Props>();
+const page = usePage();
 
 const normalizeIntegerPrice = (value: unknown): number => {
     const parsed = Number(value);
@@ -164,9 +178,10 @@ const form = useForm<{
     qty_in_stock: props.product.qty_in_stock,
     weight: props.product.weight,
     price: normalizeIntegerPrice(props.product.price),
-    partner_price: props.product.partner_price
-        ? normalizeIntegerPrice(props.product.partner_price)
-        : null,
+    partner_price:
+        props.product.partner_price == null || props.product.partner_price === ''
+            ? null
+            : normalizeIntegerPrice(props.product.partner_price),
     purchase_price: normalizeIntegerPrice(props.product.purchase_price),
     order_closing_date: orderClosingDateFormatted,
     tags: props.product.tags.map((t) => t.id),
@@ -188,14 +203,140 @@ const form = useForm<{
     variant_image_files: [],
     variant_image_file_keys: [],
 });
+const syncChildProductsForm = useForm<{
+    variant_images: VariantImageInput[];
+    variant_image_files: File[];
+    variant_image_file_keys: string[];
+}>({
+    variant_images: [],
+    variant_image_files: [],
+    variant_image_file_keys: [],
+});
+const deleteChildProductForm = useForm<Record<string, never>>({});
 
-const toggleTag = (tagId: number) => {
-    if (form.tags.includes(tagId)) {
-        form.tags = form.tags.filter((id) => id !== tagId);
+const flashSuccess = computed(() => {
+    const flash = (page.props as { flash?: Record<string, unknown> }).flash;
+    const success = flash?.success;
+    const message = flash?.message;
+
+    if (typeof success === 'string' && success.length > 0) {
+        return success;
+    }
+    if (typeof message === 'string' && message.length > 0) {
+        return message;
+    }
+
+    return null;
+});
+
+const flashError = computed(() => {
+    const flash = (page.props as { flash?: Record<string, unknown> }).flash;
+    const error = flash?.error;
+
+    return typeof error === 'string' && error.length > 0 ? error : null;
+});
+
+const flashMessageRef = ref<HTMLElement | null>(null);
+const validationErrorSummaryRef = ref<HTMLElement | null>(null);
+const editFormRef = ref<HTMLElement | null>(null);
+
+const validationErrorMessages = computed<string[]>(() => {
+    const errors = form.errors as Record<string, unknown> | undefined;
+    if (!errors) {
+        return [];
+    }
+
+    const messages: string[] = [];
+    Object.values(errors).forEach((value) => {
+        if (typeof value === 'string' && value.length > 0) {
+            messages.push(value);
+            return;
+        }
+        if (Array.isArray(value)) {
+            value.forEach((item) => {
+                if (typeof item === 'string' && item.length > 0) {
+                    messages.push(item);
+                }
+            });
+        }
+    });
+
+    return [...new Set(messages)];
+});
+
+const scrollToFlashMessage = async (): Promise<void> => {
+    await nextTick();
+    if (!flashMessageRef.value) {
         return;
     }
-    form.tags.push(tagId);
+
+    flashMessageRef.value.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+    });
+    flashMessageRef.value.focus();
 };
+
+const scrollToFlashMessageWithRetry = async (retries = 6): Promise<void> => {
+    for (let i = 0; i < retries; i += 1) {
+        await nextTick();
+        if (flashMessageRef.value) {
+            await scrollToFlashMessage();
+            return;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 80));
+    }
+};
+
+watch([flashSuccess, flashError], ([success, error]) => {
+    if (success || error) {
+        void scrollToFlashMessageWithRetry();
+    }
+});
+
+onMounted(() => {
+    if (flashSuccess.value || flashError.value) {
+        void scrollToFlashMessageWithRetry();
+    }
+});
+
+const scrollToFirstInputErrorMessage = async (): Promise<void> => {
+    await nextTick();
+    const errorMessages = Array.from(editFormRef.value?.querySelectorAll('p.text-red-600') ?? []);
+    const firstVisibleErrorMessage = errorMessages.find((el) => {
+        if (!(el instanceof HTMLElement)) {
+            return false;
+        }
+
+        return el.offsetParent !== null && el.getClientRects().length > 0;
+    });
+
+    if (!(firstVisibleErrorMessage instanceof HTMLElement)) {
+        if (validationErrorSummaryRef.value) {
+            validationErrorSummaryRef.value.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+            });
+            validationErrorSummaryRef.value.focus();
+        }
+        return;
+    }
+
+    firstVisibleErrorMessage.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+    });
+};
+
+watch(
+    () => form.errors,
+    (errors) => {
+        if (errors && Object.keys(errors).length > 0) {
+            void scrollToFirstInputErrorMessage();
+        }
+    },
+    { deep: true },
+);
 
 const showQuickTagDialog = ref(false);
 
@@ -231,6 +372,32 @@ const attributeBlockIndex = (attributeId: number): number => {
     return form.attributes.findIndex((a) => a.attribute_id === attributeId);
 };
 
+const canShowRemoveValueButton = (
+    _attributeId: number,
+    value: AttributeValueInput
+): boolean => {
+    const valueId = Number(value.id ?? 0);
+    if (valueId <= 0) {
+        return true;
+    }
+
+    return !(props.lockedProductAttributeValueIds ?? []).includes(valueId);
+};
+
+const canShowRemoveAttributeButton = (attributeId: number): boolean => {
+    const block = form.attributes.find((a) => a.attribute_id === attributeId);
+    if (!block) {
+        return true;
+    }
+
+    const lockedValueIds = new Set(props.lockedProductAttributeValueIds ?? []);
+    return !block.values.some((value) => {
+        const valueId = Number(value.id ?? 0);
+
+        return valueId > 0 && lockedValueIds.has(valueId);
+    });
+};
+
 const selectedAttributeId = ref<string>('none');
 const selectedAttributeQuickValues = ref('');
 const activeVariantTab = ref<'attributes' | 'preview'>('attributes');
@@ -249,102 +416,6 @@ const combinationsCount = computed(() => {
 });
 
 const combinationsTooMany = computed(() => combinationsCount.value > 100);
-
-/** Giống DB/BE: orderBy(order) rồi orderBy(name) — SKU preview theo đúng thứ tự này */
-const attributeOrder = computed(() => {
-    const meta = new Map(
-        props.attributes.map((a) => [
-            a.id,
-            {
-                order: Number(a.order) || 0,
-                name: (a.name ?? '').toString(),
-                id: a.id,
-            },
-        ]),
-    );
-
-    return [...form.attributes].sort((a, b) => {
-        const ma = meta.get(a.attribute_id) ?? {
-            order: Number.MAX_SAFE_INTEGER,
-            name: '',
-            id: a.attribute_id,
-        };
-        const mb = meta.get(b.attribute_id) ?? {
-            order: Number.MAX_SAFE_INTEGER,
-            name: '',
-            id: b.attribute_id,
-        };
-        if (ma.order !== mb.order) {
-            return ma.order - mb.order;
-        }
-        const byName = ma.name.localeCompare(mb.name, undefined, { sensitivity: 'base' });
-        if (byName !== 0) {
-            return byName;
-        }
-        return ma.id - mb.id;
-    });
-});
-
-const previewBasePrices = computed(() => ({
-    purchase: normalizeIntegerPrice(form.purchase_price),
-    partner: normalizeIntegerPrice(form.partner_price),
-    sale: normalizeIntegerPrice(form.price),
-}));
-
-const previewVariants = computed(() => {
-    const code = (form.code || '').trim() || 'AUTO';
-    const basePurchasePrice = previewBasePrices.value.purchase;
-    const basePartnerPrice = previewBasePrices.value.partner;
-    const baseSalePrice = previewBasePrices.value.sale;
-
-    if (attributeOrder.value.length === 0) {
-        return [
-            {
-                key: '__default__',
-                sku: code,
-                label: 'Biến thể mặc định',
-                purchase_price: basePurchasePrice,
-                partner_price: basePartnerPrice,
-                sale_price: baseSalePrice,
-            },
-        ];
-    }
-
-    const blocks = attributeOrder.value.map((b) => ({
-        values: [...b.values].sort((x, y) => {
-            if (x.order !== y.order) {
-                return x.order - y.order;
-            }
-            return (x.code || '')
-                .toString()
-                .localeCompare((y.code || '').toString(), undefined, { sensitivity: 'base' });
-        }),
-    }));
-
-    const all = cartesian(blocks.map((b) => b.values));
-    return all.slice(0, 100).map((combo) => {
-        const key = combo.map((v) => (v.code || '').trim().toUpperCase()).join('-');
-        const suffix = combo.map((v) => (v.code || '').trim().toUpperCase()).join('-');
-        const purchaseAddition = combo.reduce(
-            (sum, value) => sum + Number(value.purchase_addition_value ?? 0),
-            0,
-        );
-        const partnerAddition = combo.reduce(
-            (sum, value) => sum + Number(value.partner_addition_value ?? 0),
-            0,
-        );
-        const saleAddition = combo.reduce((sum, value) => sum + Number(value.addition_value ?? 0), 0);
-
-        return {
-            key,
-            sku: `${code}-${suffix}`,
-            label: combo.map((v) => v.value).join(' / '),
-            purchase_price: basePurchasePrice + purchaseAddition,
-            partner_price: basePartnerPrice + partnerAddition,
-            sale_price: baseSalePrice + saleAddition,
-        };
-    });
-});
 
 const variantUploadObjectUrls = ref<Record<string, string>>({});
 const variantFileInputRefs = ref<Record<string, HTMLInputElement | null>>({});
@@ -532,9 +603,9 @@ const getVariantImagePreviewUrl = (key: string): string | null => {
 };
 
 const previewVariantRows = computed(() =>
-    previewVariants.value.map((variant) => ({
-        variant,
-        previewUrl: getVariantImagePreviewUrl(variant.key),
+    (props.childProducts ?? []).map((child) => ({
+        child,
+        previewUrl: getVariantImagePreviewUrl(child.image_key),
     })),
 );
 
@@ -627,6 +698,7 @@ const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): voi
         }
 
         block.values.push({
+            id: null,
             code,
             value: parsed.displayValue,
             order: nextOrder,
@@ -648,6 +720,7 @@ const addAttribute = () => {
             attribute_id: id,
             values: [
                 {
+                    id: null,
                     code: '',
                     value: '',
                     order: 1,
@@ -686,6 +759,7 @@ const addValue = (attributeId: number) => {
     if (!block) return;
     const nextOrder = (block.values.at(-1)?.order ?? 0) + 1;
     block.values.push({
+        id: null,
         code: '',
         value: '',
         order: nextOrder,
@@ -914,24 +988,66 @@ const submit = () => {
         }),
         {
             preserveScroll: true,
+            preserveState: 'errors',
             forceFormData: true,
+            onSuccess: () => {
+                void scrollToFlashMessageWithRetry();
+            },
+            onError: () => {
+                void scrollToFirstInputErrorMessage();
+            },
         },
     );
 };
 
-function cartesian<T>(sets: T[][]): T[][] {
-    let result: T[][] = [[]];
-    for (const set of sets) {
-        const next: T[][] = [];
-        for (const prefix of result) {
-            for (const item of set) {
-                next.push([...prefix, item]);
-            }
-        }
-        result = next;
+const syncChildProducts = () => {
+    if (!props.site?.slug) {
+        return;
     }
-    return result;
-}
+
+    syncChildProductsForm.variant_images = form.variant_images.map((item) => ({
+        key: item.key,
+        media_id: item.media_id,
+        slide_index: item.slide_index,
+        use_main_image: item.use_main_image,
+    }));
+    syncChildProductsForm.variant_image_file_keys = [...form.variant_image_file_keys];
+    syncChildProductsForm.variant_image_files = [...form.variant_image_files];
+
+    syncChildProductsForm.post(`/${props.site.slug}/products/${props.product.id}/sync-child-products`, {
+        forceFormData: true,
+        preserveScroll: false,
+        onSuccess: () => {
+            void scrollToFlashMessageWithRetry();
+        },
+        onError: () => {
+            void scrollToFirstInputErrorMessage();
+        },
+    });
+};
+
+const deleteChildProduct = (childProductId: number) => {
+    if (!props.site?.slug) {
+        return;
+    }
+
+    if (!window.confirm('Bạn có chắc chắn muốn xóa sản phẩm con này?')) {
+        return;
+    }
+
+    deleteChildProductForm.delete(
+        `/${props.site.slug}/products/${props.product.id}/child-products/${childProductId}`,
+        {
+            preserveScroll: false,
+            onSuccess: () => {
+                void scrollToFlashMessageWithRetry();
+            },
+            onError: () => {
+                void scrollToFirstInputErrorMessage();
+            },
+        },
+    );
+};
 </script>
 
 <template>
@@ -964,15 +1080,44 @@ function cartesian<T>(sets: T[][]): T[][] {
                 </div>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-8">
+            <form ref="editFormRef" @submit.prevent="submit" class="space-y-8">
+                <div
+                    v-if="flashSuccess || flashError"
+                    ref="flashMessageRef"
+                    tabindex="-1"
+                    class="space-y-3 outline-none"
+                >
+                    <div
+                        v-if="flashSuccess"
+                        class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+                    >
+                        {{ flashSuccess }}
+                    </div>
+                    <div
+                        v-if="flashError"
+                        class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+                    >
+                        {{ flashError }}
+                    </div>
+                </div>
+                <div
+                    v-if="validationErrorMessages.length > 0"
+                    ref="validationErrorSummaryRef"
+                    tabindex="-1"
+                    class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 outline-none"
+                >
+                    <p class="font-medium">Vui lòng kiểm tra lại dữ liệu:</p>
+                    <p class="mt-1">{{ validationErrorMessages[0] }}</p>
+                </div>
+
                 <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6">
                         <h2 class="text-lg font-semibold text-gray-900">
                             Thông tin cơ bản
                         </h2>
                         <p class="mt-1 text-sm text-gray-600">
-                            Cập nhật thông tin và giá. Khi thay đổi thuộc tính,
-                            hệ thống sẽ tạo lại biến thể (SKU).
+                            Cập nhật thông tin và giá sản phẩm. Dùng nút
+                            "Cập nhật sản phẩm con" để đồng bộ lại sản phẩm con.
                         </p>
                     </div>
 
@@ -1363,42 +1508,14 @@ function cartesian<T>(sets: T[][]): T[][] {
                         </Button>
                     </div>
                     <p class="mt-1 text-sm text-gray-600">
-                        Gắn thẻ để lọc và tìm kiếm nhanh
+                        Gắn thẻ để lọc và tìm kiếm nhanh — có thể gõ để lọc danh sách.
                     </p>
 
-                    <div
-                        v-if="props.tags.length === 0"
-                        class="text-sm text-gray-600"
-                    >
-                        Chưa có tag nào.
-                    </div>
-                    <div
-                        v-else
-                        class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4"
-                    >
-                        <button
-                            v-for="tag in props.tags"
-                            :key="tag.id"
-                            type="button"
-                            @click="toggleTag(tag.id)"
-                            class="flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm hover:bg-gray-50"
-                        >
-                            <span class="truncate">{{ tag.name }}</span>
-                            <Badge
-                                variant="secondary"
-                                :class="
-                                    form.tags.includes(tag.id)
-                                        ? 'border border-green-200 bg-green-50 text-green-700'
-                                        : 'text-gray-600'
-                                "
-                            >
-                                <Check
-                                    v-if="form.tags.includes(tag.id)"
-                                    class="h-4 w-4 text-green-600"
-                                />
-                                <span v-else>—</span>
-                            </Badge>
-                        </button>
+                    <div class="mt-4 max-w-xl">
+                        <ProductTagsMultiselect
+                            v-model="form.tags"
+                            :options="props.tags"
+                        />
                     </div>
                     <InputError :message="tagsError" />
                 </div>
@@ -1409,8 +1526,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                             Thuộc tính & Biến thể
                         </h2>
                         <p class="mt-1 text-sm text-gray-600">
-                            Thay đổi thuộc tính sẽ tạo lại biến thể + SKU. Tối đa
-                            100 tổ hợp.
+                            Chỉnh sửa thuộc tính/value ở đây, sau đó vào tab
+                            "Xem sản phẩm con" để đồng bộ. Tối đa 100 tổ hợp cho
+                            mỗi lần đồng bộ.
                         </p>
                     </div>
 
@@ -1429,9 +1547,10 @@ function cartesian<T>(sets: T[][]): T[][] {
                             :variant="activeVariantTab === 'preview' ? 'default' : 'outline'"
                             @click="activeVariantTab = 'preview'"
                         >
-                            Xem trước biến thể
+                            Xem sản phẩm con
                         </Button>
                     </div>
+                    <InputError :message="form.errors.attributes" class="mb-4" />
 
                     <div v-if="activeVariantTab === 'attributes'">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -1503,6 +1622,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                     </div>
                                 </div>
                                 <Button
+                                    v-if="canShowRemoveAttributeButton(attr.id)"
                                     type="button"
                                     variant="ghost"
                                     size="sm"
@@ -1606,6 +1726,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                     </div>
                                     <div class="md:col-span-12">
                                         <Button
+                                            v-if="canShowRemoveValueButton(attr.id, value)"
                                             type="button"
                                             variant="ghost"
                                             size="sm"
@@ -1636,39 +1757,41 @@ function cartesian<T>(sets: T[][]): T[][] {
                     </div>
 
                     <div v-else class="space-y-4">
-                        <div
-                            v-if="combinationsTooMany"
-                            class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
-                        >
-                            <div class="flex items-start gap-3">
-                                <AlertTriangle class="h-5 w-5 shrink-0" />
-                                <div>
-                                    <div class="font-medium">
-                                        Quá nhiều tổ hợp
-                                    </div>
-                                    <div class="mt-1">
-                                        Hiện tại:
-                                        <b>{{ combinationsCount }}</b>
-                                        biến thể (tối đa 100). Vui lòng giảm số
-                                        lượng giá trị.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="rounded-lg border border-gray-200 p-4">
-                            <div>
-                                <div class="font-medium text-gray-900">
-                                    Xem trước biến thể
+                            <div
+                                class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                                <div>
+                                    <div class="font-medium text-gray-900">
+                                        Xem sản phẩm con
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ props.childProducts?.length ?? 0 }} sản phẩm con
+                                    </div>
                                 </div>
-                                <div class="text-xs text-gray-500">
-                                    {{ combinationsCount }} tổ hợp
-                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    :disabled="form.processing || syncChildProductsForm.processing || combinationsTooMany"
+                                    @click="syncChildProducts"
+                                >
+                                    <span v-if="syncChildProductsForm.processing">Đang cập nhật...</span>
+                                    <span v-else>Cập nhật sản phẩm con</span>
+                                </Button>
                             </div>
-                            <div class="mt-4 space-y-3">
+                            <p
+                                v-if="combinationsTooMany"
+                                class="mt-3 text-xs text-red-600"
+                            >
+                                Số tổ hợp vượt quá 100, không thể đồng bộ sản phẩm con.
+                            </p>
+                            <div
+                                v-if="previewVariantRows.length > 0"
+                                class="mt-4 space-y-3"
+                            >
                                 <div
                                     v-for="row in previewVariantRows"
-                                    :key="row.variant.key"
+                                    :key="row.child.id"
                                     class="rounded-md border border-gray-200 p-4"
                                 >
                                     <div
@@ -1676,23 +1799,23 @@ function cartesian<T>(sets: T[][]): T[][] {
                                     >
                                         <div class="space-y-1 lg:col-span-3">
                                             <div class="text-sm font-medium text-gray-900">
-                                                {{ row.variant.sku }}
+                                                {{ row.child.sku }}
                                             </div>
                                             <div class="text-xs text-gray-500">
-                                                {{ row.variant.label }}
+                                                {{ row.child.name }}
                                             </div>
                                             <div class="space-y-1 pt-1 text-xs text-gray-600">
                                                 <div>
                                                     Giá nhập:
-                                                    <b>{{ formatVnd(row.variant.purchase_price) }}</b>
+                                                    <b>{{ formatVnd(row.child.purchase_price) }}</b>
                                                 </div>
                                                 <div>
                                                     Giá đối tác:
-                                                    <b>{{ formatVnd(row.variant.partner_price) }}</b>
+                                                    <b>{{ formatVnd(row.child.partner_price) }}</b>
                                                 </div>
                                                 <div>
                                                     Giá bán:
-                                                    <b>{{ formatVnd(row.variant.sale_price) }}</b>
+                                                    <b>{{ formatVnd(row.child.sale_price) }}</b>
                                                 </div>
                                             </div>
                                         </div>
@@ -1702,16 +1825,16 @@ function cartesian<T>(sets: T[][]): T[][] {
                                                 <Label class="mb-1 block text-xs">Nguồn ảnh</Label>
                                                 <select
                                                     class="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                                                    :value="getVariantImageSource(row.variant.key)"
+                                                    :value="getVariantImageSource(row.child.image_key)"
                                                     @change="
                                                         setVariantImageSource(
-                                                            row.variant.key,
+                                                            row.child.image_key,
                                                             ($event.target as HTMLSelectElement).value,
                                                         )
                                                     "
                                                 >
                                                     <option
-                                                        v-if="hasVariantUploadSource(row.variant.key)"
+                                                        v-if="hasVariantUploadSource(row.child.image_key)"
                                                         value="upload"
                                                     >
                                                         Ảnh upload
@@ -1745,26 +1868,26 @@ function cartesian<T>(sets: T[][]): T[][] {
                                                     Hoặc upload riêng cho biến thể
                                                 </Label>
                                                 <input
-                                                    :ref="(el) => setVariantFileInputRef(row.variant.key, el)"
+                                                    :ref="(el) => setVariantFileInputRef(row.child.image_key, el)"
                                                     type="file"
                                                     accept="image/*"
                                                     class="block w-full text-xs text-gray-500 file:mr-2 file:rounded-md file:border-0 file:bg-gray-100 file:px-2 file:py-1.5 file:text-xs file:font-medium"
-                                                    @change="setVariantUploadFile(row.variant.key, $event)"
+                                                    @change="setVariantUploadFile(row.child.image_key, $event)"
                                                 />
                                                 <div
-                                                    v-if="getVariantUploadFileName(row.variant.key)"
+                                                    v-if="getVariantUploadFileName(row.child.image_key)"
                                                     class="mt-1 flex flex-wrap items-center gap-2"
                                                 >
                                                     <p class="text-xs text-gray-600">
                                                         File:
-                                                        {{ getVariantUploadFileName(row.variant.key) }}
+                                                        {{ getVariantUploadFileName(row.child.image_key) }}
                                                     </p>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
                                                         class="h-7 gap-1 px-2 text-red-600 hover:text-red-700"
-                                                        @click="clearVariantImage(row.variant.key)"
+                                                        @click="clearVariantImage(row.child.image_key)"
                                                     >
                                                         <Trash2 class="h-3.5 w-3.5" />
                                                         Xóa ảnh upload
@@ -1775,16 +1898,37 @@ function cartesian<T>(sets: T[][]): T[][] {
                                                 type="button"
                                                 size="sm"
                                                 variant="outline"
-                                                @click="clearVariantImage(row.variant.key)"
+                                                @click="clearVariantImage(row.child.image_key)"
                                             >
                                                 Xóa chọn ảnh
                                             </Button>
                                         </div>
 
                                         <div class="lg:col-span-4">
-                                            <Label class="mb-2 block text-xs text-gray-600">
-                                                Xem trước
-                                            </Label>
+                                            <div class="mb-2 flex items-center justify-between">
+                                                <Label class="block text-xs text-gray-600">
+                                                    Xem trước
+                                                </Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    class="h-7 px-2 text-red-600 hover:text-red-700"
+                                                    :title="
+                                                        row.child.can_delete
+                                                            ? 'Xóa sản phẩm con'
+                                                            : 'Không thể xóa sản phẩm con đã phát sinh dữ liệu'
+                                                    "
+                                                    :disabled="
+                                                        !row.child.can_delete ||
+                                                        deleteChildProductForm.processing ||
+                                                        syncChildProductsForm.processing
+                                                    "
+                                                    @click="deleteChildProduct(row.child.id)"
+                                                >
+                                                    <Trash2 class="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                             <div
                                                 class="flex h-28 w-28 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-gray-50"
                                             >
@@ -1805,7 +1949,12 @@ function cartesian<T>(sets: T[][]): T[][] {
                                     </div>
                                 </div>
                             </div>
-                            <InputError :message="form.errors.attributes" />
+                            <div
+                                v-else
+                                class="mt-4 rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-600"
+                            >
+                                Chưa có sản phẩm con nào trong cơ sở dữ liệu.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1825,7 +1974,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                     </Button>
                     <Button
                         type="submit"
-                        :disabled="form.processing || combinationsTooMany"
+                        :disabled="form.processing || syncChildProductsForm.processing"
                         class="min-w-36"
                     >
                         <span v-if="form.processing">Đang lưu...</span>
