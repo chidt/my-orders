@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\MediaLibrary\SiteIdPathGenerator;
 use App\Models\Customer;
 use App\Models\Location;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductItem;
 use App\Models\ProductType;
@@ -13,6 +14,7 @@ use App\Models\Supplier;
 use App\Models\Warehouse;
 use App\Policies\CustomerPolicy;
 use App\Policies\LocationPolicy;
+use App\Policies\OrderPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductTypePolicy;
@@ -64,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Supplier::class, SupplierPolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
     }
 
     protected function configureGates(): void

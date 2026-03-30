@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ class OrderDetail extends Model
 
     protected $fillable = [
         'payment_status',
-        'payment_request_id',
+        'payment_request_detail_id',
         'status',
         'fulfillment_status',
         'qty',
@@ -33,13 +34,14 @@ class OrderDetail extends Model
     protected function casts(): array
     {
         return [
+            'status' => OrderStatus::class,
             'price' => 'decimal:2',
             'discount' => 'decimal:2',
             'addition_price' => 'decimal:2',
             'total' => 'decimal:2',
+            'extra_attributes' => 'array',
             'order_date' => 'datetime',
             'expected_fulfillment_date' => 'datetime',
-            'extra_attributes' => 'array',
         ];
     }
 
