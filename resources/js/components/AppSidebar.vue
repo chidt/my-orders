@@ -14,6 +14,7 @@ import {
     Tag,
     ToggleLeftIcon,
     Warehouse,
+    ShoppingCart,
 } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -136,6 +137,24 @@ const getCustomerUrl = (): string | null => {
     return null;
 };
 
+const getOrdersUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return `/${currentSite.slug}/orders`;
+    }
+    return null;
+};
+
+const getOrderDetailsUrl = (): string | null => {
+    const user = page.props.auth.user as User;
+    const currentSite = (page.props.site as Site) || user?.site;
+    if (currentSite) {
+        return `/${currentSite.slug}/order-details`;
+    }
+    return null;
+};
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Bảng điều khiển',
@@ -223,6 +242,18 @@ const mainNavItems: NavItem[] = [
                 href: getCustomerUrl() || '',
                 icon: ContactRound,
                 show: (can('view_customers') || can('manage_customers')) && getCustomerUrl() !== null,
+    },
+    {
+        title: 'Quản lý đơn hàng',
+        href: getOrdersUrl() || '',
+        icon: ShoppingCart,
+        show: can('manage_orders') && getOrdersUrl() !== null,
+    },
+    {
+        title: 'Chi tiết đơn hàng',
+        href: getOrderDetailsUrl() || '',
+        icon: ShoppingCart,
+        show: can('manage_orders') && getOrderDetailsUrl() !== null,
     },
     {
         title: 'Quản lý trang web',

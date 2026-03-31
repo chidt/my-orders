@@ -87,6 +87,10 @@ class RolePermissionSeeder extends Seeder
             'create_attributes',
             'edit_attributes',
             'delete_attributes',
+
+            // Order management
+            'manage_orders',
+            'view_orders',
         ];
 
         foreach ($permissions as $permission) {
@@ -123,6 +127,8 @@ class RolePermissionSeeder extends Seeder
             'create_attributes',
             'edit_attributes',
             'delete_attributes',
+            'manage_orders',
+            'view_orders',
         ]);
 
         $this->command->info('Roles, permissions, and admin user role assignment completed.');

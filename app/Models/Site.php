@@ -50,4 +50,9 @@ class Site extends Model
     {
         return $this->hasMany(Customer::class);
     }
+
+    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 }

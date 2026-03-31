@@ -4,6 +4,8 @@ use App\Http\Controllers\Site\AttributeController;
 use App\Http\Controllers\Site\CategoryController;
 use App\Http\Controllers\Site\CustomerController;
 use App\Http\Controllers\Site\LocationController;
+use App\Http\Controllers\Site\OrderDetailController;
+use App\Http\Controllers\Site\OrderController;
 use App\Http\Controllers\Site\ProductController;
 use App\Http\Controllers\Site\ProductTypeController;
 use App\Http\Controllers\Site\SupplierController;
@@ -84,6 +86,35 @@ Route::prefix('{site:slug}')->group(function () {
         'update' => 'products.update',
         'destroy' => 'products.destroy',
     ]);
+
+    // Order management routes
+    Route::resource('orders', OrderController::class)->names([
+        'index' => 'orders.index',
+        'create' => 'orders.create',
+        'store' => 'orders.store',
+        'show' => 'orders.show',
+        'edit' => 'orders.edit',
+        'update' => 'orders.update',
+        'destroy' => 'orders.destroy',
+    ]);
+    Route::get('orders/customers/search', [OrderController::class, 'searchCustomers'])
+        ->name('orders.customers.search');
+    Route::get('orders/product-items/search', [OrderController::class, 'searchProductItems'])
+        ->name('orders.product-items.search');
+    Route::post('orders/customers/quick-store', [OrderController::class, 'quickStoreCustomer'])
+        ->name('orders.customers.quick-store');
+    Route::patch('orders/{order}/details/{detail}/status', [OrderController::class, 'updateDetailStatus'])
+        ->name('orders.details.status.update');
+
+    // Order detail management routes (bulk routes must be registered before {orderDetail} or "bulk" is captured as id)
+    Route::get('order-details', [OrderDetailController::class, 'index'])->name('order-details.index');
+    Route::patch('order-details/bulk/status', [OrderDetailController::class, 'bulkUpdateStatus'])
+        ->name('order-details.bulk-status.update');
+    Route::get('order-details/{orderDetail}', [OrderDetailController::class, 'show'])->name('order-details.show');
+    Route::patch('order-details/{orderDetail}/status', [OrderDetailController::class, 'updateStatus'])
+        ->name('order-details.status.update');
+    Route::patch('order-details/{orderDetail}/payment-status', [OrderDetailController::class, 'updatePaymentStatus'])
+        ->name('order-details.payment-status.update');
 
     // Warehouse management routes
     Route::resource('warehouses', WarehouseController::class)->names([
