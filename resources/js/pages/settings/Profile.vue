@@ -7,16 +7,15 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Select from '@/components/ui/select/Select.vue';
-import SelectContent from '@/components/ui/select/SelectContent.vue';
-import SelectItem from '@/components/ui/select/SelectItem.vue';
-import SelectTrigger from '@/components/ui/select/SelectTrigger.vue';
-import SelectValue from '@/components/ui/select/SelectValue.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit, update } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem } from '@/types';
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next';
+import { cn } from '@/lib/utils';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type Props = {
     mustVerifyEmail: boolean;
@@ -86,9 +85,25 @@ const fetchWards = async (provinceId: number): Promise<void> => {
     }
 };
 
-const onProvinceChange = (provinceId: string): void => {
+const onProvinceSelect = (provinceId: string) => {
+    form.province_id = form.province_id === provinceId ? '' : provinceId;
+
     form.ward_id = '';
-    fetchWards(Number(provinceId));
+    wards.value = [];
+
+    if (form.province_id) {
+        fetchWards(Number(form.province_id));
+    }
+
+    open.value = false;
+};
+
+const open = ref(false);
+const openWard = ref(false);
+
+const onWardSelect = (wardId: string) => {
+    form.ward_id = form.ward_id === wardId ? '' : wardId;
+    openWard.value = false;
 };
 
 const submitForm = (): void => {
@@ -111,107 +126,104 @@ onMounted(() => {
 
         <SettingsLayout>
             <div class="flex flex-col space-y-6">
-                <Heading
-                    variant="small"
-                    title="Thông tin hồ sơ"
-                    description="Cập nhật tên và địa chỉ email của bạn"
-                />
+                <Heading variant="small" title="Thông tin hồ sơ" description="Cập nhật tên và địa chỉ email của bạn" />
 
                 <form @submit.prevent="submitForm" class="space-y-6">
                     <div class="grid gap-2">
                         <Label for="name">Tên</Label>
-                        <Input
-                            id="name"
-                            v-model="form.name"
-                            class="mt-1 block w-full"
-                            name="name"
-                            required
-                            autocomplete="name"
-                            placeholder="Họ và tên"
-                        />
+                        <Input id="name" v-model="form.name" class="mt-1 block w-full" name="name" required
+                            autocomplete="name" placeholder="Họ và tên" />
                         <InputError class="mt-2" :message="form.errors.name" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="email">Địa chỉ email</Label>
-                        <Input
-                            id="email"
-                            v-model="form.email"
-                            type="email"
-                            class="mt-1 block w-full"
-                            name="email"
-                            required
-                            autocomplete="username"
-                            placeholder="Địa chỉ email"
-                        />
+                        <Input id="email" v-model="form.email" type="email" class="mt-1 block w-full" name="email"
+                            required autocomplete="username" placeholder="Địa chỉ email" />
                         <InputError class="mt-2" :message="form.errors.email" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="address">Địa chỉ</Label>
-                        <Input
-                            id="address"
-                            type="text"
-                            class="mt-1 block w-full"
-                            name="address"
-                            required
-                            autocomplete="address"
-                            placeholder="Địa chỉ"
-                            v-model="form.address"
-                        />
-                        <InputError
-                            class="mt-2"
-                            :message="form.errors.address"
-                        />
+                        <Input id="address" type="text" class="mt-1 block w-full" name="address" required
+                            autocomplete="address" placeholder="Địa chỉ" v-model="form.address" />
+                        <InputError class="mt-2" :message="form.errors.address" />
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="province_id">Tỉnh/Thành phố</Label>
-                            <Select
-                                id="province_id"
-                                name="province_id"
-                                @update:modelValue="onProvinceChange"
-                                v-model="form.province_id"
-                            >
-                                <SelectTrigger>
-                                    <SelectValue
-                                        placeholder="Chọn tỉnh/thành phố"
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="province in provinces"
-                                        :key="province.id"
-                                        :value="String(province.id)"
-                                    >
-                                        {{ province.name }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Popover v-model:open="open">
+                                <PopoverTrigger as-child>
+                                    <Button variant="outline" role="combobox" :aria-expanded="open"
+                                        class="w-full justify-between font-normal">
+                                        {{
+                                            form.province_id
+                                                ? provinces.find((p) => String(p.id) === form.province_id)?.name
+                                                : 'Chọn tỉnh/thành phố'
+                                        }}
+                                        <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent class="w-[--radix-popover-trigger-width] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Tìm kiếm tỉnh..." />
+                                        <CommandList>
+                                            <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
+                                            <CommandGroup>
+                                                <CommandItem v-for="province in provinces" :key="province.id"
+                                                    :value="province.name"
+                                                    @select="onProvinceSelect(String(province.id))">
+                                                    <CheckIcon :class="cn(
+                                                        'mr-2 h-4 w-4',
+                                                        form.province_id === String(province.id) ? 'opacity-100' : 'opacity-0'
+                                                    )" />
+                                                    {{ province.name }}
+                                                </CommandItem>
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                             <InputError :message="form.errors.province_id" />
                         </div>
 
                         <div class="grid gap-2">
                             <Label for="ward_id">Phường/Xã</Label>
-                            <Select
-                                id="ward_id"
-                                name="ward_id"
-                                v-model="form.ward_id"
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Chọn phường/xã" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="ward in wards"
-                                        :key="ward.id"
-                                        :value="String(ward.id)"
-                                    >
-                                        {{ ward.name }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Popover v-model:open="openWard">
+                                <PopoverTrigger as-child>
+                                    <Button variant="outline" role="combobox" :aria-expanded="openWard"
+                                        :disabled="!form.province_id || wards.length === 0"
+                                        class="w-full justify-between font-normal">
+                                        {{
+                                            form.ward_id
+                                                ? wards.find((w) => String(w.id) === form.ward_id)?.name
+                                                : 'Chọn phường/xã'
+                                        }}
+                                        <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent class="w-[--radix-popover-trigger-width] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Tìm kiếm phường/xã..." />
+                                        <CommandList>
+                                            <CommandEmpty>
+                                                {{ wards.length === 0 ? 'Vui lòng chọn Tỉnh/Thành phố trước.' : 'Không tìm thấy kết quả.' }}
+                                            </CommandEmpty>
+                                            <CommandGroup>
+                                                <CommandItem v-for="ward in wards" :key="ward.id" :value="ward.name"
+                                                    @select="onWardSelect(String(ward.id))">
+                                                    <CheckIcon :class="cn(
+                                                        'mr-2 h-4 w-4',
+                                                        form.ward_id === String(ward.id) ? 'opacity-100' : 'opacity-0'
+                                                    )" />
+                                                    {{ ward.name }}
+                                                </CommandItem>
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                             <InputError :message="form.errors.ward_id" />
                         </div>
                     </div>
@@ -219,42 +231,24 @@ onMounted(() => {
                     <div v-if="mustVerifyEmail && !user.email_verified_at">
                         <p class="-mt-4 text-sm text-muted-foreground">
                             Địa chỉ email của bạn chưa được xác minh.
-                            <Link
-                                :href="send().url"
-                                as="button"
-                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                            >
+                            <Link :href="send().url" as="button"
+                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500">
                                 Nhấn vào đây để gửi lại email xác minh.
                             </Link>
                         </p>
 
-                        <div
-                            v-if="status === 'verification-link-sent'"
-                            class="mt-2 text-sm font-medium text-green-600"
-                        >
+                        <div v-if="status === 'verification-link-sent'" class="mt-2 text-sm font-medium text-green-600">
                             Một liên kết xác minh mới đã được gửi đến địa chỉ
                             email của bạn.
                         </div>
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <Button
-                            type="submit"
-                            :disabled="form.processing"
-                            data-test="update-profile-button"
-                            >Lưu</Button
-                        >
+                        <Button type="submit" :disabled="form.processing" data-test="update-profile-button">Lưu</Button>
 
-                        <Transition
-                            enter-active-class="transition ease-in-out"
-                            enter-from-class="opacity-0"
-                            leave-active-class="transition ease-in-out"
-                            leave-to-class="opacity-0"
-                        >
-                            <p
-                                v-show="form.recentlySuccessful"
-                                class="text-sm text-neutral-600"
-                            >
+                        <Transition enter-active-class="transition ease-in-out" enter-from-class="opacity-0"
+                            leave-active-class="transition ease-in-out" leave-to-class="opacity-0">
+                            <p v-show="form.recentlySuccessful" class="text-sm text-neutral-600">
                                 Đã lưu.
                             </p>
                         </Transition>
