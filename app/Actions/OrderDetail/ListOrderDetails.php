@@ -2,44 +2,36 @@
 
 namespace App\Actions\OrderDetail;
 
-use App\Enums\OrderStatus;
 use App\Models\OrderDetail;
 use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 
 class ListOrderDetails
 {
     public function execute(Site $site, Request $request): LengthAwarePaginator
     {
-        if (! $request->filled('filter_status')) {
-            return (new LengthAwarePaginator([], 0, 20, max(1, (int) $request->input('page', 1)), [
-                'path' => Paginator::resolveCurrentPath(),
-                'pageName' => 'page',
-            ]))->appends($request->query());
-        }
-
-        try {
-            $statusFilter = OrderStatus::from((int) $request->input('filter_status'));
-        } catch (\ValueError) {
-            return (new LengthAwarePaginator([], 0, 20, max(1, (int) $request->input('page', 1)), [
-                'path' => Paginator::resolveCurrentPath(),
-                'pageName' => 'page',
-            ]))->appends($request->query());
-        }
-
+        // If filter_status is provided and not empty, filter by status. Otherwise, show all statuses.
         $query = OrderDetail::query()
             ->where('site_id', $site->id)
-            ->where('status', $statusFilter->value)
             ->with([
                 'order:id,order_number,order_date,customer_id',
                 'order.customer:id,name',
-                'productItem:id,name,sku,product_id',
+                'productItem:id,name,sku,product_id,media_id,is_parent_image',
                 'productItem.product:id,name,product_type_id',
                 'productItem.product.productType:id,name,color',
+                'productItem.product.media',
             ])
             ->latest('id');
+
+        if ($request->filled('filter_status') && $request->input('filter_status') !== '') {
+            try {
+                $statusFilter = \App\Enums\OrderStatus::from((int) $request->input('filter_status'));
+                $query->where('status', $statusFilter->value);
+            } catch (\ValueError) {
+                // Ignore invalid status, do not filter by status
+            }
+        }
 
         if ($request->filled('search')) {
             $search = trim((string) $request->input('search'));

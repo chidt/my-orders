@@ -3,6 +3,7 @@
 namespace App\Actions\Order;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Site;
@@ -41,7 +42,7 @@ class StoreOrder
                 'shipping_address_id' => $shippingAddress->id,
                 'customer_id' => $customer->id,
                 'site_id' => $site->id,
-                'payment_status' => 1,
+                'payment_status' => PaymentStatus::Unpaid->value,
             ]);
 
             foreach ($validated['details'] as $itemData) {

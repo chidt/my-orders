@@ -28,6 +28,8 @@ class ProductItem extends Model implements HasMedia
         'site_id',
     ];
 
+    protected $appends = ['image'];
+
     protected function casts(): array
     {
         return [
@@ -83,5 +85,32 @@ class ProductItem extends Model implements HasMedia
     public function warehouseInventory(): HasMany
     {
         return $this->hasMany(WarehouseInventory::class);
+    }
+
+    public function getImageAttribute(): ?string
+    {
+        // First try to get from media_id relationship (specific media record)
+        if ($this->media_id) {
+            $mediaRecord = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($this->media_id);
+            if ($mediaRecord) {
+                return $mediaRecord->getUrl();
+            }
+        }
+
+        // Fallback to media library collections - variant images
+        $variantImage = $this->getFirstMedia('variant_images');
+        if ($variantImage) {
+            return $variantImage->getUrl();
+        }
+
+        // If is_parent_image is true, try to get from parent product's main image
+        if ($this->is_parent_image && $this->product) {
+            $parentMainImage = $this->product->getFirstMedia('main_image');
+            if ($parentMainImage) {
+                return $parentMainImage->getUrl();
+            }
+        }
+
+        return null;
     }
 }

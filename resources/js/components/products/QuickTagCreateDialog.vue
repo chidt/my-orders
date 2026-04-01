@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +10,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { router } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
     siteSlug?: string;
@@ -97,7 +97,9 @@ async function submit(): Promise<void> {
         if (res.status === 422 && data.errors) {
             const mapped: Record<string, string> = {};
             for (const [key, messages] of Object.entries(data.errors)) {
-                mapped[key] = Array.isArray(messages) ? messages[0] : String(messages);
+                mapped[key] = Array.isArray(messages)
+                    ? messages[0]
+                    : String(messages);
             }
             errors.value = mapped;
             return;
@@ -163,7 +165,12 @@ async function submit(): Promise<void> {
                 </p>
 
                 <DialogFooter class="gap-2 sm:gap-0">
-                    <Button type="button" variant="outline" :disabled="submitting" @click="close">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        :disabled="submitting"
+                        @click="close"
+                    >
                         Hủy
                     </Button>
                     <Button type="submit" :disabled="submitting || !siteSlug">

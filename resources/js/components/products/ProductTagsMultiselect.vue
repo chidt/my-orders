@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
+import { computed } from 'vue';
 
 export interface TagOption {
     id: number;
@@ -45,7 +45,9 @@ const selected = computed({
         :hide-selected="false"
     >
         <template #noResult>
-            <span class="text-sm text-gray-600">Không tìm thấy thẻ phù hợp</span>
+            <span class="text-sm text-gray-600"
+                >Không tìm thấy thẻ phù hợp</span
+            >
         </template>
     </AppMultiselect>
 </template>

@@ -9,6 +9,7 @@ use App\Actions\Order\StoreOrder;
 use App\Actions\Order\UpdateOrder;
 use App\Actions\OrderDetail\UpdateOrderDetailStatus;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\QuickStoreCustomerRequest;
 use App\Http\Requests\Order\StoreOrderRequest;
@@ -36,7 +37,9 @@ class OrderController extends Controller
 
         $query = Order::query()
             ->where('site_id', $site->id)
-            ->with(['customer:id,name', 'orderDetails:id,order_id,status'])
+            ->with(['customer:id,name'])
+            ->withSum('orderDetails as total_qty', 'qty')
+            ->withSum('orderDetails as total_amount', 'total')
             ->latest('id');
 
         if ($request->filled('status')) {
@@ -55,6 +58,18 @@ class OrderController extends Controller
             $query->whereDate('order_date', '<=', $request->date('date_to'));
         }
 
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($customerQ) use ($search) {
+                        $customerQ->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
         $orders = $query
             ->paginate(20)
             ->withQueryString()
@@ -63,15 +78,16 @@ class OrderController extends Controller
                     'id' => $order->id,
                     'order_number' => $order->order_number,
                     'order_date' => $order->order_date?->format('Y-m-d H:i:s'),
-                    'status' => (int) ($order->status instanceof OrderStatus ? $order->status->value : $order->status),
-                    'status_label' => $order->status instanceof OrderStatus
-                        ? $order->status->label()
-                        : OrderStatus::from((int) $order->status)->label(),
+                    'status_label' => $order->status->label(),
+                    'status_color' => $order->status->color(),
+                    'payment_status' => $order->payment_status->value,
+                    'payment_status_label' => $order->payment_status->label(),
+                    'payment_status_color' => $order->payment_status->color(),
                     'customer' => $order->customer
                         ? ['id' => $order->customer->id, 'name' => $order->customer->name]
                         : null,
-                    'details_count' => $order->orderDetails->count(),
-                    'total_amount' => (float) $order->orderDetails->sum('total'),
+                    'total_qty' => (int) $order->total_qty,
+                    'total_amount' => (float) $order->total_amount,
                 ];
             });
 
@@ -92,10 +108,12 @@ class OrderController extends Controller
                 'customer_id' => $request->string('customer_id')->toString(),
                 'date_from' => $request->string('date_from')->toString(),
                 'date_to' => $request->string('date_to')->toString(),
+                'search' => $request->string('search')->toString(),
             ],
             'filterCustomer' => $filterCustomer,
             'orders' => $orders,
             'statusOptions' => OrderStatus::options(),
+            'paymentStatusOptions' => PaymentStatus::options(),
         ]);
     }
 
@@ -138,6 +156,7 @@ class OrderController extends Controller
             'customer:id,name,phone',
             'shippingAddress.ward.province',
             'orderDetails.productItem.product',
+            'orderDetails.productItem.product.media',
         ]);
 
         return Inertia::render('Orders/Show', [
@@ -146,10 +165,12 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'order_date' => $order->order_date?->format('Y-m-d H:i:s'),
-                'status' => (int) ($order->status instanceof OrderStatus ? $order->status->value : $order->status),
-                'status_label' => $order->status instanceof OrderStatus
-                    ? $order->status->label()
-                    : OrderStatus::from((int) $order->status)->label(),
+                'status' => $order->status->value,
+                'status_label' => $order->status->label(),
+                'status_color' => $order->status->color(),
+                'payment_status' => $order->payment_status->value,
+                'payment_status_label' => $order->payment_status->label(),
+                'payment_status_color' => $order->payment_status->color(),
                 'sale_channel' => (int) $order->sale_channel,
                 'shipping_payer' => (int) $order->shipping_payer,
                 'order_note' => $order->order_note,
@@ -193,6 +214,7 @@ class OrderController extends Controller
                             'name' => $detail->productItem?->name,
                             'sku' => $detail->productItem?->sku,
                             'product_name' => $detail->productItem?->product?->name,
+                            'image' => $detail->productItem?->image,
                         ],
                     ];
                 })->values(),
@@ -212,7 +234,10 @@ class OrderController extends Controller
                 ->with('error', 'Đơn hàng đã hoàn thành hoặc hủy, không thể chỉnh sửa.');
         }
 
-        $order->load(['orderDetails.productItem.product']);
+        $order->load([
+            'orderDetails.productItem.product',
+            'orderDetails.productItem.product.media',
+        ]);
         $order->loadMissing(['customer.addresses.ward.province']);
 
         return Inertia::render('Orders/Edit', [
@@ -230,6 +255,7 @@ class OrderController extends Controller
                     'sku' => $item->sku,
                     'price' => (float) $item->price,
                     'product_name' => $item->product?->name,
+                    'image' => $item->image,
                 ])->all(),
             'canQuickCreateCustomer' => Gate::allows('create', [Customer::class, $site]),
             'order' => [
@@ -258,21 +284,22 @@ class OrderController extends Controller
         Gate::authorize('viewAny', [Order::class, $site]);
 
         $search = trim($request->string('search')->toString());
-        if (mb_strlen($search) < 2) {
-            return response()->json(['data' => []]);
-        }
 
-        $customers = Customer::query()
+        $query = Customer::query()
             ->where('site_id', $site->id)
-            ->where(function ($query) use ($search): void {
-                $query
-                    ->where('name', 'like', "%{$search}%")
+            ->with(['addresses.ward.province']);
+
+        if (mb_strlen($search) >= 2) {
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
-            })
-            ->with(['addresses.ward.province'])
+            });
+        }
+
+        $customers = $query
             ->orderBy('name')
-            ->limit(20)
+            ->limit(50)
             ->get()
             ->map(fn (Customer $customer) => $this->transformCustomer($customer))
             ->values();
@@ -306,28 +333,30 @@ class OrderController extends Controller
         Gate::authorize('viewAny', [Order::class, $site]);
 
         $search = trim($request->string('search')->toString());
-        if (mb_strlen($search) < 2) {
-            return response()->json(['data' => []]);
-        }
 
-        $items = ProductItem::query()
+        $query = ProductItem::query()
             ->where('site_id', $site->id)
-            ->with('product:id,name')
-            ->where(function ($query) use ($search): void {
-                $query
-                    ->where('name', 'like', "%{$search}%")
+            ->with(['product:id,name', 'product.media']);
+
+        if (mb_strlen($search) >= 2) {
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
                     ->orWhereHas('product', fn ($productQuery) => $productQuery->where('name', 'like', "%{$search}%"));
-            })
+            });
+        }
+
+        $items = $query
             ->orderBy('name')
-            ->limit(30)
-            ->get(['id', 'name', 'sku', 'price', 'site_id', 'product_id'])
+            ->limit(50)
+            ->get(['id', 'name', 'sku', 'price', 'media_id', 'is_parent_image', 'site_id', 'product_id'])
             ->map(fn (ProductItem $item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'sku' => $item->sku,
                 'price' => (float) $item->price,
                 'product_name' => $item->product?->name,
+                'image' => $item->image, // This will use the accessor
             ])
             ->values();
 

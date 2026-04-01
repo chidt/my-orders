@@ -4,12 +4,13 @@ namespace App\Actions\Order;
 
 use App\Actions\OrderDetail\ManageOrderDetailInventory;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\ProductItem;
 use App\Models\Site;
 
-class CreateOrderDetail
+readonly class CreateOrderDetail
 {
     public function __construct(
         private ManageOrderDetailInventory $inventoryAction
@@ -40,7 +41,7 @@ class CreateOrderDetail
             'site_id' => $site->id,
             'product_item_id' => $productItem->id,
             'status' => $detailStatus->value,
-            'payment_status' => 1,
+            'payment_status' => PaymentStatus::Unpaid->value,
             'qty' => $qty,
             'price' => $price,
             'discount' => $discount,

@@ -6,6 +6,7 @@ use App\Actions\OrderDetail\ListOrderDetails;
 use App\Actions\OrderDetail\UpdateOrderDetailPaymentStatus;
 use App\Actions\OrderDetail\UpdateOrderDetailStatus;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\BulkUpdateOrderDetailStatusRequest;
 use App\Http\Requests\Order\UpdateOrderDetailPaymentStatusRequest;
@@ -34,20 +35,13 @@ class OrderDetailController extends Controller
             ->with('success', $successMessage);
     }
 
-    private const PAYMENT_STATUS_OPTIONS = [
-        ['value' => '1', 'label' => 'Chưa thanh toán'],
-        ['value' => '2', 'label' => 'Yêu cầu thanh toán'],
-        ['value' => '3', 'label' => 'Đã thanh toán'],
-        ['value' => '4', 'label' => 'Đang xử lý'],
-        ['value' => '5', 'label' => 'Chờ xác nhận'],
-    ];
-
     public function index(Site $site, Request $request, ListOrderDetails $action): Response
     {
         Gate::authorize('viewAny', [Order::class, $site]);
 
         $activeFilterStatus = null;
         $filterStatusTransitions = [];
+        $fs = null;
         if ($request->filled('filter_status')) {
             try {
                 $fs = OrderStatus::from((int) $request->input('filter_status'));
@@ -65,14 +59,14 @@ class OrderDetailController extends Controller
                         ->all();
                 }
             } catch (\ValueError) {
-                $activeFilterStatus = null;
-                $filterStatusTransitions = [];
+                // Nếu filter_status không hợp lệ thì không set activeFilterStatus
             }
         }
 
         $orderDetails = $action->execute($site, $request)
             ->through(function (OrderDetail $detail) {
-                $status = $detail->status instanceof OrderStatus ? $detail->status : OrderStatus::from((int) $detail->status);
+                $status = $detail->status;
+                $paymentStatus = $detail->payment_status;
 
                 return [
                     'id' => $detail->id,
@@ -83,7 +77,10 @@ class OrderDetailController extends Controller
                     'order_date' => $detail->order_date?->format('Y-m-d H:i:s'),
                     'status' => $status->value,
                     'status_label' => $status->label(),
-                    'payment_status' => (int) $detail->payment_status,
+                    'status_color' => $status->color(),
+                    'payment_status' => $paymentStatus->value,
+                    'payment_status_label' => $paymentStatus->label(),
+                    'payment_status_color' => $paymentStatus->color(),
                     'payment_request_detail_id' => $detail->payment_request_detail_id !== null
                         ? (int) $detail->payment_request_detail_id
                         : null,
@@ -103,6 +100,7 @@ class OrderDetailController extends Controller
                         'id' => $detail->productItem?->id,
                         'name' => $detail->productItem?->name,
                         'sku' => $detail->productItem?->sku,
+                        'image' => $detail->productItem?->image,
                     ],
                     'product_type' => [
                         'id' => $detail->productItem?->product?->productType?->id,
@@ -116,6 +114,8 @@ class OrderDetailController extends Controller
                         ->values(),
                 ];
             });
+
+        // ...existing code...
 
         $filterCustomer = null;
         if ($request->filled('customer_id')) {
@@ -135,7 +135,7 @@ class OrderDetailController extends Controller
                 'product_id' => $request->string('product_id')->toString(),
                 'product_item_id' => $request->string('product_item_id')->toString(),
                 'product_type_id' => $request->string('product_type_id')->toString(),
-                'filter_status' => $request->string('filter_status')->toString(),
+                'filter_status' => $request->filled('filter_status') ? (string) $request->input('filter_status') : '',
                 'payment_statuses' => $request->input('payment_statuses', []),
                 'date_from' => $request->string('date_from')->toString(),
                 'date_to' => $request->string('date_to')->toString(),
@@ -144,7 +144,7 @@ class OrderDetailController extends Controller
             'filterStatusTransitions' => $filterStatusTransitions,
             'orderDetails' => $orderDetails,
             'statusOptions' => OrderStatus::options(),
-            'paymentStatusOptions' => self::PAYMENT_STATUS_OPTIONS,
+            'paymentStatusOptions' => PaymentStatus::options(),
             'filterCustomer' => $filterCustomer,
             'products' => Product::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name']),
             'productItems' => ProductItem::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name', 'sku', 'product_id']),
@@ -164,9 +164,8 @@ class OrderDetailController extends Controller
             'productItem.product.productType',
         ]);
 
-        $status = $orderDetail->status instanceof OrderStatus ? $orderDetail->status : OrderStatus::from((int) $orderDetail->status);
-        $paymentStatusLabel = collect(self::PAYMENT_STATUS_OPTIONS)
-            ->firstWhere('value', (string) (int) $orderDetail->payment_status)['label'] ?? 'Không xác định';
+        $status = $orderDetail->status;
+        $paymentStatus = $orderDetail->payment_status;
 
         $statusHistory = collect([
             [
@@ -191,9 +190,7 @@ class OrderDetailController extends Controller
                     'id' => $orderDetail->order?->id,
                     'order_number' => $orderDetail->order?->order_number,
                     'order_date' => $orderDetail->order?->order_date?->format('Y-m-d H:i:s'),
-                    'status' => $orderDetail->order?->status instanceof OrderStatus
-                        ? $orderDetail->order?->status->label()
-                        : ($orderDetail->order ? OrderStatus::from((int) $orderDetail->order->status)->label() : null),
+                    'status' => $orderDetail->order?->status->label(),
                 ],
                 'customer' => [
                     'id' => $orderDetail->order?->customer?->id,
@@ -236,8 +233,9 @@ class OrderDetailController extends Controller
                         ->values(),
                 ],
                 'payment_status' => [
-                    'value' => (int) $orderDetail->payment_status,
-                    'label' => $paymentStatusLabel,
+                    'value' => $paymentStatus->value,
+                    'label' => $paymentStatus->label(),
+                    'color' => $paymentStatus->color(),
                 ],
                 'payment_request_detail_id' => $orderDetail->payment_request_detail_id !== null
                     ? (int) $orderDetail->payment_request_detail_id
@@ -250,7 +248,7 @@ class OrderDetailController extends Controller
                 'status_history' => $statusHistory,
             ],
             'statusOptions' => OrderStatus::options(),
-            'paymentStatusOptions' => self::PAYMENT_STATUS_OPTIONS,
+            'paymentStatusOptions' => PaymentStatus::options(),
         ]);
     }
 
@@ -264,7 +262,7 @@ class OrderDetailController extends Controller
         abort_if(! $orderDetail->order, 404);
         Gate::authorize('update', [$orderDetail->order, $site]);
 
-        $currentStatus = $orderDetail->status instanceof OrderStatus ? $orderDetail->status : OrderStatus::from((int) $orderDetail->status);
+        $currentStatus = $orderDetail->status;
         if ($currentStatus->isFinal()) {
             return back()->with('error', 'OrderDetail đã ở trạng thái cuối, không thể cập nhật.');
         }
@@ -283,7 +281,7 @@ class OrderDetailController extends Controller
         }
 
         $order = $orderDetail->order()->firstOrFail();
-        $orderStatus = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((int) $order->status);
+        $orderStatus = $order->status;
         if ($orderStatus->isFinal()) {
             return back()->with('error', 'Order đã hoàn thành hoặc hủy, không thể chỉnh sửa chi tiết.');
         }
@@ -315,8 +313,8 @@ class OrderDetailController extends Controller
         Gate::authorize('update', [$orderDetail->order, $site]);
 
         $nextPaymentStatus = (int) $request->integer('payment_status');
-        $currentPaymentStatus = (int) $orderDetail->payment_status;
-        if (! $action->canTransition($currentPaymentStatus, $nextPaymentStatus)) {
+        $currentPaymentStatus = $orderDetail->payment_status;
+        if (! $action->canTransition($currentPaymentStatus->value, $nextPaymentStatus)) {
             return back()->with('error', 'Payment status transition không hợp lệ.');
         }
 
@@ -364,7 +362,7 @@ class OrderDetailController extends Controller
         $targetStatusValue = $targetStatus->value;
 
         foreach ($orderDetails as $detail) {
-            $currentStatus = $detail->status instanceof OrderStatus ? $detail->status : OrderStatus::from((int) $detail->status);
+            $currentStatus = $detail->status;
             if ($currentStatus->isFinal()) {
                 $failed[] = "#{$detail->id}: trạng thái hiện tại là final";
 
@@ -388,7 +386,7 @@ class OrderDetailController extends Controller
                 continue;
             }
 
-            $orderStatus = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((int) $order->status);
+            $orderStatus = $order->status;
             if ($orderStatus->isFinal()) {
                 $failed[] = "#{$detail->id}: order đã final";
 

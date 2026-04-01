@@ -158,7 +158,7 @@ class StoreProduct
                 $purchaseAddition = collect($combination)->sum(fn (ProductAttributeValue $v) => (float) ($v->purchase_addition_value ?? 0));
 
                 $item = ProductItem::create([
-                    'name' => $product->name.' - '.collect($combination)->pluck('value')->implode(' / '),
+                    'name' => $product->name.' - '.collect($combination)->pluck('value')->implode(' - '),
                     'sku' => $sku,
                     'is_parent_image' => ($variantSourceMap[$variantKey] ?? 'main') === 'main',
                     'is_parent_slider_image' => ($variantSourceMap[$variantKey] ?? null) === 'slide',

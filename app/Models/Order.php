@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,7 @@ class Order extends Model
         return [
             'order_date' => 'datetime',
             'status' => OrderStatus::class,
+            'payment_status' => PaymentStatus::class,
         ];
     }
 

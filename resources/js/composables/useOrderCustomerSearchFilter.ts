@@ -18,7 +18,9 @@ export interface OrderSearchCustomer {
 }
 
 export function orderSearchCustomerLabel(c: OrderSearchCustomer): string {
-    return [c.name, c.phone, c.email].filter((v) => v && String(v).trim()).join(' | ');
+    return [c.name, c.phone, c.email]
+        .filter((v) => v && String(v).trim())
+        .join(' | ');
 }
 
 export function useOrderCustomerSearchFilter(options: {
@@ -45,7 +47,11 @@ export function useOrderCustomerSearchFilter(options: {
     };
 
     watch(
-        () => [options.getCustomerId(), options.getFilterCustomer()?.id ?? null] as const,
+        () =>
+            [
+                options.getCustomerId(),
+                options.getFilterCustomer()?.id ?? null,
+            ] as const,
         () => {
             hydrateFromProps();
         },
@@ -54,7 +60,9 @@ export function useOrderCustomerSearchFilter(options: {
 
     const searchCustomers = async (search: string) => {
         if (search.trim().length < 2) {
-            customerOptions.value = selectedCustomer.value ? [selectedCustomer.value] : [];
+            customerOptions.value = selectedCustomer.value
+                ? [selectedCustomer.value]
+                : [];
             return;
         }
 
@@ -67,7 +75,11 @@ export function useOrderCustomerSearchFilter(options: {
                     credentials: 'same-origin',
                 },
             );
-            const payload = (await response.json().catch(() => ({ data: [] }))) as { data?: OrderSearchCustomer[] };
+            const payload = (await response
+                .json()
+                .catch(() => ({ data: [] }))) as {
+                data?: OrderSearchCustomer[];
+            };
             customerOptions.value = payload.data ?? [];
         } finally {
             isSearchingCustomers.value = false;
@@ -88,7 +100,10 @@ export function useOrderCustomerSearchFilter(options: {
         selectedCustomer.value = customer;
         customerId.value = String(customer.id);
         customerSearch.value = customer.name;
-        customerOptions.value = [customer, ...customerOptions.value.filter((c) => c.id !== customer.id)];
+        customerOptions.value = [
+            customer,
+            ...customerOptions.value.filter((c) => c.id !== customer.id),
+        ];
         isCustomerSuggestionsOpen.value = false;
         setTimeout(() => {
             suppressCustomerSearchWatch.value = false;
@@ -107,7 +122,10 @@ export function useOrderCustomerSearchFilter(options: {
             return;
         }
 
-        if (selectedCustomer.value && normalizedSearch === selectedCustomer.value.name) {
+        if (
+            selectedCustomer.value &&
+            normalizedSearch === selectedCustomer.value.name
+        ) {
             isCustomerSuggestionsOpen.value = false;
             return;
         }
@@ -118,7 +136,10 @@ export function useOrderCustomerSearchFilter(options: {
             isCustomerSuggestionsOpen.value = false;
         }
 
-        if (selectedCustomer.value && normalizedSearch !== selectedCustomer.value.name) {
+        if (
+            selectedCustomer.value &&
+            normalizedSearch !== selectedCustomer.value.name
+        ) {
             selectedCustomer.value = null;
             customerId.value = '';
         }

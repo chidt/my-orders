@@ -38,6 +38,8 @@ class DatabaseSeeder extends Seeder
                 LocationSeeder::class,
                 AttributeSeeder::class,
                 CustomerSeeder::class,
+                ProductSeeder::class,
+                OrderSeeder::class,
             ]);
         }
     }

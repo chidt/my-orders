@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\CustomerType;
 use App\Models\Customer;
 use App\Models\Site;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,11 +17,14 @@ class CustomerFactory extends Factory
 
     public function definition(): array
     {
+        $fakerVi = FakerFactory::create('vi_VN');
+        $type = fake()->randomElement(CustomerType::cases())->value;
+
         return [
-            'name' => fake()->company(),
+            'name' => $type === CustomerType::INDIVIDUAL->value ? $fakerVi->name() : $fakerVi->company(),
             'phone' => fake()->phoneNumber(),
-            'email' => fake()->unique()->companyEmail(),
-            'type' => fake()->randomElement(CustomerType::cases())->value,
+            'email' => $type === CustomerType::INDIVIDUAL->value ? $fakerVi->unique()->safeEmail() : $fakerVi->unique()->companyEmail(),
+            'type' => $type,
             'description' => fake()->sentence(10),
             'site_id' => fn () => $this->getRandomSiteId(),
         ];

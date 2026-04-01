@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import ProductTagsMultiselect from '@/components/products/ProductTagsMultiselect.vue';
 import QuickTagCreateDialog from '@/components/products/QuickTagCreateDialog.vue';
@@ -18,7 +15,20 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatVnd } from '@/lib/utils';
-import { index as ProductsIndex, update as ProductsUpdate } from '@/routes/products';
+import {
+    index as ProductsIndex,
+    update as ProductsUpdate,
+} from '@/routes/products';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch,
+} from 'vue';
 
 interface Site {
     id: number;
@@ -179,7 +189,8 @@ const form = useForm<{
     weight: props.product.weight,
     price: normalizeIntegerPrice(props.product.price),
     partner_price:
-        props.product.partner_price == null || props.product.partner_price === ''
+        props.product.partner_price == null ||
+        props.product.partner_price === ''
             ? null
             : normalizeIntegerPrice(props.product.partner_price),
     purchase_price: normalizeIntegerPrice(props.product.purchase_price),
@@ -191,8 +202,12 @@ const form = useForm<{
             values: attribute.values.map((value) => ({
                 ...value,
                 addition_value: normalizeIntegerPrice(value.addition_value),
-                partner_addition_value: normalizeIntegerPrice(value.partner_addition_value),
-                purchase_addition_value: normalizeIntegerPrice(value.purchase_addition_value),
+                partner_addition_value: normalizeIntegerPrice(
+                    value.partner_addition_value,
+                ),
+                purchase_addition_value: normalizeIntegerPrice(
+                    value.purchase_addition_value,
+                ),
             })),
         })) ?? [],
     main_image: null,
@@ -302,7 +317,9 @@ onMounted(() => {
 
 const scrollToFirstInputErrorMessage = async (): Promise<void> => {
     await nextTick();
-    const errorMessages = Array.from(editFormRef.value?.querySelectorAll('p.text-red-600') ?? []);
+    const errorMessages = Array.from(
+        editFormRef.value?.querySelectorAll('p.text-red-600') ?? [],
+    );
     const firstVisibleErrorMessage = errorMessages.find((el) => {
         if (!(el instanceof HTMLElement)) {
             return false;
@@ -374,7 +391,7 @@ const attributeBlockIndex = (attributeId: number): number => {
 
 const canShowRemoveValueButton = (
     _attributeId: number,
-    value: AttributeValueInput
+    value: AttributeValueInput,
 ): boolean => {
     const valueId = Number(value.id ?? 0);
     if (valueId <= 0) {
@@ -437,7 +454,10 @@ initializeVariantUploadOptionKeys();
 
 function setVariantFileInputRef(key: string, el: unknown): void {
     if (el instanceof HTMLInputElement) {
-        variantFileInputRefs.value = { ...variantFileInputRefs.value, [key]: el };
+        variantFileInputRefs.value = {
+            ...variantFileInputRefs.value,
+            [key]: el,
+        };
         return;
     }
     if (el === null && key in variantFileInputRefs.value) {
@@ -463,12 +483,19 @@ const hasVariantUploadFile = (key: string): boolean => {
 };
 
 const getExistingVariantUploadMediaIdForKey = (key: string): number | null => {
-    const matched = (props.variantUploadImages ?? []).find((img) => img.key === key);
+    const matched = (props.variantUploadImages ?? []).find(
+        (img) => img.key === key,
+    );
     return matched ? Number(matched.id) : null;
 };
 
-const isExistingVariantUploadMediaForKey = (key: string, mediaId: number): boolean => {
-    return (props.variantUploadImages ?? []).some((img) => img.id === mediaId && img.key === key);
+const isExistingVariantUploadMediaForKey = (
+    key: string,
+    mediaId: number,
+): boolean => {
+    return (props.variantUploadImages ?? []).some(
+        (img) => img.id === mediaId && img.key === key,
+    );
 };
 
 const hasVariantUploadSource = (key: string): boolean => {
@@ -476,7 +503,8 @@ const hasVariantUploadSource = (key: string): boolean => {
         return true;
     }
 
-    const mediaId = form.variant_images.find((v) => v.key === key)?.media_id ?? null;
+    const mediaId =
+        form.variant_images.find((v) => v.key === key)?.media_id ?? null;
     if (mediaId !== null && isExistingVariantUploadMediaForKey(key, mediaId)) {
         return true;
     }
@@ -581,7 +609,9 @@ const getVariantImagePreviewUrl = (key: string): string | null => {
     }
 
     if (row.media_id !== null) {
-        const existingSlide = props.slideImages?.find((img) => img.id === row.media_id);
+        const existingSlide = props.slideImages?.find(
+            (img) => img.id === row.media_id,
+        );
         if (existingSlide) {
             return existingSlide.url ?? null;
         }
@@ -611,11 +641,14 @@ const previewVariantRows = computed(() =>
 
 const existingSlideImagesCount = computed(
     () =>
-        props.slideImages?.filter((x) => !form.remove_slide_media_ids.includes(x.id)).length ??
-        0,
+        props.slideImages?.filter(
+            (x) => !form.remove_slide_media_ids.includes(x.id),
+        ).length ?? 0,
 );
 
-const maxNewSlideImages = computed(() => Math.max(0, 10 - existingSlideImagesCount.value));
+const maxNewSlideImages = computed(() =>
+    Math.max(0, 10 - existingSlideImagesCount.value),
+);
 
 const setVariantUploadFile = (key: string, event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -630,7 +663,9 @@ const setVariantUploadFile = (key: string, event: Event) => {
     row.slide_index = null;
     variantUploadOptionKeys.value.add(key);
 
-    const existedIndex = form.variant_image_file_keys.findIndex((k) => k === key);
+    const existedIndex = form.variant_image_file_keys.findIndex(
+        (k) => k === key,
+    );
     if (existedIndex !== -1) {
         form.variant_image_files[existedIndex] = file;
     } else {
@@ -659,7 +694,10 @@ const getVariantUploadFileName = (key: string): string | null => {
     return file?.name ?? null;
 };
 
-const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): void => {
+const applyQuickValuesToAttribute = (
+    attributeId: number,
+    rawInput: string,
+): void => {
     const block = form.attributes.find((a) => a.attribute_id === attributeId);
     if (!block) return;
 
@@ -669,11 +707,16 @@ const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): voi
         .filter((x) => x.length > 0);
     if (items.length === 0) return;
 
-    if (block.values.length === 1 && !block.values[0].value.trim() && !block.values[0].code.trim()) {
+    if (
+        block.values.length === 1 &&
+        !block.values[0].value.trim() &&
+        !block.values[0].code.trim()
+    ) {
         block.values = [];
     }
 
-    let nextOrder = Math.max(0, ...block.values.map((v) => Number(v.order) || 0)) + 1;
+    let nextOrder =
+        Math.max(0, ...block.values.map((v) => Number(v.order) || 0)) + 1;
 
     items.forEach((item) => {
         const parsed = parseQuickAttributeValueItem(item);
@@ -691,8 +734,10 @@ const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): voi
         );
         if (existingValue) {
             existingValue.value = parsed.displayValue;
-            existingValue.purchase_addition_value = parsed.purchase_addition_value;
-            existingValue.partner_addition_value = parsed.partner_addition_value;
+            existingValue.purchase_addition_value =
+                parsed.purchase_addition_value;
+            existingValue.partner_addition_value =
+                parsed.partner_addition_value;
             existingValue.addition_value = parsed.addition_value;
             return;
         }
@@ -739,7 +784,9 @@ const addAttribute = () => {
 };
 
 const removeAttribute = (attributeId: number) => {
-    form.attributes = form.attributes.filter((a) => a.attribute_id !== attributeId);
+    form.attributes = form.attributes.filter(
+        (a) => a.attribute_id !== attributeId,
+    );
 };
 
 const quickValuesByAttribute = ref<Record<number, string>>({});
@@ -776,7 +823,11 @@ function parseQuickAttributeValueItem(rawItem: string): {
     addition_value: number;
 } {
     const item = rawItem.trim();
-    const zeros = { purchase_addition_value: 0, partner_addition_value: 0, addition_value: 0 };
+    const zeros = {
+        purchase_addition_value: 0,
+        partner_addition_value: 0,
+        addition_value: 0,
+    };
 
     const firstPipe = item.indexOf('|');
     if (firstPipe === -1) {
@@ -828,7 +879,9 @@ const mainImageInputRef = ref<HTMLInputElement | null>(null);
 const slideImagesInputRef = ref<HTMLInputElement | null>(null);
 
 function revokeAllVariantUploadObjectUrls(): void {
-    Object.values(variantUploadObjectUrls.value).forEach((u) => URL.revokeObjectURL(u));
+    Object.values(variantUploadObjectUrls.value).forEach((u) =>
+        URL.revokeObjectURL(u),
+    );
     variantUploadObjectUrls.value = {};
 }
 
@@ -858,7 +911,9 @@ watch(
     () => form.slide_images,
     (files) => {
         slideImagePreviewUrls.value.forEach((url) => URL.revokeObjectURL(url));
-        slideImagePreviewUrls.value = (files ?? []).map((f) => URL.createObjectURL(f));
+        slideImagePreviewUrls.value = (files ?? []).map((f) =>
+            URL.createObjectURL(f),
+        );
     },
     { deep: true, immediate: true },
 );
@@ -890,7 +945,10 @@ const resetVariantToMainImage = (row: VariantImageInput) => {
 const slideFileKey = (f: File) => `${f.name}_${f.size}_${f.lastModified}`;
 
 /** Sau khi merge/dedupe danh sách slide mới upload, map lại slide_index theo đúng file (không giữ index cũ). */
-const remapVariantSlideIndicesAfterNewSlidesChange = (previous: File[], next: File[]) => {
+const remapVariantSlideIndicesAfterNewSlidesChange = (
+    previous: File[],
+    next: File[],
+) => {
     form.variant_images.forEach((row) => {
         if (row.use_main_image) return;
         if (row.media_id !== null) return;
@@ -1011,19 +1069,24 @@ const syncChildProducts = () => {
         slide_index: item.slide_index,
         use_main_image: item.use_main_image,
     }));
-    syncChildProductsForm.variant_image_file_keys = [...form.variant_image_file_keys];
+    syncChildProductsForm.variant_image_file_keys = [
+        ...form.variant_image_file_keys,
+    ];
     syncChildProductsForm.variant_image_files = [...form.variant_image_files];
 
-    syncChildProductsForm.post(`/${props.site.slug}/products/${props.product.id}/sync-child-products`, {
-        forceFormData: true,
-        preserveScroll: false,
-        onSuccess: () => {
-            void scrollToFlashMessageWithRetry();
+    syncChildProductsForm.post(
+        `/${props.site.slug}/products/${props.product.id}/sync-child-products`,
+        {
+            forceFormData: true,
+            preserveScroll: false,
+            onSuccess: () => {
+                void scrollToFlashMessageWithRetry();
+            },
+            onError: () => {
+                void scrollToFirstInputErrorMessage();
+            },
         },
-        onError: () => {
-            void scrollToFirstInputErrorMessage();
-        },
-    });
+    );
 };
 
 const deleteChildProduct = (childProductId: number) => {
@@ -1116,8 +1179,8 @@ const deleteChildProduct = (childProductId: number) => {
                             Thông tin cơ bản
                         </h2>
                         <p class="mt-1 text-sm text-gray-600">
-                            Cập nhật thông tin và giá sản phẩm. Dùng nút
-                            "Cập nhật sản phẩm con" để đồng bộ lại sản phẩm con.
+                            Cập nhật thông tin và giá sản phẩm. Dùng nút "Cập
+                            nhật sản phẩm con" để đồng bộ lại sản phẩm con.
                         </p>
                     </div>
 
@@ -1211,7 +1274,9 @@ const deleteChildProduct = (childProductId: number) => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="form.errors.product_type_id" />
+                            <InputError
+                                :message="form.errors.product_type_id"
+                            />
                         </div>
 
                         <div class="space-y-2">
@@ -1239,9 +1304,7 @@ const deleteChildProduct = (childProductId: number) => {
                             </Label>
                             <Select v-model="form.default_location_id">
                                 <SelectTrigger>
-                                    <SelectValue
-                                        placeholder="Chọn vị trí"
-                                    />
+                                    <SelectValue placeholder="Chọn vị trí" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem
@@ -1273,7 +1336,8 @@ const deleteChildProduct = (childProductId: number) => {
                                 required
                                 @change="
                                     form.purchase_price = normalizeIntegerPrice(
-                                        ($event.target as HTMLInputElement).value,
+                                        ($event.target as HTMLInputElement)
+                                            .value,
                                     )
                                 "
                             />
@@ -1291,7 +1355,8 @@ const deleteChildProduct = (childProductId: number) => {
                                 placeholder="0"
                                 @change="
                                     form.partner_price = normalizeIntegerPrice(
-                                        ($event.target as HTMLInputElement).value,
+                                        ($event.target as HTMLInputElement)
+                                            .value,
                                     )
                                 "
                             />
@@ -1310,7 +1375,8 @@ const deleteChildProduct = (childProductId: number) => {
                                 required
                                 @change="
                                     form.price = normalizeIntegerPrice(
-                                        ($event.target as HTMLInputElement).value,
+                                        ($event.target as HTMLInputElement)
+                                            .value,
                                     )
                                 "
                             />
@@ -1362,8 +1428,7 @@ const deleteChildProduct = (childProductId: number) => {
                             Hình ảnh sản phẩm
                         </h2>
                         <p class="mt-1 text-sm text-gray-600">
-                            Cập nhật 1 ảnh chính và tối đa 10 ảnh cho
-                            slide.
+                            Cập nhật 1 ảnh chính và tối đa 10 ảnh cho slide.
                         </p>
                     </div>
 
@@ -1391,7 +1456,7 @@ const deleteChildProduct = (childProductId: number) => {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        class="absolute right-1 top-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
+                                        class="absolute top-1 right-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
                                         @click="removeMainImage"
                                     >
                                         <Trash2 class="h-4 w-4" />
@@ -1399,7 +1464,9 @@ const deleteChildProduct = (childProductId: number) => {
                                 </div>
                             </div>
                             <div
-                                v-else-if="props.mainImage && !form.remove_main_image"
+                                v-else-if="
+                                    props.mainImage && !form.remove_main_image
+                                "
                                 class="mt-2"
                             >
                                 <div class="relative inline-block">
@@ -1412,7 +1479,7 @@ const deleteChildProduct = (childProductId: number) => {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        class="absolute right-1 top-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
+                                        class="absolute top-1 right-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
                                         @click="removeExistingMainImage"
                                     >
                                         <Trash2 class="h-4 w-4" />
@@ -1436,16 +1503,20 @@ const deleteChildProduct = (childProductId: number) => {
                                 @change="onSlideImagesChange"
                             />
                             <p class="text-xs text-gray-500">
-                                Bạn có thể chọn thêm tối đa {{ maxNewSlideImages }} ảnh
-                                (tổng tối đa 10 ảnh slide).
+                                Bạn có thể chọn thêm tối đa
+                                {{ maxNewSlideImages }} ảnh (tổng tối đa 10 ảnh
+                                slide).
                             </p>
                             <InputError :message="form.errors.slide_images" />
 
-                            <div
-                                class="mt-2 flex flex-wrap gap-2"
-                            >
+                            <div class="mt-2 flex flex-wrap gap-2">
                                 <div
-                                    v-for="img in props.slideImages?.filter((x) => !form.remove_slide_media_ids.includes(x.id))"
+                                    v-for="img in props.slideImages?.filter(
+                                        (x) =>
+                                            !form.remove_slide_media_ids.includes(
+                                                x.id,
+                                            ),
+                                    )"
                                     :key="`existing_${img.id}`"
                                     class="relative"
                                 >
@@ -1458,8 +1529,10 @@ const deleteChildProduct = (childProductId: number) => {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        class="absolute right-1 top-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
-                                        @click="removeExistingSlideImage(img.id)"
+                                        class="absolute top-1 right-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
+                                        @click="
+                                            removeExistingSlideImage(img.id)
+                                        "
                                     >
                                         <Trash2 class="h-4 w-4" />
                                     </Button>
@@ -1479,7 +1552,7 @@ const deleteChildProduct = (childProductId: number) => {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        class="absolute right-1 top-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
+                                        class="absolute top-1 right-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
                                         @click="removeSlideImage(idx)"
                                     >
                                         <Trash2 class="h-4 w-4" />
@@ -1492,9 +1565,7 @@ const deleteChildProduct = (childProductId: number) => {
 
                 <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6 flex items-center justify-between gap-3">
-                        <h2 class="text-lg font-semibold text-gray-900">
-                            Thẻ
-                        </h2>
+                        <h2 class="text-lg font-semibold text-gray-900">Thẻ</h2>
                         <Button
                             v-if="props.site?.slug"
                             type="button"
@@ -1508,7 +1579,8 @@ const deleteChildProduct = (childProductId: number) => {
                         </Button>
                     </div>
                     <p class="mt-1 text-sm text-gray-600">
-                        Gắn thẻ để lọc và tìm kiếm nhanh — có thể gõ để lọc danh sách.
+                        Gắn thẻ để lọc và tìm kiếm nhanh — có thể gõ để lọc danh
+                        sách.
                     </p>
 
                     <div class="mt-4 max-w-xl">
@@ -1536,7 +1608,11 @@ const deleteChildProduct = (childProductId: number) => {
                         <Button
                             type="button"
                             size="sm"
-                            :variant="activeVariantTab === 'attributes' ? 'default' : 'outline'"
+                            :variant="
+                                activeVariantTab === 'attributes'
+                                    ? 'default'
+                                    : 'outline'
+                            "
                             @click="activeVariantTab = 'attributes'"
                         >
                             Thuộc tính & Biến thể
@@ -1544,216 +1620,304 @@ const deleteChildProduct = (childProductId: number) => {
                         <Button
                             type="button"
                             size="sm"
-                            :variant="activeVariantTab === 'preview' ? 'default' : 'outline'"
+                            :variant="
+                                activeVariantTab === 'preview'
+                                    ? 'default'
+                                    : 'outline'
+                            "
                             @click="activeVariantTab = 'preview'"
                         >
                             Xem sản phẩm con
                         </Button>
                     </div>
-                    <InputError :message="form.errors.attributes" class="mb-4" />
+                    <InputError
+                        :message="form.errors.attributes"
+                        class="mb-4"
+                    />
 
                     <div v-if="activeVariantTab === 'attributes'">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                        <div class="w-full space-y-2 sm:max-w-xs">
-                            <Label>Thêm thuộc tính</Label>
-                            <Select v-model="selectedAttributeId">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Chọn thuộc tính..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">—</SelectItem>
-                                    <SelectItem
-                                        v-for="attr in props.attributes"
-                                        :key="attr.id"
-                                        :value="attr.id.toString()"
-                                    >
-                                        {{ attr.name }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
                         <div
-                            v-if="selectedAttributeId !== 'none'"
-                            class="w-full flex-1 space-y-2"
+                            class="flex flex-col gap-3 sm:flex-row sm:items-end"
                         >
-                            <Label>
-                                Thêm nhanh values (phân tách bằng dấu phẩy và phân tách giá bằng |)
-                            </Label>
-                            <Input
-                                :model-value="selectedAttributeQuickValues"
-                                placeholder="VD: Xanh|200, Đỏ|100"
-                                @update:model-value="
-                                    selectedAttributeQuickValues = ($event as string) ?? ''
-                                "
-                                @keydown.enter.prevent="addAttribute"
-                            />
-                        </div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            class="flex items-center gap-2"
-                            @click="addAttribute"
-                        >
-                            <Plus class="h-4 w-4" />
-                            Thêm
-                        </Button>
-                    </div>
-
-                    <div v-if="form.attributes.length === 0" class="mt-6">
-                        <div class="text-sm text-gray-600">
-                            Nếu không chọn attributes, hệ thống sẽ tạo 1 SKU =
-                            product_code.
-                        </div>
-                    </div>
-
-                    <div v-else class="mt-6 space-y-6">
-                        <div
-                            v-for="attr in selectedAttributes"
-                            :key="attr.id"
-                            class="rounded-lg border border-gray-200 p-4"
-                        >
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <div class="font-medium text-gray-900">
-                                        {{ attr.name }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        order: {{ attr.order }} • code: {{ attr.code }}
-                                    </div>
-                                </div>
-                                <Button
-                                    v-if="canShowRemoveAttributeButton(attr.id)"
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="text-red-600 hover:text-red-700"
-                                    @click="removeAttribute(attr.id)"
-                                >
-                                    <Trash2 class="h-4 w-4" />
-                                </Button>
-                            </div>
-
-                            <div class="mt-4 space-y-3">
-                                <div class="rounded-md border border-dashed border-gray-300 p-3">
-                                    <Label class="mb-2 block text-xs text-gray-600">
-                                        Thêm nhanh values (phân tách bằng dấu phẩy và phân tách giá bằng |)
-                                    </Label>
-                                    <div class="flex flex-col gap-2 sm:flex-row">
-                                        <Input
-                                            :model-value="quickValuesByAttribute[attr.id] ?? ''"
-                                            placeholder="Ví dụ: Xanh|200, Đỏ|100"
-                                            @update:model-value="
-                                                quickValuesByAttribute = {
-                                                    ...quickValuesByAttribute,
-                                                    [attr.id]: ($event as string) ?? '',
-                                                }
-                                            "
-                                            @keydown.enter.prevent="addValuesFromQuickInput(attr.id)"
+                            <div class="w-full space-y-2 sm:max-w-xs">
+                                <Label>Thêm thuộc tính</Label>
+                                <Select v-model="selectedAttributeId">
+                                    <SelectTrigger>
+                                        <SelectValue
+                                            placeholder="Chọn thuộc tính..."
                                         />
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            class="whitespace-nowrap"
-                                            @click="addValuesFromQuickInput(attr.id)"
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">—</SelectItem>
+                                        <SelectItem
+                                            v-for="attr in props.attributes"
+                                            :key="attr.id"
+                                            :value="attr.id.toString()"
                                         >
-                                            Tạo nhiều value
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div class="hidden grid-cols-12 gap-2 text-xs text-gray-500 md:grid">
-                                    <div class="col-span-2">Mã *</div>
-                                    <div class="col-span-3">Giá trị *</div>
-                                    <div class="col-span-1">Thứ tự *</div>
-                                    <div class="col-span-2">Phụ phí giá nhập</div>
-                                    <div class="col-span-2">Phụ phí giá đối tác</div>
-                                    <div class="col-span-2">Phụ phí giá bán lẻ</div>
-                                </div>
+                                            {{ attr.name }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div
+                                v-if="selectedAttributeId !== 'none'"
+                                class="w-full flex-1 space-y-2"
+                            >
+                                <Label>
+                                    Thêm nhanh values (phân tách bằng dấu phẩy
+                                    và phân tách giá bằng |)
+                                </Label>
+                                <Input
+                                    :model-value="selectedAttributeQuickValues"
+                                    placeholder="VD: Xanh|200, Đỏ|100"
+                                    @update:model-value="
+                                        selectedAttributeQuickValues =
+                                            ($event as string) ?? ''
+                                    "
+                                    @keydown.enter.prevent="addAttribute"
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="flex items-center gap-2"
+                                @click="addAttribute"
+                            >
+                                <Plus class="h-4 w-4" />
+                                Thêm
+                            </Button>
+                        </div>
 
+                        <div v-if="form.attributes.length === 0" class="mt-6">
+                            <div class="text-sm text-gray-600">
+                                Nếu không chọn attributes, hệ thống sẽ tạo 1 SKU
+                                = product_code.
+                            </div>
+                        </div>
+
+                        <div v-else class="mt-6 space-y-6">
+                            <div
+                                v-for="attr in selectedAttributes"
+                                :key="attr.id"
+                                class="rounded-lg border border-gray-200 p-4"
+                            >
                                 <div
-                                    v-for="(value, idx) in form.attributes.find((a) => a.attribute_id === attr.id)?.values"
-                                    :key="idx"
-                                    class="grid grid-cols-1 gap-2 md:grid-cols-12"
+                                    class="flex items-start justify-between gap-3"
                                 >
-                                    <div class="md:col-span-2">
-                                        <Input v-model="value.code" placeholder="VD: S" />
-                                        <InputError
-                                            :message="errorFor(`attributes.${attributeBlockIndex(attr.id)}.values.${idx}.code`)"
-                                        />
+                                    <div>
+                                        <div class="font-medium text-gray-900">
+                                            {{ attr.name }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            order: {{ attr.order }} • code:
+                                            {{ attr.code }}
+                                        </div>
                                     </div>
-                                    <div class="md:col-span-3">
-                                        <Input v-model="value.value" placeholder="VD: Small" />
-                                        <InputError
-                                            :message="errorFor(`attributes.${attributeBlockIndex(attr.id)}.values.${idx}.value`)"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-1">
-                                        <Input
-                                            v-model.number="value.order"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                        />
-                                        <InputError
-                                            :message="errorFor(`attributes.${attributeBlockIndex(attr.id)}.values.${idx}.order`)"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <Input
-                                            v-model.number="value.purchase_addition_value"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <Input
-                                            v-model.number="value.partner_addition_value"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <Input
-                                            v-model.number="value.addition_value"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-12">
-                                        <Button
-                                            v-if="canShowRemoveValueButton(attr.id, value)"
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            class="text-red-600 hover:text-red-700"
-                                            @click="removeValue(attr.id, idx)"
-                                            :disabled="
-                                                (form.attributes.find((a) => a.attribute_id === attr.id)?.values.length ?? 0) <= 1
-                                            "
-                                        >
-                                            Xóa value
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        v-if="
+                                            canShowRemoveAttributeButton(
+                                                attr.id,
+                                            )
+                                        "
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        class="text-red-600 hover:text-red-700"
+                                        @click="removeAttribute(attr.id)"
+                                    >
+                                        <Trash2 class="h-4 w-4" />
+                                    </Button>
                                 </div>
 
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    class="flex items-center gap-2"
-                                    @click="addValue(attr.id)"
-                                >
-                                    <Plus class="h-4 w-4" />
-                                    Thêm value
-                                </Button>
+                                <div class="mt-4 space-y-3">
+                                    <div
+                                        class="rounded-md border border-dashed border-gray-300 p-3"
+                                    >
+                                        <Label
+                                            class="mb-2 block text-xs text-gray-600"
+                                        >
+                                            Thêm nhanh values (phân tách bằng
+                                            dấu phẩy và phân tách giá bằng |)
+                                        </Label>
+                                        <div
+                                            class="flex flex-col gap-2 sm:flex-row"
+                                        >
+                                            <Input
+                                                :model-value="
+                                                    quickValuesByAttribute[
+                                                        attr.id
+                                                    ] ?? ''
+                                                "
+                                                placeholder="Ví dụ: Xanh|200, Đỏ|100"
+                                                @update:model-value="
+                                                    quickValuesByAttribute = {
+                                                        ...quickValuesByAttribute,
+                                                        [attr.id]:
+                                                            ($event as string) ??
+                                                            '',
+                                                    }
+                                                "
+                                                @keydown.enter.prevent="
+                                                    addValuesFromQuickInput(
+                                                        attr.id,
+                                                    )
+                                                "
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                class="whitespace-nowrap"
+                                                @click="
+                                                    addValuesFromQuickInput(
+                                                        attr.id,
+                                                    )
+                                                "
+                                            >
+                                                Tạo nhiều value
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="hidden grid-cols-12 gap-2 text-xs text-gray-500 md:grid"
+                                    >
+                                        <div class="col-span-2">Mã *</div>
+                                        <div class="col-span-3">Giá trị *</div>
+                                        <div class="col-span-1">Thứ tự *</div>
+                                        <div class="col-span-2">
+                                            Phụ phí giá nhập
+                                        </div>
+                                        <div class="col-span-2">
+                                            Phụ phí giá đối tác
+                                        </div>
+                                        <div class="col-span-2">
+                                            Phụ phí giá bán lẻ
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        v-for="(
+                                            value, idx
+                                        ) in form.attributes.find(
+                                            (a) => a.attribute_id === attr.id,
+                                        )?.values"
+                                        :key="idx"
+                                        class="grid grid-cols-1 gap-2 md:grid-cols-12"
+                                    >
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model="value.code"
+                                                placeholder="VD: S"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    errorFor(
+                                                        `attributes.${attributeBlockIndex(attr.id)}.values.${idx}.code`,
+                                                    )
+                                                "
+                                            />
+                                        </div>
+                                        <div class="md:col-span-3">
+                                            <Input
+                                                v-model="value.value"
+                                                placeholder="VD: Small"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    errorFor(
+                                                        `attributes.${attributeBlockIndex(attr.id)}.values.${idx}.value`,
+                                                    )
+                                                "
+                                            />
+                                        </div>
+                                        <div class="md:col-span-1">
+                                            <Input
+                                                v-model.number="value.order"
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    errorFor(
+                                                        `attributes.${attributeBlockIndex(attr.id)}.values.${idx}.order`,
+                                                    )
+                                                "
+                                            />
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model.number="
+                                                    value.purchase_addition_value
+                                                "
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model.number="
+                                                    value.partner_addition_value
+                                                "
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model.number="
+                                                    value.addition_value
+                                                "
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div class="md:col-span-12">
+                                            <Button
+                                                v-if="
+                                                    canShowRemoveValueButton(
+                                                        attr.id,
+                                                        value,
+                                                    )
+                                                "
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                class="text-red-600 hover:text-red-700"
+                                                @click="
+                                                    removeValue(attr.id, idx)
+                                                "
+                                                :disabled="
+                                                    (form.attributes.find(
+                                                        (a) =>
+                                                            a.attribute_id ===
+                                                            attr.id,
+                                                    )?.values.length ?? 0) <= 1
+                                                "
+                                            >
+                                                Xóa value
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        class="flex items-center gap-2"
+                                        @click="addValue(attr.id)"
+                                    >
+                                        <Plus class="h-4 w-4" />
+                                        Thêm value
+                                    </Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     </div>
 
                     <div v-else class="space-y-4">
@@ -1766,16 +1930,26 @@ const deleteChildProduct = (childProductId: number) => {
                                         Xem sản phẩm con
                                     </div>
                                     <div class="text-xs text-gray-500">
-                                        {{ props.childProducts?.length ?? 0 }} sản phẩm con
+                                        {{
+                                            props.childProducts?.length ?? 0
+                                        }}
+                                        sản phẩm con
                                     </div>
                                 </div>
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    :disabled="form.processing || syncChildProductsForm.processing || combinationsTooMany"
+                                    :disabled="
+                                        form.processing ||
+                                        syncChildProductsForm.processing ||
+                                        combinationsTooMany
+                                    "
                                     @click="syncChildProducts"
                                 >
-                                    <span v-if="syncChildProductsForm.processing">Đang cập nhật...</span>
+                                    <span
+                                        v-if="syncChildProductsForm.processing"
+                                        >Đang cập nhật...</span
+                                    >
                                     <span v-else>Cập nhật sản phẩm con</span>
                                 </Button>
                             </div>
@@ -1783,7 +1957,8 @@ const deleteChildProduct = (childProductId: number) => {
                                 v-if="combinationsTooMany"
                                 class="mt-3 text-xs text-red-600"
                             >
-                                Số tổ hợp vượt quá 100, không thể đồng bộ sản phẩm con.
+                                Số tổ hợp vượt quá 100, không thể đồng bộ sản
+                                phẩm con.
                             </p>
                             <div
                                 v-if="previewVariantRows.length > 0"
@@ -1798,43 +1973,76 @@ const deleteChildProduct = (childProductId: number) => {
                                         class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start"
                                     >
                                         <div class="space-y-1 lg:col-span-3">
-                                            <div class="text-sm font-medium text-gray-900">
+                                            <div
+                                                class="text-sm font-medium text-gray-900"
+                                            >
                                                 {{ row.child.sku }}
                                             </div>
                                             <div class="text-xs text-gray-500">
                                                 {{ row.child.name }}
                                             </div>
-                                            <div class="space-y-1 pt-1 text-xs text-gray-600">
+                                            <div
+                                                class="space-y-1 pt-1 text-xs text-gray-600"
+                                            >
                                                 <div>
                                                     Giá nhập:
-                                                    <b>{{ formatVnd(row.child.purchase_price) }}</b>
+                                                    <b>{{
+                                                        formatVnd(
+                                                            row.child
+                                                                .purchase_price,
+                                                        )
+                                                    }}</b>
                                                 </div>
                                                 <div>
                                                     Giá đối tác:
-                                                    <b>{{ formatVnd(row.child.partner_price) }}</b>
+                                                    <b>{{
+                                                        formatVnd(
+                                                            row.child
+                                                                .partner_price,
+                                                        )
+                                                    }}</b>
                                                 </div>
                                                 <div>
                                                     Giá bán:
-                                                    <b>{{ formatVnd(row.child.sale_price) }}</b>
+                                                    <b>{{
+                                                        formatVnd(
+                                                            row.child
+                                                                .sale_price,
+                                                        )
+                                                    }}</b>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="space-y-3 lg:col-span-5">
                                             <div>
-                                                <Label class="mb-1 block text-xs">Nguồn ảnh</Label>
+                                                <Label
+                                                    class="mb-1 block text-xs"
+                                                    >Nguồn ảnh</Label
+                                                >
                                                 <select
                                                     class="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                                                    :value="getVariantImageSource(row.child.image_key)"
+                                                    :value="
+                                                        getVariantImageSource(
+                                                            row.child.image_key,
+                                                        )
+                                                    "
                                                     @change="
                                                         setVariantImageSource(
                                                             row.child.image_key,
-                                                            ($event.target as HTMLSelectElement).value,
+                                                            (
+                                                                $event.target as HTMLSelectElement
+                                                            ).value,
                                                         )
                                                     "
                                                 >
                                                     <option
-                                                        v-if="hasVariantUploadSource(row.child.image_key)"
+                                                        v-if="
+                                                            hasVariantUploadSource(
+                                                                row.child
+                                                                    .image_key,
+                                                            )
+                                                        "
                                                         value="upload"
                                                     >
                                                         Ảnh upload
@@ -1843,20 +2051,34 @@ const deleteChildProduct = (childProductId: number) => {
                                                         Sử dụng ảnh chính
                                                     </option>
                                                     <option
-                                                        v-for="(img, idx) in props.slideImages?.filter((x) => !form.remove_slide_media_ids.includes(x.id))"
+                                                        v-for="(
+                                                            img, idx
+                                                        ) in props.slideImages?.filter(
+                                                            (x) =>
+                                                                !form.remove_slide_media_ids.includes(
+                                                                    x.id,
+                                                                ),
+                                                        )"
                                                         :key="`existing_${img.id}`"
                                                         :value="`existing:${img.id}`"
                                                     >
                                                         Ảnh slide {{ idx + 1 }}
                                                     </option>
                                                     <option
-                                                        v-for="(url, idx) in slideImagePreviewUrls"
+                                                        v-for="(
+                                                            url, idx
+                                                        ) in slideImagePreviewUrls"
                                                         :key="`new_${idx}`"
                                                         :value="`new:${idx}`"
                                                     >
                                                         Ảnh slide
                                                         {{
-                                                            (props.slideImages?.filter((x) => !form.remove_slide_media_ids.includes(x.id)).length ?? 0) +
+                                                            (props.slideImages?.filter(
+                                                                (x) =>
+                                                                    !form.remove_slide_media_ids.includes(
+                                                                        x.id,
+                                                                    ),
+                                                            ).length ?? 0) +
                                                             idx +
                                                             1
                                                         }}
@@ -1864,32 +2086,65 @@ const deleteChildProduct = (childProductId: number) => {
                                                 </select>
                                             </div>
                                             <div>
-                                                <Label class="mb-1 block text-xs">
-                                                    Hoặc upload riêng cho biến thể
+                                                <Label
+                                                    class="mb-1 block text-xs"
+                                                >
+                                                    Hoặc upload riêng cho biến
+                                                    thể
                                                 </Label>
                                                 <input
-                                                    :ref="(el) => setVariantFileInputRef(row.child.image_key, el)"
+                                                    :ref="
+                                                        (el) =>
+                                                            setVariantFileInputRef(
+                                                                row.child
+                                                                    .image_key,
+                                                                el,
+                                                            )
+                                                    "
                                                     type="file"
                                                     accept="image/*"
                                                     class="block w-full text-xs text-gray-500 file:mr-2 file:rounded-md file:border-0 file:bg-gray-100 file:px-2 file:py-1.5 file:text-xs file:font-medium"
-                                                    @change="setVariantUploadFile(row.child.image_key, $event)"
+                                                    @change="
+                                                        setVariantUploadFile(
+                                                            row.child.image_key,
+                                                            $event,
+                                                        )
+                                                    "
                                                 />
                                                 <div
-                                                    v-if="getVariantUploadFileName(row.child.image_key)"
+                                                    v-if="
+                                                        getVariantUploadFileName(
+                                                            row.child.image_key,
+                                                        )
+                                                    "
                                                     class="mt-1 flex flex-wrap items-center gap-2"
                                                 >
-                                                    <p class="text-xs text-gray-600">
+                                                    <p
+                                                        class="text-xs text-gray-600"
+                                                    >
                                                         File:
-                                                        {{ getVariantUploadFileName(row.child.image_key) }}
+                                                        {{
+                                                            getVariantUploadFileName(
+                                                                row.child
+                                                                    .image_key,
+                                                            )
+                                                        }}
                                                     </p>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
                                                         class="h-7 gap-1 px-2 text-red-600 hover:text-red-700"
-                                                        @click="clearVariantImage(row.child.image_key)"
+                                                        @click="
+                                                            clearVariantImage(
+                                                                row.child
+                                                                    .image_key,
+                                                            )
+                                                        "
                                                     >
-                                                        <Trash2 class="h-3.5 w-3.5" />
+                                                        <Trash2
+                                                            class="h-3.5 w-3.5"
+                                                        />
                                                         Xóa ảnh upload
                                                     </Button>
                                                 </div>
@@ -1898,15 +2153,23 @@ const deleteChildProduct = (childProductId: number) => {
                                                 type="button"
                                                 size="sm"
                                                 variant="outline"
-                                                @click="clearVariantImage(row.child.image_key)"
+                                                @click="
+                                                    clearVariantImage(
+                                                        row.child.image_key,
+                                                    )
+                                                "
                                             >
                                                 Xóa chọn ảnh
                                             </Button>
                                         </div>
 
                                         <div class="lg:col-span-4">
-                                            <div class="mb-2 flex items-center justify-between">
-                                                <Label class="block text-xs text-gray-600">
+                                            <div
+                                                class="mb-2 flex items-center justify-between"
+                                            >
+                                                <Label
+                                                    class="block text-xs text-gray-600"
+                                                >
                                                     Xem trước
                                                 </Label>
                                                 <Button
@@ -1924,7 +2187,11 @@ const deleteChildProduct = (childProductId: number) => {
                                                         deleteChildProductForm.processing ||
                                                         syncChildProductsForm.processing
                                                     "
-                                                    @click="deleteChildProduct(row.child.id)"
+                                                    @click="
+                                                        deleteChildProduct(
+                                                            row.child.id,
+                                                        )
+                                                    "
                                                 >
                                                     <Trash2 class="h-4 w-4" />
                                                 </Button>
@@ -1974,7 +2241,9 @@ const deleteChildProduct = (childProductId: number) => {
                     </Button>
                     <Button
                         type="submit"
-                        :disabled="form.processing || syncChildProductsForm.processing"
+                        :disabled="
+                            form.processing || syncChildProductsForm.processing
+                        "
                         class="min-w-36"
                     >
                         <span v-if="form.processing">Đang lưu...</span>

@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, PackageSearch, Edit, Trash2 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,16 +11,18 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
 import { usePermissions } from '@/composables/usePermissions';
-import { formatVnd } from '@/lib/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatVnd } from '@/lib/utils';
 import {
     create as ProductsCreate,
     destroy as ProductsDestroy,
     edit as ProductsEdit,
     index as ProductsIndex,
 } from '@/routes/products';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Edit, PackageSearch, Plus, Trash2 } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface Site {
     id: number;
@@ -283,7 +283,10 @@ const deleteProduct = () => {
                                     <div
                                         class="mt-1 flex flex-wrap items-center gap-2"
                                     >
-                                        <Badge variant="outline" class="text-xs">
+                                        <Badge
+                                            variant="outline"
+                                            class="text-xs"
+                                        >
                                             {{ product.code }}
                                         </Badge>
                                         <Badge
@@ -313,18 +316,24 @@ const deleteProduct = () => {
                                     {{ product.supplier?.name || '—' }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <td class="px-6 py-4 text-right whitespace-nowrap">
                                 <div class="space-y-1 text-xs text-gray-600">
                                     <div>
                                         Giá nhập:
                                         <span class="font-medium text-gray-900">
-                                            {{ formatVnd(product.purchase_price) }}
+                                            {{
+                                                formatVnd(
+                                                    product.purchase_price,
+                                                )
+                                            }}
                                         </span>
                                     </div>
                                     <div>
                                         Giá đối tác:
                                         <span class="font-medium text-gray-900">
-                                            {{ formatVnd(product.partner_price) }}
+                                            {{
+                                                formatVnd(product.partner_price)
+                                            }}
                                         </span>
                                     </div>
                                     <div>
@@ -335,19 +344,19 @@ const deleteProduct = () => {
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <Badge variant="outline">
                                     {{ product.qty_in_stock }}
                                 </Badge>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <Badge variant="outline">
                                     {{ product.product_items_count }}
                                 </Badge>
                             </td>
                             <td
                                 v-if="canManageProducts"
-                                class="px-6 py-4 whitespace-nowrap text-center"
+                                class="px-6 py-4 text-center whitespace-nowrap"
                             >
                                 <div class="flex justify-center gap-2">
                                     <Button
@@ -394,10 +403,14 @@ const deleteProduct = () => {
                                 size-class="h-14 w-14"
                             />
                             <div class="min-w-0 flex-1">
-                                <h3 class="truncate text-lg font-medium text-gray-900">
+                                <h3
+                                    class="truncate text-lg font-medium text-gray-900"
+                                >
                                     {{ product.name }}
                                 </h3>
-                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                <div
+                                    class="mt-1 flex flex-wrap items-center gap-2"
+                                >
                                     <Badge variant="outline" class="text-xs">
                                         {{ product.code }}
                                     </Badge>
@@ -473,9 +486,15 @@ const deleteProduct = () => {
                                     Giá nhập / đối tác / bán:
                                 </span>
                                 <div class="space-y-1 text-sm text-gray-900">
-                                    <div>{{ formatVnd(product.purchase_price) }}</div>
-                                    <div>{{ formatVnd(product.partner_price) }}</div>
-                                    <div class="font-medium">{{ formatVnd(product.price) }}</div>
+                                    <div>
+                                        {{ formatVnd(product.purchase_price) }}
+                                    </div>
+                                    <div>
+                                        {{ formatVnd(product.partner_price) }}
+                                    </div>
+                                    <div class="font-medium">
+                                        {{ formatVnd(product.price) }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -484,7 +503,10 @@ const deleteProduct = () => {
                                         >Tồn:</span
                                     >
                                     <div>
-                                        <Badge variant="outline" class="text-sm">
+                                        <Badge
+                                            variant="outline"
+                                            class="text-sm"
+                                        >
                                             {{ product.qty_in_stock }}
                                         </Badge>
                                     </div>
@@ -494,7 +516,10 @@ const deleteProduct = () => {
                                         >Variants:</span
                                     >
                                     <div>
-                                        <Badge variant="outline" class="text-sm">
+                                        <Badge
+                                            variant="outline"
+                                            class="text-sm"
+                                        >
                                             {{ product.product_items_count }}
                                         </Badge>
                                     </div>
@@ -544,10 +569,7 @@ const deleteProduct = () => {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button
-                        variant="outline"
-                        @click="showDeleteDialog = false"
-                    >
+                    <Button variant="outline" @click="showDeleteDialog = false">
                         Hủy
                     </Button>
                     <Button variant="destructive" @click="deleteProduct">
@@ -558,4 +580,3 @@ const deleteProduct = () => {
         </Dialog>
     </AppLayout>
 </template>
-

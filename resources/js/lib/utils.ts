@@ -12,6 +12,8 @@ export function toUrl(href: NonNullable<InertiaLinkProps['href']>) {
 
 export function formatVnd(value: unknown): string {
     const parsed = Number(value);
-    const normalized = Number.isNaN(parsed) ? 0 : Math.max(0, Math.trunc(parsed));
+    const normalized = Number.isNaN(parsed)
+        ? 0
+        : Math.max(0, Math.trunc(parsed));
     return `${new Intl.NumberFormat('en-US').format(normalized)} đ`;
 }

@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { computed } from 'vue';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const props = withDefaults(
     defineProps<{
@@ -27,13 +32,21 @@ const hasImage = computed(() => Boolean(props.src));
                 :class="sizeClass"
                 :title="alt"
             >
-                <img :src="src ?? ''" :alt="alt" class="h-full w-full object-cover" />
+                <img
+                    :src="src ?? ''"
+                    :alt="alt"
+                    class="h-full w-full object-cover"
+                />
             </button>
         </DialogTrigger>
         <DialogContent class="max-w-4xl">
             <DialogTitle class="sr-only">{{ alt }}</DialogTitle>
             <div class="flex items-center justify-center">
-                <img :src="src ?? ''" :alt="alt" class="max-h-[75vh] w-auto rounded-md object-contain" />
+                <img
+                    :src="src ?? ''"
+                    :alt="alt"
+                    class="max-h-[75vh] w-auto rounded-md object-contain"
+                />
             </div>
         </DialogContent>
     </Dialog>
@@ -46,4 +59,3 @@ const hasImage = computed(() => Boolean(props.src));
         No image
     </div>
 </template>
-

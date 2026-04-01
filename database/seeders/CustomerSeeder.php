@@ -35,10 +35,24 @@ class CustomerSeeder extends Seeder
 
         $this->command->info('✅ Found '.Province::count().' provinces and '.Ward::count().' wards');
 
-        // Create sites (they don't exist from import)
-        $this->command->info('Creating sites...');
-        $sites = Site::factory(5)->create();
-        $this->command->info('✅ Created '.$sites->count().' sites');
+        // Check for existing sites first
+        $existingSites = Site::all();
+
+        if ($existingSites->count() > 0) {
+            $this->command->info('✅ Found '.$existingSites->count().' existing sites, using them...');
+            $sites = $existingSites;
+        } else {
+            $this->command->info('No existing sites found. Creating new sites...');
+            $sites = Site::factory(5)->create();
+            $this->command->info('✅ Created '.$sites->count().' sites');
+        }
+
+        // Ensure we have at least one site for customer assignment
+        if ($sites->count() === 0) {
+            $this->command->error('❌ No sites available. Cannot proceed with customer creation.');
+
+            return;
+        }
 
         // Create customers
         $this->command->info('Creating customers...');

@@ -1,22 +1,4 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import {
-    FolderTree,
-    Handshake,
-    Layers,
-    LayoutGrid,
-    LucideUserKey,
-    Package,
-    Settings,
-    ShieldUser,
-    Boxes,
-    ContactRound,
-    Tag,
-    ToggleLeftIcon,
-    Warehouse,
-    ShoppingCart,
-} from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -34,6 +16,26 @@ import { index as PermissionsIndex } from '@/routes/admin/permissions';
 import { index as RolesIndex } from '@/routes/admin/roles';
 import site, { edit as SiteEdit } from '@/routes/site';
 import { type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    Boxes,
+    ContactRound,
+    FolderTree,
+    Handshake,
+    Layers,
+    LayoutGrid,
+    ListOrdered,
+    LucideUserKey,
+    Package,
+    Receipt,
+    Settings,
+    ShieldUser,
+    ShoppingCart,
+    Tag,
+    ToggleLeftIcon,
+    Warehouse,
+} from 'lucide-vue-next';
+import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 const { can } = usePermissions();
@@ -163,29 +165,36 @@ const mainNavItems: NavItem[] = [
         show: true,
     },
     {
-        title: 'Quản lý vai trò',
-        href: RolesIndex(),
-        icon: LucideUserKey,
-        show: can('view_roles'),
+        title: 'Đơn hàng',
+        href: '#', // Dummy href for parent item
+        icon: ShoppingCart,
+        show:
+            ((can('view_orders') || can('manage_orders')) &&
+                getOrdersUrl() !== null) ||
+            ((can('view_order_details') || can('manage_orders')) &&
+                getOrderDetailsUrl() !== null),
+        children: [
+            {
+                title: 'Danh sách đơn hàng',
+                href: getOrdersUrl() || '',
+                icon: ListOrdered,
+                show: can('manage_orders') && getOrdersUrl() !== null,
+            },
+            {
+                title: 'Đơn hàng chi tiết',
+                href: getOrderDetailsUrl() || '',
+                icon: Receipt,
+                show: can('manage_orders') && getOrderDetailsUrl() !== null,
+            },
+        ],
     },
     {
-        title: 'Quản lý quyền',
-        href: PermissionsIndex(),
-        icon: ShieldUser,
-        show: can('view_permissions'),
-    },
-    {
-        title: 'Quản lý kho',
-        href: getWarehouseUrl() || '',
-        icon: Warehouse,
-        show: can('manage_warehouses') && getWarehouseUrl() !== null,
-    },
-    {
-        title: 'Quản lý sản phẩm',
+        title: 'Sản phẩm',
         href: '#', // Dummy href for parent item
         icon: Package,
         show:
-            (can('view_products') || can('manage_products')) && getProductsUrl() !== null ||
+            ((can('view_products') || can('manage_products')) &&
+                getProductsUrl() !== null) ||
             (can('view_product_types') && getProductTypesUrl() !== null) ||
             (can('view_attributes') && getAttributesUrl() !== null) ||
             ((can('view_categories') || can('manage_categories')) &&
@@ -198,7 +207,9 @@ const mainNavItems: NavItem[] = [
                 title: 'Sản phẩm',
                 href: getProductsUrl() || '',
                 icon: Boxes,
-                show: (can('view_products') || can('manage_products')) && getProductsUrl() !== null,
+                show:
+                    (can('view_products') || can('manage_products')) &&
+                    getProductsUrl() !== null,
             },
             {
                 title: 'Loại sản phẩm',
@@ -236,24 +247,32 @@ const mainNavItems: NavItem[] = [
                 show: can('manage_suppliers') && getSupplierUrl() !== null,
             },
         ],
-            },
-            {
-        title: 'Quản lý khách hàng',
-                href: getCustomerUrl() || '',
-                icon: ContactRound,
-                show: (can('view_customers') || can('manage_customers')) && getCustomerUrl() !== null,
     },
     {
-        title: 'Quản lý đơn hàng',
-        href: getOrdersUrl() || '',
-        icon: ShoppingCart,
-        show: can('manage_orders') && getOrdersUrl() !== null,
+        title: 'Khách hàng',
+        href: getCustomerUrl() || '',
+        icon: ContactRound,
+        show:
+            (can('view_customers') || can('manage_customers')) &&
+            getCustomerUrl() !== null,
     },
     {
-        title: 'Chi tiết đơn hàng',
-        href: getOrderDetailsUrl() || '',
-        icon: ShoppingCart,
-        show: can('manage_orders') && getOrderDetailsUrl() !== null,
+        title: 'Quản lý vai trò',
+        href: RolesIndex(),
+        icon: LucideUserKey,
+        show: can('view_roles'),
+    },
+    {
+        title: 'Quản lý quyền',
+        href: PermissionsIndex(),
+        icon: ShieldUser,
+        show: can('view_permissions'),
+    },
+    {
+        title: 'Quản lý kho',
+        href: getWarehouseUrl() || '',
+        icon: Warehouse,
+        show: can('manage_warehouses') && getWarehouseUrl() !== null,
     },
     {
         title: 'Quản lý trang web',

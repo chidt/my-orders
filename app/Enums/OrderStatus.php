@@ -35,6 +35,24 @@ enum OrderStatus: int
         };
     }
 
+    public function color(): string
+    {
+        return match ($this) {
+            self::New => 'blue',
+            self::Processing => 'yellow',
+            self::ClosingOrder => 'orange',
+            self::AddToCart => 'purple',
+            self::Ordered => 'cyan',
+            self::PreOrder => 'teal',
+            self::WaitingForStock => 'gray',
+            self::Arrived => 'indigo',
+            self::Invoiced => 'pink',
+            self::Delivering => 'lime',
+            self::Completed => 'green',
+            self::Cancelled => 'red',
+        };
+    }
+
     public function transitions(): array
     {
         return match ($this) {
@@ -78,6 +96,7 @@ enum OrderStatus: int
             ->map(fn (self $status) => [
                 'value' => (string) $status->value,
                 'label' => $status->label(),
+                'color' => $status->color(),
             ])
             ->all();
     }

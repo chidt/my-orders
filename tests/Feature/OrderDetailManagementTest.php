@@ -80,16 +80,6 @@ beforeEach(function () {
     ]);
 });
 
-test('site admin can view order detail list without loading rows until status filter', function () {
-    $this->actingAs($this->user)
-        ->get(route('order-details.index', $this->site))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('Orders/Details/Index')
-            ->has('orderDetails.data', 0)
-        );
-});
-
 test('site admin can load order detail list when filter_status is set', function () {
     $this->actingAs($this->user)
         ->get(route('order-details.index', $this->site).'?filter_status=5')
@@ -122,7 +112,7 @@ test('can update order detail payment status with valid transition', function ()
         ->assertSessionHas('success');
 
     $this->orderDetail->refresh();
-    expect((int) $this->orderDetail->payment_status)->toBe(2);
+    expect((int) $this->orderDetail->payment_status->value)->toBe(2);
 });
 
 test('cannot update order detail payment status with invalid transition', function () {
@@ -133,7 +123,7 @@ test('cannot update order detail payment status with invalid transition', functi
         ->assertSessionHas('error');
 
     $this->orderDetail->refresh();
-    expect((int) $this->orderDetail->payment_status)->toBe(1);
+    expect((int) $this->orderDetail->payment_status->value)->toBe(1);
 });
 
 test('can bulk update order detail status by ids', function () {

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Plus, Trash2, AlertTriangle } from 'lucide-vue-next';
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import ProductTagsMultiselect from '@/components/products/ProductTagsMultiselect.vue';
 import QuickTagCreateDialog from '@/components/products/QuickTagCreateDialog.vue';
@@ -18,7 +15,13 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatVnd } from '@/lib/utils';
-import { index as ProductsIndex, store as ProductsStore } from '@/routes/products';
+import {
+    index as ProductsIndex,
+    store as ProductsStore,
+} from '@/routes/products';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { AlertTriangle, ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 interface Site {
     id: number;
@@ -196,7 +199,9 @@ const attributeOrder = computed(() => {
         if (ma.order !== mb.order) {
             return ma.order - mb.order;
         }
-        const byName = ma.name.localeCompare(mb.name, undefined, { sensitivity: 'base' });
+        const byName = ma.name.localeCompare(mb.name, undefined, {
+            sensitivity: 'base',
+        });
         if (byName !== 0) {
             return byName;
         }
@@ -236,14 +241,20 @@ const previewVariants = computed(() => {
             }
             return (x.code || '')
                 .toString()
-                .localeCompare((y.code || '').toString(), undefined, { sensitivity: 'base' });
+                .localeCompare((y.code || '').toString(), undefined, {
+                    sensitivity: 'base',
+                });
         }),
     }));
 
     const all = cartesian(blocks.map((b) => b.values));
     return all.slice(0, 100).map((combo) => {
-        const key = combo.map((v) => (v.code || '').trim().toUpperCase()).join('-');
-        const suffix = combo.map((v) => (v.code || '').trim().toUpperCase()).join('-');
+        const key = combo
+            .map((v) => (v.code || '').trim().toUpperCase())
+            .join('-');
+        const suffix = combo
+            .map((v) => (v.code || '').trim().toUpperCase())
+            .join('-');
         const purchaseAddition = combo.reduce(
             (sum, value) => sum + Number(value.purchase_addition_value ?? 0),
             0,
@@ -252,7 +263,10 @@ const previewVariants = computed(() => {
             (sum, value) => sum + Number(value.partner_addition_value ?? 0),
             0,
         );
-        const saleAddition = combo.reduce((sum, value) => sum + Number(value.addition_value ?? 0), 0);
+        const saleAddition = combo.reduce(
+            (sum, value) => sum + Number(value.addition_value ?? 0),
+            0,
+        );
 
         return {
             key,
@@ -270,7 +284,10 @@ const variantFileInputRefs = ref<Record<string, HTMLInputElement | null>>({});
 
 function setVariantFileInputRef(key: string, el: unknown): void {
     if (el instanceof HTMLInputElement) {
-        variantFileInputRefs.value = { ...variantFileInputRefs.value, [key]: el };
+        variantFileInputRefs.value = {
+            ...variantFileInputRefs.value,
+            [key]: el,
+        };
         return;
     }
     if (el === null && key in variantFileInputRefs.value) {
@@ -363,7 +380,9 @@ const setVariantUploadFile = (key: string, event: Event) => {
     row.slide_index = null;
     row.media_id = null;
 
-    const existedIndex = form.variant_image_file_keys.findIndex((k) => k === key);
+    const existedIndex = form.variant_image_file_keys.findIndex(
+        (k) => k === key,
+    );
     if (existedIndex !== -1) {
         form.variant_image_files[existedIndex] = file;
     } else {
@@ -425,7 +444,10 @@ const previewVariantRows = computed(() =>
     })),
 );
 
-const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): void => {
+const applyQuickValuesToAttribute = (
+    attributeId: number,
+    rawInput: string,
+): void => {
     const block = form.attributes.find((a) => a.attribute_id === attributeId);
     if (!block) return;
 
@@ -435,11 +457,16 @@ const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): voi
         .filter((x) => x.length > 0);
     if (items.length === 0) return;
 
-    if (block.values.length === 1 && !block.values[0].value.trim() && !block.values[0].code.trim()) {
+    if (
+        block.values.length === 1 &&
+        !block.values[0].value.trim() &&
+        !block.values[0].code.trim()
+    ) {
         block.values = [];
     }
 
-    let nextOrder = Math.max(0, ...block.values.map((v) => Number(v.order) || 0)) + 1;
+    let nextOrder =
+        Math.max(0, ...block.values.map((v) => Number(v.order) || 0)) + 1;
 
     items.forEach((item) => {
         const parsed = parseQuickAttributeValueItem(item);
@@ -457,8 +484,10 @@ const applyQuickValuesToAttribute = (attributeId: number, rawInput: string): voi
         );
         if (existingValue) {
             existingValue.value = parsed.displayValue;
-            existingValue.purchase_addition_value = parsed.purchase_addition_value;
-            existingValue.partner_addition_value = parsed.partner_addition_value;
+            existingValue.purchase_addition_value =
+                parsed.purchase_addition_value;
+            existingValue.partner_addition_value =
+                parsed.partner_addition_value;
             existingValue.addition_value = parsed.addition_value;
             return;
         }
@@ -503,7 +532,9 @@ const addAttribute = () => {
 };
 
 const removeAttribute = (attributeId: number) => {
-    form.attributes = form.attributes.filter((a) => a.attribute_id !== attributeId);
+    form.attributes = form.attributes.filter(
+        (a) => a.attribute_id !== attributeId,
+    );
 };
 
 const quickValuesByAttribute = ref<Record<number, string>>({});
@@ -539,7 +570,11 @@ function parseQuickAttributeValueItem(rawItem: string): {
     addition_value: number;
 } {
     const item = rawItem.trim();
-    const zeros = { purchase_addition_value: 0, partner_addition_value: 0, addition_value: 0 };
+    const zeros = {
+        purchase_addition_value: 0,
+        partner_addition_value: 0,
+        addition_value: 0,
+    };
 
     const firstPipe = item.indexOf('|');
     if (firstPipe === -1) {
@@ -613,7 +648,9 @@ const mainImageInputRef = ref<HTMLInputElement | null>(null);
 const slideImagesInputRef = ref<HTMLInputElement | null>(null);
 
 function revokeAllVariantUploadObjectUrls(): void {
-    Object.values(variantUploadObjectUrls.value).forEach((u) => URL.revokeObjectURL(u));
+    Object.values(variantUploadObjectUrls.value).forEach((u) =>
+        URL.revokeObjectURL(u),
+    );
     variantUploadObjectUrls.value = {};
 }
 
@@ -643,7 +680,9 @@ watch(
     () => form.slide_images,
     (files) => {
         slideImagePreviewUrls.value.forEach((url) => URL.revokeObjectURL(url));
-        slideImagePreviewUrls.value = (files ?? []).map((f) => URL.createObjectURL(f));
+        slideImagePreviewUrls.value = (files ?? []).map((f) =>
+            URL.createObjectURL(f),
+        );
     },
     { deep: true, immediate: true },
 );
@@ -673,7 +712,10 @@ const resetVariantToMainImage = (row: VariantImageInput) => {
 const slideFileKey = (f: File) => `${f.name}_${f.size}_${f.lastModified}`;
 
 /** Sau khi merge/dedupe danh sách slide mới upload, map lại slide_index theo đúng file (không giữ index cũ). */
-const remapVariantSlideIndicesAfterNewSlidesChange = (previous: File[], next: File[]) => {
+const remapVariantSlideIndicesAfterNewSlidesChange = (
+    previous: File[],
+    next: File[],
+) => {
     form.variant_images.forEach((row) => {
         if (row.use_main_image) return;
         if (row.media_id !== null) return;
@@ -751,7 +793,9 @@ const attributeBlockIndex = (attributeId: number): number => {
 
 const scrollToFirstInputErrorMessage = async (): Promise<void> => {
     await nextTick();
-    const errorMessages = Array.from(createFormRef.value?.querySelectorAll('p.text-red-600') ?? []);
+    const errorMessages = Array.from(
+        createFormRef.value?.querySelectorAll('p.text-red-600') ?? [],
+    );
     const firstVisibleErrorMessage = errorMessages.find((el) => {
         if (!(el instanceof HTMLElement)) {
             return false;
@@ -805,7 +849,11 @@ function cartesian<T>(sets: T[][]): T[][] {
             <div class="mb-8 flex items-center gap-4">
                 <Button
                     :as="Link"
-                    :href="props.site?.slug ? ProductsIndex.url({ site: props.site.slug }) : '#'"
+                    :href="
+                        props.site?.slug
+                            ? ProductsIndex.url({ site: props.site.slug })
+                            : '#'
+                    "
                     variant="outline"
                     size="icon"
                     class="shrink-0"
@@ -822,7 +870,11 @@ function cartesian<T>(sets: T[][]): T[][] {
                 </div>
             </div>
 
-            <form ref="createFormRef" @submit.prevent="submit" class="space-y-8">
+            <form
+                ref="createFormRef"
+                @submit.prevent="submit"
+                class="space-y-8"
+            >
                 <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6">
                         <h2 class="text-lg font-semibold text-gray-900">
@@ -853,7 +905,8 @@ function cartesian<T>(sets: T[][]): T[][] {
                                 placeholder="Để trống để tự generate"
                             />
                             <p class="text-xs text-gray-500">
-                                Nếu để trống, hệ thống sẽ tự tạo theo prefix site.
+                                Nếu để trống, hệ thống sẽ tự tạo theo prefix
+                                site.
                             </p>
                             <InputError :message="form.errors.code" />
                         </div>
@@ -891,7 +944,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                             <Label for="supplier_id">Nhà cung cấp *</Label>
                             <Select v-model="form.supplier_id">
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Chọn nhà cung cấp" />
+                                    <SelectValue
+                                        placeholder="Chọn nhà cung cấp"
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem
@@ -910,7 +965,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                             <Label for="product_type_id">Loại sản phẩm *</Label>
                             <Select v-model="form.product_type_id">
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Chọn loại sản phẩm" />
+                                    <SelectValue
+                                        placeholder="Chọn loại sản phẩm"
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem
@@ -922,7 +979,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="form.errors.product_type_id" />
+                            <InputError
+                                :message="form.errors.product_type_id"
+                            />
                         </div>
 
                         <div class="space-y-2">
@@ -965,7 +1024,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="form.errors.default_location_id" />
+                            <InputError
+                                :message="form.errors.default_location_id"
+                            />
                         </div>
 
                         <div class="space-y-2">
@@ -980,7 +1041,8 @@ function cartesian<T>(sets: T[][]): T[][] {
                                 required
                                 @change="
                                     form.purchase_price = normalizeIntegerPrice(
-                                        ($event.target as HTMLInputElement).value,
+                                        ($event.target as HTMLInputElement)
+                                            .value,
                                     )
                                 "
                             />
@@ -998,7 +1060,8 @@ function cartesian<T>(sets: T[][]): T[][] {
                                 placeholder="0"
                                 @change="
                                     form.partner_price = normalizeIntegerPrice(
-                                        ($event.target as HTMLInputElement).value,
+                                        ($event.target as HTMLInputElement)
+                                            .value,
                                     )
                                 "
                             />
@@ -1017,7 +1080,8 @@ function cartesian<T>(sets: T[][]): T[][] {
                                 required
                                 @change="
                                     form.price = normalizeIntegerPrice(
-                                        ($event.target as HTMLInputElement).value,
+                                        ($event.target as HTMLInputElement)
+                                            .value,
                                     )
                                 "
                             />
@@ -1046,7 +1110,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                                 v-model="form.order_closing_date"
                                 type="date"
                             />
-                            <InputError :message="form.errors.order_closing_date" />
+                            <InputError
+                                :message="form.errors.order_closing_date"
+                            />
                         </div>
 
                         <div class="space-y-2 lg:col-span-2">
@@ -1095,7 +1161,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        class="absolute right-1 top-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
+                                        class="absolute top-1 right-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
                                         @click="removeMainImage"
                                     >
                                         <Trash2 class="h-4 w-4" />
@@ -1140,7 +1206,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        class="absolute right-1 top-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
+                                        class="absolute top-1 right-1 h-7 w-7 rounded-full bg-white/90 text-red-600 hover:bg-white"
                                         @click="removeSlideImage(idx)"
                                     >
                                         <Trash2 class="h-4 w-4" />
@@ -1153,9 +1219,7 @@ function cartesian<T>(sets: T[][]): T[][] {
 
                 <div class="rounded-lg border border-gray-200 bg-white p-6">
                     <div class="mb-6 flex items-center justify-between gap-3">
-                        <h2 class="text-lg font-semibold text-gray-900">
-                            Thẻ
-                        </h2>
+                        <h2 class="text-lg font-semibold text-gray-900">Thẻ</h2>
                         <Button
                             v-if="props.site?.slug"
                             type="button"
@@ -1169,7 +1233,8 @@ function cartesian<T>(sets: T[][]): T[][] {
                         </Button>
                     </div>
                     <p class="mt-1 text-sm text-gray-600">
-                        Gắn thẻ để lọc và tìm kiếm nhanh — có thể gõ để lọc danh sách.
+                        Gắn thẻ để lọc và tìm kiếm nhanh — có thể gõ để lọc danh
+                        sách.
                     </p>
 
                     <div class="mt-4 max-w-xl">
@@ -1196,7 +1261,11 @@ function cartesian<T>(sets: T[][]): T[][] {
                         <Button
                             type="button"
                             size="sm"
-                            :variant="activeVariantTab === 'attributes' ? 'default' : 'outline'"
+                            :variant="
+                                activeVariantTab === 'attributes'
+                                    ? 'default'
+                                    : 'outline'
+                            "
                             @click="activeVariantTab = 'attributes'"
                         >
                             Thuộc tính & Biến thể
@@ -1204,7 +1273,11 @@ function cartesian<T>(sets: T[][]): T[][] {
                         <Button
                             type="button"
                             size="sm"
-                            :variant="activeVariantTab === 'preview' ? 'default' : 'outline'"
+                            :variant="
+                                activeVariantTab === 'preview'
+                                    ? 'default'
+                                    : 'outline'
+                            "
                             @click="activeVariantTab = 'preview'"
                         >
                             Xem trước biến thể
@@ -1212,7 +1285,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                     </div>
 
                     <div v-if="activeVariantTab === 'attributes'">
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div
+                            class="flex flex-col gap-3 sm:flex-row sm:items-end"
+                        >
                             <div class="w-full space-y-2 sm:max-w-xs">
                                 <Label>Thêm thuộc tính</Label>
                                 <Select v-model="selectedAttributeId">
@@ -1222,9 +1297,7 @@ function cartesian<T>(sets: T[][]): T[][] {
                                         />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="none"
-                                            >—</SelectItem
-                                        >
+                                        <SelectItem value="none">—</SelectItem>
                                         <SelectItem
                                             v-for="attr in props.attributes"
                                             :key="attr.id"
@@ -1240,13 +1313,15 @@ function cartesian<T>(sets: T[][]): T[][] {
                                 class="w-full flex-1 space-y-2"
                             >
                                 <Label>
-                                    Thêm nhanh values (phân tách bằng dấu phẩy và phân tách giá bằng |)
+                                    Thêm nhanh values (phân tách bằng dấu phẩy
+                                    và phân tách giá bằng |)
                                 </Label>
                                 <Input
                                     :model-value="selectedAttributeQuickValues"
                                     placeholder="VD: Xanh|200, Đỏ|100"
                                     @update:model-value="
-                                        selectedAttributeQuickValues = ($event as string) ?? ''
+                                        selectedAttributeQuickValues =
+                                            ($event as string) ?? ''
                                     "
                                     @keydown.enter.prevent="addAttribute"
                                 />
@@ -1264,165 +1339,222 @@ function cartesian<T>(sets: T[][]): T[][] {
 
                         <div v-if="form.attributes.length === 0" class="mt-6">
                             <div class="text-sm text-gray-600">
-                                Nếu không chọn attributes, hệ thống sẽ tạo 1 SKU =
-                                product_code.
+                                Nếu không chọn attributes, hệ thống sẽ tạo 1 SKU
+                                = product_code.
                             </div>
                         </div>
 
                         <div v-else class="mt-6 space-y-6">
-                        <div
-                            v-for="attr in selectedAttributes"
-                            :key="attr.id"
-                            class="rounded-lg border border-gray-200 p-4"
-                        >
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <div class="font-medium text-gray-900">
-                                        {{ attr.name }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        order: {{ attr.order }} • code:
-                                        {{ attr.code }}
-                                    </div>
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="text-red-600 hover:text-red-700"
-                                    @click="removeAttribute(attr.id)"
-                                >
-                                    <Trash2 class="h-4 w-4" />
-                                </Button>
-                            </div>
-
-                            <div class="mt-4 space-y-3">
-                            <div class="rounded-md border border-dashed border-gray-300 p-3">
-                                    <Label class="mb-2 block text-xs text-gray-600">
-                                        Thêm nhanh values (phân tách bằng dấu phẩy và phân tách giá bằng |)
-                                    </Label>
-                                    <div class="flex flex-col gap-2 sm:flex-row">
-                                        <Input
-                                            :model-value="quickValuesByAttribute[attr.id] ?? ''"
-                                            placeholder="Ví dụ: Xanh|200, Đỏ|100"
-                                            @update:model-value="
-                                                quickValuesByAttribute = {
-                                                    ...quickValuesByAttribute,
-                                                    [attr.id]: ($event as string) ?? '',
-                                                }
-                                            "
-                                            @keydown.enter.prevent="addValuesFromQuickInput(attr.id)"
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            class="whitespace-nowrap"
-                                            @click="addValuesFromQuickInput(attr.id)"
-                                        >
-                                            Tạo nhiều value
-                                        </Button>
-                                    </div>
-                                </div>
-                            <div class="hidden grid-cols-12 gap-2 text-xs text-gray-500 md:grid">
-                                    <div class="col-span-2">Mã *</div>
-                                    <div class="col-span-3">Giá trị *</div>
-                                    <div class="col-span-1">Thứ tự *</div>
-                                    <div class="col-span-2">Phụ phí giá nhập</div>
-                                    <div class="col-span-2">Phụ phí giá đối tác</div>
-                                    <div class="col-span-2">Phụ phí giá bán lẻ</div>
-                                </div>
-
+                            <div
+                                v-for="attr in selectedAttributes"
+                                :key="attr.id"
+                                class="rounded-lg border border-gray-200 p-4"
+                            >
                                 <div
-                                    v-for="(value, idx) in form.attributes.find((a) => a.attribute_id === attr.id)?.values"
-                                    :key="idx"
-                                    class="grid grid-cols-1 gap-2 md:grid-cols-12"
+                                    class="flex items-start justify-between gap-3"
                                 >
-                                    <div class="md:col-span-2">
-                                        <Input
-                                            v-model="value.code"
-                                            placeholder="VD: S"
-                                        />
-                                        <InputError
-                                            :message="errorFor(`attributes.${attributeBlockIndex(attr.id)}.values.${idx}.code`)"
-                                        />
+                                    <div>
+                                        <div class="font-medium text-gray-900">
+                                            {{ attr.name }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            order: {{ attr.order }} • code:
+                                            {{ attr.code }}
+                                        </div>
                                     </div>
-                                    <div class="md:col-span-3">
-                                        <Input
-                                            v-model="value.value"
-                                            placeholder="VD: Small"
-                                        />
-                                        <InputError
-                                            :message="errorFor(`attributes.${attributeBlockIndex(attr.id)}.values.${idx}.value`)"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-1">
-                                        <Input
-                                            v-model.number="value.order"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                        />
-                                        <InputError
-                                            :message="errorFor(`attributes.${attributeBlockIndex(attr.id)}.values.${idx}.order`)"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <Input
-                                            v-model.number="value.purchase_addition_value"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <Input
-                                            v-model.number="value.partner_addition_value"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <Input
-                                            v-model.number="value.addition_value"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div class="md:col-span-12">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            class="text-red-600 hover:text-red-700"
-                                            @click="
-                                                removeValue(attr.id, idx)
-                                            "
-                                            :disabled="
-                                                (form.attributes.find((a) => a.attribute_id === attr.id)?.values.length ?? 0) <= 1
-                                            "
-                                        >
-                                            Xóa value
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        class="text-red-600 hover:text-red-700"
+                                        @click="removeAttribute(attr.id)"
+                                    >
+                                        <Trash2 class="h-4 w-4" />
+                                    </Button>
                                 </div>
 
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    class="flex items-center gap-2"
-                                    @click="addValue(attr.id)"
-                                >
-                                    <Plus class="h-4 w-4" />
-                                    Thêm value
-                                </Button>
+                                <div class="mt-4 space-y-3">
+                                    <div
+                                        class="rounded-md border border-dashed border-gray-300 p-3"
+                                    >
+                                        <Label
+                                            class="mb-2 block text-xs text-gray-600"
+                                        >
+                                            Thêm nhanh values (phân tách bằng
+                                            dấu phẩy và phân tách giá bằng |)
+                                        </Label>
+                                        <div
+                                            class="flex flex-col gap-2 sm:flex-row"
+                                        >
+                                            <Input
+                                                :model-value="
+                                                    quickValuesByAttribute[
+                                                        attr.id
+                                                    ] ?? ''
+                                                "
+                                                placeholder="Ví dụ: Xanh|200, Đỏ|100"
+                                                @update:model-value="
+                                                    quickValuesByAttribute = {
+                                                        ...quickValuesByAttribute,
+                                                        [attr.id]:
+                                                            ($event as string) ??
+                                                            '',
+                                                    }
+                                                "
+                                                @keydown.enter.prevent="
+                                                    addValuesFromQuickInput(
+                                                        attr.id,
+                                                    )
+                                                "
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                class="whitespace-nowrap"
+                                                @click="
+                                                    addValuesFromQuickInput(
+                                                        attr.id,
+                                                    )
+                                                "
+                                            >
+                                                Tạo nhiều value
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="hidden grid-cols-12 gap-2 text-xs text-gray-500 md:grid"
+                                    >
+                                        <div class="col-span-2">Mã *</div>
+                                        <div class="col-span-3">Giá trị *</div>
+                                        <div class="col-span-1">Thứ tự *</div>
+                                        <div class="col-span-2">
+                                            Phụ phí giá nhập
+                                        </div>
+                                        <div class="col-span-2">
+                                            Phụ phí giá đối tác
+                                        </div>
+                                        <div class="col-span-2">
+                                            Phụ phí giá bán lẻ
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        v-for="(
+                                            value, idx
+                                        ) in form.attributes.find(
+                                            (a) => a.attribute_id === attr.id,
+                                        )?.values"
+                                        :key="idx"
+                                        class="grid grid-cols-1 gap-2 md:grid-cols-12"
+                                    >
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model="value.code"
+                                                placeholder="VD: S"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    errorFor(
+                                                        `attributes.${attributeBlockIndex(attr.id)}.values.${idx}.code`,
+                                                    )
+                                                "
+                                            />
+                                        </div>
+                                        <div class="md:col-span-3">
+                                            <Input
+                                                v-model="value.value"
+                                                placeholder="VD: Small"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    errorFor(
+                                                        `attributes.${attributeBlockIndex(attr.id)}.values.${idx}.value`,
+                                                    )
+                                                "
+                                            />
+                                        </div>
+                                        <div class="md:col-span-1">
+                                            <Input
+                                                v-model.number="value.order"
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                            />
+                                            <InputError
+                                                :message="
+                                                    errorFor(
+                                                        `attributes.${attributeBlockIndex(attr.id)}.values.${idx}.order`,
+                                                    )
+                                                "
+                                            />
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model.number="
+                                                    value.purchase_addition_value
+                                                "
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model.number="
+                                                    value.partner_addition_value
+                                                "
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <Input
+                                                v-model.number="
+                                                    value.addition_value
+                                                "
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div class="md:col-span-12">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                class="text-red-600 hover:text-red-700"
+                                                @click="
+                                                    removeValue(attr.id, idx)
+                                                "
+                                                :disabled="
+                                                    (form.attributes.find(
+                                                        (a) =>
+                                                            a.attribute_id ===
+                                                            attr.id,
+                                                    )?.values.length ?? 0) <= 1
+                                                "
+                                            >
+                                                Xóa value
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        class="flex items-center gap-2"
+                                        @click="addValue(attr.id)"
+                                    >
+                                        <Plus class="h-4 w-4" />
+                                        Thêm value
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
                         </div>
                     </div>
 
@@ -1448,7 +1580,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                         </div>
 
                         <div class="rounded-lg border border-gray-200 p-4">
-                            <div class="flex items-center justify-between gap-3">
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
                                 <div>
                                     <div class="font-medium text-gray-900">
                                         Xem trước biến thể
@@ -1468,43 +1602,75 @@ function cartesian<T>(sets: T[][]): T[][] {
                                         class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start"
                                     >
                                         <div class="space-y-1 lg:col-span-3">
-                                            <div class="text-sm font-medium text-gray-900">
+                                            <div
+                                                class="text-sm font-medium text-gray-900"
+                                            >
                                                 {{ row.variant.sku }}
                                             </div>
                                             <div class="text-xs text-gray-500">
                                                 {{ row.variant.label }}
                                             </div>
-                                            <div class="space-y-1 pt-1 text-xs text-gray-600">
+                                            <div
+                                                class="space-y-1 pt-1 text-xs text-gray-600"
+                                            >
                                                 <div>
                                                     Giá nhập:
-                                                    <b>{{ formatVnd(row.variant.purchase_price) }}</b>
+                                                    <b>{{
+                                                        formatVnd(
+                                                            row.variant
+                                                                .purchase_price,
+                                                        )
+                                                    }}</b>
                                                 </div>
                                                 <div>
                                                     Giá đối tác:
-                                                    <b>{{ formatVnd(row.variant.partner_price) }}</b>
+                                                    <b>{{
+                                                        formatVnd(
+                                                            row.variant
+                                                                .partner_price,
+                                                        )
+                                                    }}</b>
                                                 </div>
                                                 <div>
                                                     Giá bán:
-                                                    <b>{{ formatVnd(row.variant.sale_price) }}</b>
+                                                    <b>{{
+                                                        formatVnd(
+                                                            row.variant
+                                                                .sale_price,
+                                                        )
+                                                    }}</b>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="space-y-3 lg:col-span-5">
                                             <div>
-                                                <Label class="mb-1 block text-xs">Nguồn ảnh</Label>
+                                                <Label
+                                                    class="mb-1 block text-xs"
+                                                    >Nguồn ảnh</Label
+                                                >
                                                 <select
                                                     class="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm"
-                                                    :value="getVariantImageSource(row.variant.key)"
+                                                    :value="
+                                                        getVariantImageSource(
+                                                            row.variant.key,
+                                                        )
+                                                    "
                                                     @change="
                                                         setVariantImageSource(
                                                             row.variant.key,
-                                                            ($event.target as HTMLSelectElement).value,
+                                                            (
+                                                                $event.target as HTMLSelectElement
+                                                            ).value,
                                                         )
                                                     "
                                                 >
                                                     <option
-                                                        v-if="hasVariantUploadFile(row.variant.key)"
+                                                        v-if="
+                                                            hasVariantUploadFile(
+                                                                row.variant.key,
+                                                            )
+                                                        "
                                                         value="upload"
                                                     >
                                                         Ảnh upload
@@ -1513,7 +1679,9 @@ function cartesian<T>(sets: T[][]): T[][] {
                                                         Sử dụng ảnh chính
                                                     </option>
                                                     <option
-                                                        v-for="(url, idx) in slideImagePreviewUrls"
+                                                        v-for="(
+                                                            url, idx
+                                                        ) in slideImagePreviewUrls"
                                                         :key="`slide_${idx}`"
                                                         :value="`slide:${idx}`"
                                                     >
@@ -1522,32 +1690,62 @@ function cartesian<T>(sets: T[][]): T[][] {
                                                 </select>
                                             </div>
                                             <div>
-                                                <Label class="mb-1 block text-xs">
-                                                    Hoặc upload riêng cho biến thể
+                                                <Label
+                                                    class="mb-1 block text-xs"
+                                                >
+                                                    Hoặc upload riêng cho biến
+                                                    thể
                                                 </Label>
                                                 <input
-                                                    :ref="(el) => setVariantFileInputRef(row.variant.key, el)"
+                                                    :ref="
+                                                        (el) =>
+                                                            setVariantFileInputRef(
+                                                                row.variant.key,
+                                                                el,
+                                                            )
+                                                    "
                                                     type="file"
                                                     accept="image/*"
                                                     class="block w-full text-xs text-gray-500 file:mr-2 file:rounded-md file:border-0 file:bg-gray-100 file:px-2 file:py-1.5 file:text-xs file:font-medium"
-                                                    @change="setVariantUploadFile(row.variant.key, $event)"
+                                                    @change="
+                                                        setVariantUploadFile(
+                                                            row.variant.key,
+                                                            $event,
+                                                        )
+                                                    "
                                                 />
                                                 <div
-                                                    v-if="getVariantUploadFileName(row.variant.key)"
+                                                    v-if="
+                                                        getVariantUploadFileName(
+                                                            row.variant.key,
+                                                        )
+                                                    "
                                                     class="mt-1 flex flex-wrap items-center gap-2"
                                                 >
-                                                    <p class="text-xs text-gray-600">
+                                                    <p
+                                                        class="text-xs text-gray-600"
+                                                    >
                                                         File:
-                                                        {{ getVariantUploadFileName(row.variant.key) }}
+                                                        {{
+                                                            getVariantUploadFileName(
+                                                                row.variant.key,
+                                                            )
+                                                        }}
                                                     </p>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
                                                         class="h-7 gap-1 px-2 text-red-600 hover:text-red-700"
-                                                        @click="clearVariantImage(row.variant.key)"
+                                                        @click="
+                                                            clearVariantImage(
+                                                                row.variant.key,
+                                                            )
+                                                        "
                                                     >
-                                                        <Trash2 class="h-3.5 w-3.5" />
+                                                        <Trash2
+                                                            class="h-3.5 w-3.5"
+                                                        />
                                                         Xóa ảnh upload
                                                     </Button>
                                                 </div>
@@ -1556,14 +1754,20 @@ function cartesian<T>(sets: T[][]): T[][] {
                                                 type="button"
                                                 size="sm"
                                                 variant="outline"
-                                                @click="clearVariantImage(row.variant.key)"
+                                                @click="
+                                                    clearVariantImage(
+                                                        row.variant.key,
+                                                    )
+                                                "
                                             >
                                                 Xóa chọn ảnh
                                             </Button>
                                         </div>
 
                                         <div class="lg:col-span-4">
-                                            <Label class="mb-2 block text-xs text-gray-600">
+                                            <Label
+                                                class="mb-2 block text-xs text-gray-600"
+                                            >
                                                 Xem trước
                                             </Label>
                                             <div
@@ -1594,7 +1798,11 @@ function cartesian<T>(sets: T[][]): T[][] {
                 <div class="flex items-center justify-end gap-4 pt-2">
                     <Button
                         :as="Link"
-                        :href="props.site?.slug ? ProductsIndex.url({ site: props.site.slug }) : '#'"
+                        :href="
+                            props.site?.slug
+                                ? ProductsIndex.url({ site: props.site.slug })
+                                : '#'
+                        "
                         variant="outline"
                         type="button"
                     >
@@ -1620,4 +1828,3 @@ function cartesian<T>(sets: T[][]): T[][] {
         />
     </AppLayout>
 </template>
-

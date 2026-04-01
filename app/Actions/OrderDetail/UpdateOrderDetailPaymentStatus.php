@@ -2,6 +2,7 @@
 
 namespace App\Actions\OrderDetail;
 
+use App\Enums\PaymentStatus;
 use App\Models\OrderDetail;
 use Illuminate\Support\Facades\Log;
 
@@ -12,11 +13,12 @@ class UpdateOrderDetailPaymentStatus
      * 1 Unpaid -> 2 PaymentRequested -> 4 Processing / 5 PendingConfirmation -> 3 Paid
      */
     private const ALLOWED_TRANSITIONS = [
-        1 => [2],
-        2 => [4, 5, 3],
-        4 => [5, 3],
-        5 => [4, 3],
-        3 => [],
+        PaymentStatus::Unpaid->value => [PaymentStatus::PaymentRequested->value],
+        PaymentStatus::PaymentRequested->value => [PaymentStatus::Processing->value, PaymentStatus::PendingConfirmation->value, PaymentStatus::Paid->value],
+        PaymentStatus::Processing->value => [PaymentStatus::PendingConfirmation->value, PaymentStatus::Paid->value],
+        PaymentStatus::PendingConfirmation->value => [PaymentStatus::Processing->value, PaymentStatus::Paid->value],
+        PaymentStatus::Cancelled->value => [PaymentStatus::PaymentRequested->value], // Allow re-request after cancellation
+        PaymentStatus::Paid->value => [],
     ];
 
     public function canTransition(int $from, int $to): bool
@@ -26,10 +28,10 @@ class UpdateOrderDetailPaymentStatus
 
     public function execute(OrderDetail $detail, int $nextPaymentStatus, ?string $note = null): void
     {
-        $currentPaymentStatus = (int) $detail->payment_status;
+        $currentPaymentStatus = $detail->payment_status->value; // Access the integer value
 
         $detail->update([
-            'payment_status' => $nextPaymentStatus,
+            'payment_status' => $nextPaymentStatus, // This will be cast to enum by the model
             'note' => $note ?: $detail->note,
         ]);
 

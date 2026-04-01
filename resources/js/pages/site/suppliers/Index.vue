@@ -422,7 +422,7 @@ const translatePaginationLabel = (label: string) => {
                             >
                                 <div class="min-w-0 flex-1">
                                     <h3
-                                        class="truncate text-base font-semibold leading-tight text-gray-900"
+                                        class="truncate text-base leading-tight font-semibold text-gray-900"
                                     >
                                         {{ supplier.name }}
                                     </h3>
@@ -474,14 +474,24 @@ const translatePaginationLabel = (label: string) => {
 
                             <div class="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Người phụ trách</span>
-                                    <div class="mt-1 text-sm font-medium leading-tight text-gray-900">
+                                    <span
+                                        class="text-xs font-medium tracking-wide text-gray-500 uppercase"
+                                        >Người phụ trách</span
+                                    >
+                                    <div
+                                        class="mt-1 text-sm leading-tight font-medium text-gray-900"
+                                    >
                                         {{ supplier.person_in_charge || '-' }}
                                     </div>
                                 </div>
                                 <div>
-                                    <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Số SP</span>
-                                    <div class="mt-1 text-sm font-medium leading-tight text-gray-900">
+                                    <span
+                                        class="text-xs font-medium tracking-wide text-gray-500 uppercase"
+                                        >Số SP</span
+                                    >
+                                    <div
+                                        class="mt-1 text-sm leading-tight font-medium text-gray-900"
+                                    >
                                         {{
                                             (supplier as any).products_count ??
                                             0
@@ -489,8 +499,13 @@ const translatePaginationLabel = (label: string) => {
                                     </div>
                                 </div>
                                 <div class="col-span-2">
-                                    <span class="text-xs font-medium uppercase tracking-wide text-gray-500">Liên hệ</span>
-                                    <div class="mt-1 flex items-center gap-1 text-sm font-medium leading-tight text-gray-900">
+                                    <span
+                                        class="text-xs font-medium tracking-wide text-gray-500 uppercase"
+                                        >Liên hệ</span
+                                    >
+                                    <div
+                                        class="mt-1 flex items-center gap-1 text-sm leading-tight font-medium text-gray-900"
+                                    >
                                         <Phone
                                             v-if="supplier.phone"
                                             class="h-3 w-3 text-gray-400"
@@ -571,7 +586,9 @@ const translatePaginationLabel = (label: string) => {
                         @click="confirmDelete"
                     >
                         <span v-if="isDeleting">Đang xóa...</span>
-                        <span v-else class="cursor-pointer">Xóa nhà cung cấp</span>
+                        <span v-else class="cursor-pointer"
+                            >Xóa nhà cung cấp</span
+                        >
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,6 +35,7 @@ class OrderDetail extends Model
     protected function casts(): array
     {
         return [
+            'payment_status' => PaymentStatus::class,
             'status' => OrderStatus::class,
             'price' => 'decimal:2',
             'discount' => 'decimal:2',

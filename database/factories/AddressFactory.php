@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Ward;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,8 +23,10 @@ class AddressFactory extends Factory
      */
     public function definition(): array
     {
+        $fakerVi = FakerFactory::create('vi_VN');
+
         return [
-            'address' => fake()->streetAddress().', '.fake()->city(),
+            'address' => $fakerVi->streetAddress().', '.$fakerVi->city(),
             'addressable_id' => fn () => $this->getRandomAddressableId(),
             'addressable_type' => fn () => $this->getRandomAddressableType(),
             'ward_id' => fn () => $this->getRandomWardId(),
