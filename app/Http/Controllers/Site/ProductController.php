@@ -39,7 +39,7 @@ class ProductController extends Controller
                 'category:id,name',
                 'supplier:id,name',
                 'unit:id,name',
-                'productType:id,name',
+                'productType:id,name,color',
                 'media',
                 'tags' => fn ($q) => $q->where('site_id', $siteId),
             ])
@@ -99,7 +99,9 @@ class ProductController extends Controller
                         ? ['id' => $product->unit->id, 'name' => $product->unit->name]
                         : null,
                     'product_type' => $product->productType
-                        ? ['id' => $product->productType->id, 'name' => $product->productType->name]
+                        ? ['id' => $product->productType->id,
+                            'name' => $product->productType->name,
+                            'color' => $product->productType->color]
                         : null,
                 ];
             });

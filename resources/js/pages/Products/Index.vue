@@ -42,6 +42,7 @@ interface Site {
 interface RelatedEntity {
     id: number;
     name: string;
+    color?: string; // Optional color field for product types
 }
 
 interface Product {
@@ -184,6 +185,21 @@ const breadcrumbs = computed(() => {
         },
     ];
 });
+
+// Generate product type badge style based on color
+const getProductTypeBadgeStyle = (product: Product) => {
+    const color = product.product_type?.color;
+    if (!color) return {};
+
+    // Ensure color starts with # for hex colors
+    const hexColor = color.startsWith('#') ? color : `#${color}`;
+
+    return {
+        backgroundColor: `${hexColor}20`, // 20% opacity background
+        borderColor: `${hexColor}60`, // 60% opacity border
+        color: hexColor, // Full color text
+    };
+};
 </script>
 
 <template>
@@ -379,7 +395,7 @@ const breadcrumbs = computed(() => {
                             <td class="max-w-[200px] px-3 py-4 lg:max-w-xs">
                                 <div class="min-w-0">
                                     <div
-                                        class="truncate text-sm font-black text-gray-900"
+                                        class="truncate text-sm font-medium text-gray-900"
                                     >
                                         {{ product.name }}
                                     </div>
@@ -394,8 +410,9 @@ const breadcrumbs = computed(() => {
                                         </Badge>
                                         <Badge
                                             v-if="product.product_type?.name"
-                                            variant="secondary"
-                                            class="text-[10px] font-bold uppercase"
+                                            variant="outline"
+                                            class="text-[10px] font-bold uppercase border"
+                                            :style="getProductTypeBadgeStyle(product)"
                                         >
                                             {{ product.product_type.name }}
                                         </Badge>
@@ -435,7 +452,7 @@ const breadcrumbs = computed(() => {
                                     >
                                         <span
                                             class="font-black tracking-tight text-gray-400 uppercase"
-                                            >Đối tác:</span
+                                            >CTV:</span
                                         >
                                         <span
                                             class="font-medium text-gray-700"
@@ -447,7 +464,7 @@ const breadcrumbs = computed(() => {
                                     <div
                                         class="mt-1 rounded border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-xs font-black text-indigo-700"
                                     >
-                                        {{ formatVnd(product.price) }}
+                                        Lẻ: {{ formatVnd(product.price) }}
                                     </div>
                                 </div>
                             </td>
@@ -512,7 +529,7 @@ const breadcrumbs = computed(() => {
                         />
                         <div class="min-w-0 flex-1 space-y-1">
                             <h3
-                                class="truncate text-base leading-tight font-bold text-gray-900"
+                                class="truncate text-base leading-tight font-medium text-gray-900"
                             >
                                 {{ product.name }}
                             </h3>
@@ -525,8 +542,9 @@ const breadcrumbs = computed(() => {
                                 </Badge>
                                 <Badge
                                     v-if="product.product_type?.name"
-                                    variant="secondary"
-                                    class="text-[10px] font-bold uppercase"
+                                    variant="outline"
+                                    class="text-[10px] font-bold uppercase border"
+                                    :style="getProductTypeBadgeStyle(product)"
                                 >
                                     {{ product.product_type.name }}
                                 </Badge>
@@ -630,7 +648,7 @@ const breadcrumbs = computed(() => {
                             >
                         </div>
                         <div class="flex items-center justify-between text-xs">
-                            <span class="text-gray-500">Giá đối tác</span>
+                            <span class="text-gray-500">Giá CTV</span>
                             <span
                                 class="text-[10px] font-medium text-gray-900"
                                 >{{ formatVnd(product.partner_price) }}</span
