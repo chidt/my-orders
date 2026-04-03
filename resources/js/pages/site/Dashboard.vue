@@ -332,9 +332,9 @@
 </template>
 
 <script setup lang="ts">
+import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard as siteDashboard } from '@/routes/site';
-import { Head, usePage } from '@inertiajs/vue3';
 
 defineProps({
     site: Object,

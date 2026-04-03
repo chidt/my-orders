@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { ChevronRight } from 'lucide-vue-next';
 import {
     Collapsible,
     CollapsibleContent,
@@ -16,8 +18,6 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { ChevronRight } from 'lucide-vue-next';
 
 defineProps<{
     items: NavItem[];

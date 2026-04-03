@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowLeft } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import siteRoute from '@/routes/site';
 import type { AttributeFormProps } from '@/types/attribute';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowLeft } from 'lucide-vue-next';
 
 const props = defineProps<AttributeFormProps>();
 const page = usePage();

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { login, register } from '@/routes';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { login, register } from '@/routes';
 
 withDefaults(
     defineProps<{

@@ -298,6 +298,19 @@
 </template>
 
 <script setup lang="ts">
+import {
+    ArrowUpDown,
+    ChevronDown,
+    ChevronUp,
+    Download,
+    Eye,
+    EyeOff,
+    FolderTree,
+    Merge,
+    Trash2,
+    X,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -315,19 +328,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    ArrowUpDown,
-    ChevronDown,
-    ChevronUp,
-    Download,
-    Eye,
-    EyeOff,
-    FolderTree,
-    Merge,
-    Trash2,
-    X,
-} from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 
 interface BulkItem {
     id: number;

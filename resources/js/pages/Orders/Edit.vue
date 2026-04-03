@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, ref, watch } from 'vue';
 import QuickCustomerCreateDialog from '@/components/orders/QuickCustomerCreateDialog.vue';
 import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +9,6 @@ import { Input } from '@/components/ui/input';
 import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatVnd } from '@/lib/utils';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
 
 interface Site {
     id: number;
@@ -118,7 +118,7 @@ const selectedProductItems = ref<Record<string, ProductItem>>(
         props.initialProductItems.map((item) => [String(item.id), item]),
     ),
 );
-const productItemSearch = ref('');
+// ...existing code...
 const productItemOptions = ref<ProductItem[]>([]);
 const isSearchingProductItems = ref(false);
 let productItemSearchTimeout: ReturnType<typeof setTimeout> | null = null;

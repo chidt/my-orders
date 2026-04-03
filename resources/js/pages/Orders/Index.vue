@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Eye, Filter, Pencil, Plus, Search, Trash2, X } from 'lucide-vue-next';
+import { computed, reactive, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,9 +12,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { Eye, Filter, Pencil, Plus, Search, Trash2, X } from 'lucide-vue-next';
-import { computed, reactive, ref } from 'vue';
 
 import { Input } from '@/components/ui/input';
 import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
@@ -134,12 +134,8 @@ const {
     customerSearch,
     customerOptions,
     isSearchingCustomers,
-    isCustomerSuggestionsOpen,
     selectCustomer,
     clearCustomerSelection,
-    orderSearchCustomerLabel,
-    openSuggestions,
-    closeSuggestionsBlur,
 } = useOrderCustomerSearchFilter({
     siteSlug: () => props.site.slug,
     getCustomerId: () => props.filters.customer_id || '',
@@ -263,10 +259,6 @@ const confirmBulkDelete = () => {
             },
         },
     );
-};
-
-const onStatusChange = () => {
-    applyFilters();
 };
 </script>
 

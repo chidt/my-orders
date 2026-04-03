@@ -1,4 +1,14 @@
 <script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+import {
+    ArrowLeft,
+    CheckIcon,
+    ChevronsUpDownIcon,
+    Plus,
+    Trash2,
+} from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,16 +31,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import siteRoute from '@/routes/site';
 import type { CustomerFormProps } from '@/types/customer';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import axios from 'axios';
-import {
-    ArrowLeft,
-    CheckIcon,
-    ChevronsUpDownIcon,
-    Plus,
-    Trash2,
-} from 'lucide-vue-next';
-import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps<CustomerFormProps>();
 

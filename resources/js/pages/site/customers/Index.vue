@@ -1,4 +1,17 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import axios from 'axios';
+import {
+    CheckIcon,
+    ChevronsUpDownIcon,
+    ContactRound,
+    Edit,
+    Plus,
+    Search,
+    Trash2,
+    UserRound,
+} from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Command,
@@ -34,19 +47,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import siteRoute from '@/routes/site';
 import type { CustomerListProps } from '@/types/customer';
-import { Head, Link, router } from '@inertiajs/vue3';
-import axios from 'axios';
-import {
-    CheckIcon,
-    ChevronsUpDownIcon,
-    ContactRound,
-    Edit,
-    Plus,
-    Search,
-    Trash2,
-    UserRound,
-} from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
 
 const props = defineProps<CustomerListProps>();
 const { can } = usePermissions();

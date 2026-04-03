@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { Check, Eye, Filter, Search, X } from 'lucide-vue-next';
+import { computed, reactive, ref, watch } from 'vue';
 import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,9 +23,6 @@ import {
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatVnd } from '@/lib/utils';
 import type { AppPageProps } from '@/types';
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { Check, Eye, Filter, Search, X } from 'lucide-vue-next';
-import { computed, reactive, ref, watch } from 'vue';
 
 interface Site {
     id: number;

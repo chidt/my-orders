@@ -129,11 +129,11 @@
 </template>
 
 <script setup lang="ts">
+import { Plus, Tag, X } from 'lucide-vue-next';
+import { computed, nextTick, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Tag, X } from 'lucide-vue-next';
-import { computed, nextTick, ref, watch } from 'vue';
 
 interface TagData {
     id: number;

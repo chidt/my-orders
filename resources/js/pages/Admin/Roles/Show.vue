@@ -285,6 +285,8 @@
 </template>
 
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
@@ -293,8 +295,6 @@ import {
     edit as RolesEdit,
     index as RolesIndex,
 } from '@/routes/admin/roles';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 // eslint-disable-next-line vue/no-dupe-keys
 const { can } = usePermissions();

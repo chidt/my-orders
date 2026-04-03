@@ -1,21 +1,4 @@
 <script setup lang="ts">
-import NavFooter from '@/components/NavFooter.vue';
-import NavMain from '@/components/NavMain.vue';
-import NavUser from '@/components/NavUser.vue';
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { usePermissions } from '@/composables/usePermissions';
-import { index as PermissionsIndex } from '@/routes/admin/permissions';
-import { index as RolesIndex } from '@/routes/admin/roles';
-import site, { edit as SiteEdit } from '@/routes/site';
-import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     Boxes,
@@ -35,6 +18,23 @@ import {
     ToggleLeftIcon,
     Warehouse,
 } from 'lucide-vue-next';
+import NavFooter from '@/components/NavFooter.vue';
+import NavMain from '@/components/NavMain.vue';
+import NavUser from '@/components/NavUser.vue';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import { usePermissions } from '@/composables/usePermissions';
+import { index as PermissionsIndex } from '@/routes/admin/permissions';
+import { index as RolesIndex } from '@/routes/admin/roles';
+import site, { edit as SiteEdit } from '@/routes/site';
+import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
