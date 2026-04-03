@@ -322,6 +322,8 @@
 </template>
 
 <script setup lang="ts">
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -341,8 +343,6 @@ import {
     index as RolesIndex,
     show as RolesShow,
 } from '@/routes/admin/roles';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
 const page = usePage();
 // eslint-disable-next-line vue/no-dupe-keys
 const { can } = usePermissions();

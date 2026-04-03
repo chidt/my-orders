@@ -1,29 +1,5 @@
 <script setup lang="ts">
-import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { formatVnd } from '@/lib/utils';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-
-interface Site {
-    id: number;
-    slug: string;
-    name: string;
-}
-
-interface Option {
-    value: string;
-    label: string;
-}
-
-const props = defineProps<{
-    site: Site;
-    orderDetail: any;
-    statusOptions: Option[];
-    paymentStatusOptions: Option[];
-}>();
-
+// ...existing code...
 const page = usePage<{
     flash?: { success?: string; error?: string; message?: string };
 }>();

@@ -94,13 +94,13 @@
 </template>
 
 <script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
 import {
     index as PermissionsIndex,
     update as PermissionsUpdate,
 } from '@/routes/admin/permissions';
-import { Head, Link, useForm } from '@inertiajs/vue3';
 
 interface Permission {
     id: number;

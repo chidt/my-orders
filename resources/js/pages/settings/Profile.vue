@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next';
+import { onMounted, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -23,10 +27,6 @@ import { cn } from '@/lib/utils';
 import { edit, update } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import axios from 'axios';
-import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
 
 type Props = {
     mustVerifyEmail: boolean;

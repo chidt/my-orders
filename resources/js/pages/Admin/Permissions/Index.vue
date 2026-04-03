@@ -269,6 +269,8 @@
 </template>
 
 <script setup lang="ts">
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -288,8 +290,6 @@ import {
     index as PermissionsIndex,
     show as PermissionsShow,
 } from '@/routes/admin/permissions';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
 
 const page = usePage();
 const { can } = usePermissions();

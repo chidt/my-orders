@@ -1,4 +1,14 @@
 <script setup lang="ts">
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch,
+} from 'vue';
 import InputError from '@/components/InputError.vue';
 import ProductTagsMultiselect from '@/components/products/ProductTagsMultiselect.vue';
 import QuickTagCreateDialog from '@/components/products/QuickTagCreateDialog.vue';
@@ -19,16 +29,6 @@ import {
     index as ProductsIndex,
     update as ProductsUpdate,
 } from '@/routes/products';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
-import {
-    computed,
-    nextTick,
-    onBeforeUnmount,
-    onMounted,
-    ref,
-    watch,
-} from 'vue';
 
 interface Site {
     id: number;

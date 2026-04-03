@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatVnd } from '@/lib/utils';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 interface Site {
     id: number;

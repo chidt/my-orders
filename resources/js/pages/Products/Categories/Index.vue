@@ -1,4 +1,16 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    Edit,
+    Eye,
+    EyeOff,
+    FolderTree,
+    List,
+    Plus,
+    Trash2,
+    TreePine,
+} from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
 import CategoryTree from '@/components/CategoryTree.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,18 +33,6 @@ import {
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import CategoriesRoutes from '@/routes/categories';
-import { Head, Link, router } from '@inertiajs/vue3';
-import {
-    Edit,
-    Eye,
-    EyeOff,
-    FolderTree,
-    List,
-    Plus,
-    Trash2,
-    TreePine,
-} from 'lucide-vue-next';
-import { computed, onMounted, ref, watch } from 'vue';
 
 interface Site {
     id: number;

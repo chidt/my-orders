@@ -1,4 +1,16 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    Edit,
+    Eye,
+    EyeOff,
+    Palette,
+    Plus,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,18 +31,6 @@ import {
     index as ProductTypesIndex,
     update as ProductTypesUpdate,
 } from '@/routes/product-types';
-import { Head, Link, router } from '@inertiajs/vue3';
-import {
-    Edit,
-    Eye,
-    EyeOff,
-    Palette,
-    Plus,
-    Search,
-    Trash2,
-    X,
-} from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 
 interface Site {
     id: number;

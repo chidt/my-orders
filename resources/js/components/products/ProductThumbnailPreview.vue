@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { X } from 'lucide-vue-next';
+import { computed } from 'vue';
 import {
     Dialog,
     DialogClose,
@@ -6,8 +8,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { X } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 const props = withDefaults(
     defineProps<{

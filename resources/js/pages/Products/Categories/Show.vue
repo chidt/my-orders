@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Head, Link } from '@inertiajs/vue3';
+import { ArrowLeft, Edit, FolderTree, Package } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,8 +14,6 @@ import { Label } from '@/components/ui/label';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import CategoriesRoutes from '@/routes/categories';
-import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Edit, FolderTree, Package } from 'lucide-vue-next';
 
 interface Site {
     id: number;

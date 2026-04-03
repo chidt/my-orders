@@ -137,6 +137,8 @@
 </template>
 
 <script setup lang="ts">
+import { FolderTree, Search } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
@@ -148,8 +150,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { FolderTree, Search } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
 
 interface Category {
     id: number;

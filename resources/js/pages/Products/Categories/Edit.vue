@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowLeft, FolderTree } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,8 +16,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import CategoriesRoutes from '@/routes/categories';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, FolderTree } from 'lucide-vue-next';
 
 interface Site {
     id: number;

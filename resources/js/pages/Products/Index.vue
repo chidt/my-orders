@@ -1,4 +1,15 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    Edit,
+    Filter,
+    PackageSearch,
+    Plus,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-vue-next';
+import { computed, reactive, ref } from 'vue';
 import ProductThumbnailPreview from '@/components/products/ProductThumbnailPreview.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,17 +32,6 @@ import {
     edit as ProductsEdit,
     index as ProductsIndex,
 } from '@/routes/products';
-import { Head, Link, router } from '@inertiajs/vue3';
-import {
-    Edit,
-    Filter,
-    PackageSearch,
-    Plus,
-    Search,
-    Trash2,
-    X,
-} from 'lucide-vue-next';
-import { computed, reactive, ref } from 'vue';
 
 interface Site {
     id: number;

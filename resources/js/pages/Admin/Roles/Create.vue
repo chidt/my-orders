@@ -190,11 +190,11 @@
 </template>
 
 <script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
 import { index as RolesIndex, store as RolesStore } from '@/routes/admin/roles';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 interface Permission {
     id: number;

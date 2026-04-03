@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
 import { computed } from 'vue';
+import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
 
 export interface TagOption {
     id: number;

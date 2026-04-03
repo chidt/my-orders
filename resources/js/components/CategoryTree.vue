@@ -40,9 +40,9 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
 import { FolderTree, Plus } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
 import CategoryTreeNode from './CategoryTreeNode.vue';
 
 interface Category {

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowLeft, Palette } from 'lucide-vue-next';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,9 +12,6 @@ import {
     index as ProductTypesIndex,
     update as ProductTypesUpdate,
 } from '@/routes/product-types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Palette } from 'lucide-vue-next';
-import { ref } from 'vue';
 
 interface Site {
     id: number;

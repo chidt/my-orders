@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import logoUrl from '@/assets/my-order-logo.png'; // 1. Import the image
 import type { HTMLAttributes } from 'vue';
+import logoUrl from '@/assets/my-order-logo.png'; // 1. Import the image
 
 defineOptions({
     inheritAttrs: false,

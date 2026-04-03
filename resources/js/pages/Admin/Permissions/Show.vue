@@ -102,6 +102,7 @@
 </template>
 
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes/admin';
@@ -110,7 +111,6 @@ import {
     edit as PermissionsEdit,
     index as PermissionsIndex,
 } from '@/routes/admin/permissions';
-import { Head, Link, router } from '@inertiajs/vue3';
 
 const { can } = usePermissions();
 
