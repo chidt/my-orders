@@ -4,8 +4,8 @@ use App\Http\Controllers\Site\AttributeController;
 use App\Http\Controllers\Site\CategoryController;
 use App\Http\Controllers\Site\CustomerController;
 use App\Http\Controllers\Site\LocationController;
-use App\Http\Controllers\Site\OrderDetailController;
 use App\Http\Controllers\Site\OrderController;
+use App\Http\Controllers\Site\OrderDetailController;
 use App\Http\Controllers\Site\ProductController;
 use App\Http\Controllers\Site\ProductTypeController;
 use App\Http\Controllers\Site\SupplierController;
@@ -87,7 +87,8 @@ Route::prefix('{site:slug}')->group(function () {
         'destroy' => 'products.destroy',
     ]);
 
-    // Order management routes
+    Route::post('orders/bulk-delete', [OrderController::class, 'bulkDestroy'])
+        ->name('orders.bulk-destroy');
     Route::resource('orders', OrderController::class)->names([
         'index' => 'orders.index',
         'create' => 'orders.create',

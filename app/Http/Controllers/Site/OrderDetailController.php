@@ -135,10 +135,12 @@ class OrderDetailController extends Controller
                 'product_id' => $request->string('product_id')->toString(),
                 'product_item_id' => $request->string('product_item_id')->toString(),
                 'product_type_id' => $request->string('product_type_id')->toString(),
+                'supplier_id' => $request->string('supplier_id')->toString(),
                 'filter_status' => $request->filled('filter_status') ? (string) $request->input('filter_status') : '',
                 'payment_statuses' => $request->input('payment_statuses', []),
                 'date_from' => $request->string('date_from')->toString(),
                 'date_to' => $request->string('date_to')->toString(),
+                'per_page' => (int) $request->input('per_page', 50),
             ],
             'activeFilterStatus' => $activeFilterStatus,
             'filterStatusTransitions' => $filterStatusTransitions,
@@ -149,6 +151,7 @@ class OrderDetailController extends Controller
             'products' => Product::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name']),
             'productItems' => ProductItem::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name', 'sku', 'product_id']),
             'productTypes' => ProductType::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name', 'color']),
+            'suppliers' => \App\Models\Supplier::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -215,6 +218,7 @@ class OrderDetailController extends Controller
                     'id' => $orderDetail->productItem?->id,
                     'name' => $orderDetail->productItem?->name,
                     'sku' => $orderDetail->productItem?->sku,
+                    'image' => $orderDetail->productItem?->image,
                 ],
                 'pricing' => [
                     'qty' => (int) $orderDetail->qty,
@@ -226,6 +230,7 @@ class OrderDetailController extends Controller
                 'status' => [
                     'value' => $status->value,
                     'label' => $status->label(),
+                    'color' => $status->color(),
                     'can_update' => ! $status->isFinal(),
                     'allowed_status_values' => collect($status->transitions())
                         ->prepend($status)

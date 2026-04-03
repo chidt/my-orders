@@ -20,7 +20,16 @@ import {
     update as ProductTypesUpdate,
 } from '@/routes/product-types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Edit, Eye, EyeOff, Palette, Plus, Trash2 } from 'lucide-vue-next';
+import {
+    Edit,
+    Eye,
+    EyeOff,
+    Palette,
+    Plus,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 interface Site {
@@ -160,54 +169,77 @@ const getContrastColor = (hexColor: string) => {
 
     return luminance > 0.5 ? '#000000' : '#ffffff';
 };
+
+const breadcrumbs = computed(() => {
+    if (!props.site) return [];
+    return [
+        {
+            title: props.site.name,
+            href: `/${props.site.slug}/dashboard`,
+            current: false,
+        },
+        {
+            title: 'Quản lý loại sản phẩm',
+            href: ProductTypesIndex.url({ site: props.site.slug }),
+            current: true,
+        },
+    ];
+});
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Quản lý loại sản phẩm" />
 
         <div class="px-4 py-8 sm:px-6 lg:px-8">
-            <!-- Header -->
-            <div class="mb-8 sm:flex sm:items-center sm:justify-between">
-                <div class="mb-4 sm:mb-0">
-                    <h1 class="text-2xl font-bold text-gray-900">
+            <!-- Header with Title and Search -->
+            <div
+                class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 sm:text-2xl">
                         Quản lý loại sản phẩm
                     </h1>
-                    <p class="mt-2 text-sm text-gray-700">
+                    <p class="mt-1 text-sm text-gray-600">
                         Quản lý các loại sản phẩm trong cửa hàng của bạn
                     </p>
                 </div>
+                <div class="w-full sm:w-80">
+                    <div class="relative">
+                        <Search
+                            class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
+                        />
+                        <Input
+                            v-model="searchQuery"
+                            placeholder="Tìm kiếm theo tên loại sản phẩm..."
+                            class="h-11 pl-9 text-sm sm:h-10"
+                            @keyup.enter="performSearch"
+                        />
+                        <button
+                            v-if="searchQuery"
+                            class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            type="button"
+                            @click="
+                                searchQuery = '';
+                                performSearch();
+                            "
+                        >
+                            <X class="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
 
+            <div class="mt-6 mb-4 flex w-full justify-end">
                 <Button
                     v-if="canManageProductTypes && props.site?.slug"
                     :as="Link"
                     :href="ProductTypesCreate.url({ site: props.site.slug })"
-                    class="flex w-full items-center justify-center gap-2 sm:w-auto"
+                    class="h-11 w-full sm:h-10 sm:w-auto"
                 >
-                    <Plus class="h-4 w-4" />
+                    <Plus class="mr-2 h-4 w-4" />
                     Thêm loại sản phẩm
                 </Button>
-            </div>
-
-            <!-- Search -->
-            <div class="mb-8 rounded-lg border border-gray-200 bg-white p-4">
-                <div class="flex flex-col gap-4 sm:flex-row">
-                    <div class="flex-1">
-                        <Input
-                            v-model="searchQuery"
-                            placeholder="Tìm kiếm theo tên loại sản phẩm..."
-                            @keyup.enter="performSearch"
-                            class="w-full"
-                        />
-                    </div>
-                    <Button
-                        @click="performSearch"
-                        variant="outline"
-                        class="w-full sm:w-auto"
-                    >
-                        Tìm kiếm
-                    </Button>
-                </div>
             </div>
 
             <!-- Summary -->

@@ -16,7 +16,7 @@ class UpdateProduct
 {
     public function handle(Product $product, array $validated, Request $request, int $siteId): void
     {
-        DB::transaction(function () use ($product, $validated, $request, $siteId) {
+        DB::transaction(function () use ($product, $validated, $request) {
             $newCode = $validated['code'] ?: $product->code;
 
             $product->update([
@@ -278,7 +278,7 @@ class UpdateProduct
                 ->map(fn (ProductAttributeValue $value) => strtoupper(trim($value->code)))
                 ->implode('-');
 
-            $name = $product->name.' - '.collect($combination)->pluck('value')->implode(' / ');
+            $name = $product->name.' - '.collect($combination)->pluck('value')->implode(' - ');
             $skuBase = $newCode.'-'.$key;
 
             $addition = collect($combination)->sum(fn (ProductAttributeValue $v) => (float) ($v->addition_value ?? 0));

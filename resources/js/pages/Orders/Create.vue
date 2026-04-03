@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
 import QuickCustomerCreateDialog from '@/components/orders/QuickCustomerCreateDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatVnd } from '@/lib/utils';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
@@ -50,9 +50,11 @@ const props = defineProps<{
 }>();
 
 import type { AppPageProps } from '@/types';
-const page = usePage<AppPageProps & {
-    flash: { success?: string; error?: string; message?: string };
-}>();
+const page = usePage<
+    AppPageProps & {
+        flash: { success?: string; error?: string; message?: string };
+    }
+>();
 
 const form = useForm({
     customer_id: '',
@@ -258,7 +260,6 @@ const getProductItemLabel = (productItemId: string): string => {
     return product.name;
 };
 
-
 const getLineTotal = (index: number) => {
     const line = form.details[index];
     const price = getPrice(line.product_item_id);
@@ -359,16 +360,48 @@ const submit = () => {
                             >
                                 <template #option="{ option }">
                                     <div class="flex flex-col">
-                                        <span class="font-medium text-gray-900">{{ (option as Customer).name }}</span>
-                                        <div class="flex gap-2 text-xs text-gray-500">
-                                            <span v-if="(option as Customer).phone">{{ (option as Customer).phone }}</span>
-                                            <span v-if="(option as Customer).phone && (option as Customer).email">|</span>
-                                            <span v-if="(option as Customer).email">{{ (option as Customer).email }}</span>
+                                        <span
+                                            class="font-medium text-gray-900"
+                                            >{{
+                                                (option as Customer).name
+                                            }}</span
+                                        >
+                                        <div
+                                            class="flex gap-2 text-xs text-gray-500"
+                                        >
+                                            <span
+                                                v-if="
+                                                    (option as Customer).phone
+                                                "
+                                                >{{
+                                                    (option as Customer).phone
+                                                }}</span
+                                            >
+                                            <span
+                                                v-if="
+                                                    (option as Customer)
+                                                        .phone &&
+                                                    (option as Customer).email
+                                                "
+                                                >|</span
+                                            >
+                                            <span
+                                                v-if="
+                                                    (option as Customer).email
+                                                "
+                                                >{{
+                                                    (option as Customer).email
+                                                }}</span
+                                            >
                                         </div>
                                     </div>
                                 </template>
                                 <template #noResult>
-                                    <span class="px-3 py-2 text-sm text-gray-500">Không tìm thấy khách hàng phù hợp.</span>
+                                    <span
+                                        class="px-3 py-2 text-sm text-gray-500"
+                                        >Không tìm thấy khách hàng phù
+                                        hợp.</span
+                                    >
                                 </template>
                             </AppMultiselect>
                         </div>
@@ -494,20 +527,33 @@ const submit = () => {
                             <div class="flex items-center gap-3">
                                 <img
                                     v-if="(option as ProductItem).image"
-                                    :src="(option as ProductItem).image ?? undefined"
+                                    :src="
+                                        (option as ProductItem).image ??
+                                        undefined
+                                    "
                                     class="h-10 w-10 rounded border object-cover"
                                 />
-                                <div class="flex flex-1 items-center justify-between">
+                                <div
+                                    class="flex flex-1 items-center justify-between"
+                                >
                                     <div class="flex flex-col">
-                                        <span class="font-medium">{{ (option as ProductItem).name }}</span>
-                                        <span class="text-xs text-gray-500">{{ (option as ProductItem).sku }}</span>
+                                        <span class="font-medium">{{
+                                            (option as ProductItem).name
+                                        }}</span>
+                                        <span class="text-xs text-gray-500">{{
+                                            (option as ProductItem).sku
+                                        }}</span>
                                     </div>
-                                    <span class="text-sm font-semibold">{{ formatVnd((option as ProductItem).price) }}</span>
+                                    <span class="text-sm font-semibold">{{
+                                        formatVnd((option as ProductItem).price)
+                                    }}</span>
                                 </div>
                             </div>
                         </template>
                         <template #noResult>
-                            <span class="px-3 py-2 text-sm text-gray-500">Không tìm thấy sản phẩm phù hợp.</span>
+                            <span class="px-3 py-2 text-sm text-gray-500"
+                                >Không tìm thấy sản phẩm phù hợp.</span
+                            >
                         </template>
                     </AppMultiselect>
                 </div>

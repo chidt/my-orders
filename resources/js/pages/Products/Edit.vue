@@ -1930,9 +1930,7 @@ const deleteChildProduct = (childProductId: number) => {
                                         Xem sản phẩm con
                                     </div>
                                     <div class="text-xs text-gray-500">
-                                        {{
-                                            props.childProducts?.length ?? 0
-                                        }}
+                                        {{ props.childProducts?.length ?? 0 }}
                                         sản phẩm con
                                     </div>
                                 </div>

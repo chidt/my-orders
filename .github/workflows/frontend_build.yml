@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "staging" ]
     paths:
       - 'resources/js/**'
       - '.github/workflows/frontend_build.yml'

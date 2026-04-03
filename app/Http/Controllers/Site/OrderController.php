@@ -24,6 +24,7 @@ use App\Support\OrderCustomerPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -190,11 +191,16 @@ class OrderController extends Controller
                     : null,
                 'details' => $order->orderDetails->map(function (OrderDetail $detail) {
                     $status = $detail->status instanceof OrderStatus ? $detail->status : OrderStatus::from((int) $detail->status);
+                    $paymentStatus = $detail->payment_status instanceof PaymentStatus ? $detail->payment_status : PaymentStatus::from((int) $detail->payment_status);
 
                     return [
                         'id' => $detail->id,
                         'status' => $status->value,
                         'status_label' => $status->label(),
+                        'status_color' => $status->color(),
+                        'payment_status' => $paymentStatus->value,
+                        'payment_status_label' => $paymentStatus->label(),
+                        'payment_status_color' => $paymentStatus->color(),
                         'qty' => (int) $detail->qty,
                         'price' => (float) $detail->price,
                         'discount' => (float) $detail->discount,
@@ -263,6 +269,10 @@ class OrderController extends Controller
                 'customer_id' => (string) $order->customer_id,
                 'shipping_address_id' => (string) $order->shipping_address_id,
                 'order_date' => $order->order_date?->format('Y-m-d\TH:i'),
+                'status_label' => $order->status->label(),
+                'status_color' => $order->status->color(),
+                'payment_status_label' => $order->payment_status->label(),
+                'payment_status_color' => $order->payment_status->color(),
                 'sale_channel' => (string) $order->sale_channel,
                 'shipping_payer' => (string) $order->shipping_payer,
                 'shipping_note' => $order->shipping_note,
@@ -270,6 +280,10 @@ class OrderController extends Controller
                 'details' => $order->orderDetails->map(fn (OrderDetail $detail) => [
                     'id' => $detail->id,
                     'product_item_id' => (string) $detail->product_item_id,
+                    'status_label' => $detail->status->label(),
+                    'status_color' => $detail->status->color(),
+                    'payment_status_label' => $detail->payment_status->label(),
+                    'payment_status_color' => $detail->payment_status->color(),
                     'qty' => (int) $detail->qty,
                     'discount' => (float) $detail->discount,
                     'addition_price' => (float) $detail->addition_price,
@@ -402,6 +416,40 @@ class OrderController extends Controller
         return redirect()
             ->route('orders.index', $site)
             ->with('success', 'Đơn hàng đã được xóa thành công.');
+    }
+
+    public function bulkDestroy(
+        Request $request,
+        Site $site,
+        DeleteOrder $action
+    ): RedirectResponse {
+        Gate::authorize('delete', [Order::class, $site]);
+
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'Chưa chọn đơn hàng nào để xóa.');
+        }
+
+        try {
+            DB::transaction(function () use ($ids, $action, $site) {
+                $orders = Order::query()
+                    ->whereIn('id', $ids)
+                    ->where('site_id', $site->id)
+                    ->get();
+
+                foreach ($orders as $order) {
+                    $action->execute($order);
+                }
+            });
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return back()->with('error', 'Xóa hàng loạt thất bại: '.$e->getMessage());
+        }
+
+        return redirect()
+            ->route('orders.index', $site)
+            ->with('success', count($ids).' đơn hàng đã được xóa thành công.');
     }
 
     public function updateDetailStatus(
