@@ -10,30 +10,19 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from '@/components/ui/drawer';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { useOrderCustomerSearchFilter, type OrderSearchCustomer } from '@/composables/useOrderCustomerSearchFilter';
+import AppMultiselect from '@/components/ui/multiselect/AppMultiselect.vue';
+import AppPagination from '@/components/ui/pagination/AppPagination.vue';
+import {
+    useOrderCustomerSearchFilter,
+    type OrderSearchCustomer,
+} from '@/composables/useOrderCustomerSearchFilter';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatVnd } from '@/lib/utils';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { Eye, Pencil, TableOfContents, Trash2 } from 'lucide-vue-next';
-import { computed, reactive, ref } from 'vue';
+import type { AppPageProps } from '@/types';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { Check, Eye, Filter, Search, X } from 'lucide-vue-next';
+import { computed, reactive, ref, watch } from 'vue';
 
 interface Site {
     id: number;
@@ -65,18 +54,25 @@ const props = defineProps<{
     products: Option[];
     productItems: Option[];
     productTypes: Option[];
+    suppliers: Option[];
 }>();
 
-const page = usePage<{ flash?: { success?: string; error?: string; message?: string } }>();
+const page = usePage<
+    AppPageProps<{
+        flash?: { success?: string; error?: string; message?: string };
+    }>
+>();
 
 const filters = reactive({
     search: props.filters.search ?? '',
     product_id: props.filters.product_id ?? '',
     product_item_id: props.filters.product_item_id ?? '',
     product_type_id: props.filters.product_type_id ?? '',
+    supplier_id: props.filters.supplier_id ?? '',
     date_from: props.filters.date_from ?? '',
     date_to: props.filters.date_to ?? '',
     filter_status: props.filters.filter_status ?? '',
+    per_page: props.filters.per_page ?? 50,
 });
 
 const {
@@ -84,11 +80,7 @@ const {
     customerSearch,
     customerOptions,
     isSearchingCustomers,
-    isCustomerSuggestionsOpen,
     selectCustomer,
-    orderSearchCustomerLabel,
-    openSuggestions,
-    closeSuggestionsBlur,
 } = useOrderCustomerSearchFilter({
     siteSlug: () => props.site.slug,
     getCustomerId: () => props.filters.customer_id || '',
@@ -101,12 +93,31 @@ const pendingBulkTarget = ref<{ value: number; label: string } | null>(null);
 const isBulkUpdating = ref(false);
 const showFilterModal = ref(false);
 
-const hasStatusFilter = computed(() => String(filters.filter_status ?? '').trim() !== '');
+const activeFiltersCount = computed(() => {
+    let count = 0;
+    if (filters.filter_status) count++;
+    if (filterCustomerId.value) count++;
+    if (filters.product_id) count++;
+    if (filters.product_item_id) count++;
+    if (filters.product_type_id) count++;
+    if (filters.supplier_id) count++;
+    if (filters.date_from) count++;
+    if (filters.date_to) count++;
+    return count;
+});
 
-const visibleRowIds = computed(() => (props.orderDetails.data ?? []).map((d: { id: number }) => d.id));
+const hasActiveFilters = computed(() => activeFiltersCount.value > 0);
+
+const visibleRowIds = computed(() =>
+    (props.orderDetails.data ?? []).map((d: { id: number }) => d.id),
+);
 
 const allVisibleSelected = computed(
-    () => visibleRowIds.value.length > 0 && visibleRowIds.value.every((id: number) => selectedIds.value.includes(id)),
+    () =>
+        visibleRowIds.value.length > 0 &&
+        visibleRowIds.value.every((id: number) =>
+            selectedIds.value.includes(id),
+        ),
 );
 
 const toggleAllVisible = () => {
@@ -142,7 +153,10 @@ const transitionButtonClass = (value: number): string => {
         11: 'bg-emerald-600 hover:bg-emerald-700 text-white focus-visible:ring-emerald-500',
         12: 'bg-red-600 hover:bg-red-700 text-white focus-visible:ring-red-500',
     };
-    return map[value] ?? 'bg-gray-600 hover:bg-gray-700 text-white focus-visible:ring-gray-500';
+    return (
+        map[value] ??
+        'bg-gray-600 hover:bg-gray-700 text-white focus-visible:ring-gray-500'
+    );
 };
 
 const getBadgeClass = (color: string): string => {
@@ -175,18 +189,27 @@ const fetchList = () => {
         {
             ...filters,
             customer_id: filterCustomerId.value.trim() || undefined,
+            per_page: filters.per_page,
+            page: 1, // Always reset to page 1 when applying filters
         },
         { preserveState: true, preserveScroll: true, replace: true },
     );
 };
 
-const onFilterStatusChange = () => {
-    fetchList();
-};
-
-const clearStatusFilter = () => {
-    filters.filter_status = '';
-    fetchList();
+const handlePagination = (url: string) => {
+    // Parse the page number from the URL
+    const urlObj = new URL(url, window.location.origin);
+    const page = urlObj.searchParams.get('page') || 1;
+    router.get(
+        `/${props.site.slug}/order-details`,
+        {
+            ...filters,
+            customer_id: filterCustomerId.value.trim() || undefined,
+            page,
+            per_page: filters.per_page,
+        },
+        { preserveState: true, preserveScroll: true, replace: true },
+    );
 };
 
 const applyFilters = () => {
@@ -197,7 +220,9 @@ const openBulkConfirm = (targetStatus: number) => {
     if (selectedIds.value.length === 0) {
         return;
     }
-    const label = props.filterStatusTransitions.find((t) => t.value === targetStatus)?.label ?? String(targetStatus);
+    const label =
+        props.filterStatusTransitions.find((t) => t.value === targetStatus)
+            ?.label ?? String(targetStatus);
     pendingBulkTarget.value = { value: targetStatus, label };
     showBulkConfirmDialog.value = true;
 };
@@ -217,15 +242,26 @@ const closeFilterModal = () => {
 };
 
 const clearAllFilters = () => {
+    filters.filter_status = '';
+    filters.product_id = '';
+    filters.product_item_id = '';
+    filters.product_type_id = '';
+    filters.supplier_id = '';
     filters.date_from = '';
     filters.date_to = '';
     filterCustomerId.value = '';
     customerSearch.value = '';
+    fetchList();
 };
 
 const applyAdvancedFilters = () => {
     fetchList();
     closeFilterModal();
+};
+
+const clearCustomerSelection = () => {
+    filterCustomerId.value = '';
+    customerSearch.value = '';
 };
 
 const viewDetail = (id: number) => {
@@ -259,6 +295,16 @@ const confirmBulkUpdate = () => {
         },
     );
 };
+
+// Watch for per_page changes and automatically refetch data
+watch(
+    () => filters.per_page,
+    (newPerPage, oldPerPage) => {
+        if (newPerPage !== oldPerPage && oldPerPage !== undefined) {
+            fetchList();
+        }
+    },
+);
 </script>
 
 <template>
@@ -266,349 +312,509 @@ const confirmBulkUpdate = () => {
 
     <AppLayout
         :breadcrumbs="[
-            { title: site.name, href: `/${site.slug}/dashboard`, current: false },
-            { title: 'Chi tiết đơn hàng', href: `/${site.slug}/order-details`, current: true },
+            { title: props.site.name, href: `/${props.site.slug}/dashboard` },
+            {
+                title: 'Chi tiết đơn hàng',
+                href: `/${props.site.slug}/order-details`,
+            },
         ]"
     >
         <div class="space-y-4 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             <!-- Header with Title and Search -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h1 class="text-xl sm:text-2xl font-bold">Chi tiết đơn hàng</h1>
-                <div class="w-full sm:w-80">
-                    <div class="relative">
+            <div
+                class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 sm:text-2xl">
+                        Chi tiết đơn hàng
+                    </h1>
+                </div>
+                <div class="flex w-full gap-3 sm:w-auto">
+                    <div class="relative flex-1 sm:w-80">
+                        <Search
+                            class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
+                        />
                         <Input
                             v-model="filters.search"
-                            placeholder="Tìm kiếm mã đơn, khách hàng, SKU..."
-                            class="w-full h-11 sm:h-10 pr-10"
-                            @input="applyFilters"
+                            placeholder="Mã đơn, khách hàng, SKU..."
+                            class="h-11 pl-9 text-sm sm:h-10"
                             @keyup.enter="applyFilters"
                         />
                         <button
+                            v-if="filters.search"
+                            class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             type="button"
-                            @click="applyFilters"
-                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                            @click="
+                                filters.search = '';
+                                applyFilters();
+                            "
                         >
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <X class="h-4 w-4" />
                         </button>
                     </div>
-                </div>
-            </div>
-
-            <div v-if="page.props.flash?.success || page.props.flash?.message" class="rounded-md border border-green-200 bg-green-50 p-3 sm:px-4 sm:py-3">
-                <p class="text-sm font-medium text-green-800">
-                    {{ page.props.flash?.success || page.props.flash?.message }}
-                </p>
-            </div>
-            <div v-if="page.props.flash?.error" class="rounded-md border border-red-200 bg-red-50 p-3 sm:px-4 sm:py-3">
-                <p class="text-sm font-medium text-red-800">
-                    {{ page.props.flash.error }}
-                </p>
-            </div>
-
-            <div class="rounded-lg border bg-white p-3 sm:p-4 space-y-3">
-                <p class="text-sm font-medium text-gray-700">Lọc theo trạng thái chi tiết</p>
-                <div class="flex flex-col sm:flex-row sm:items-end gap-3">
-                    <div class="w-full sm:min-w-[200px] sm:flex-1">
-                        <select
-                            v-model="filters.filter_status"
-                            class="h-11 sm:h-10 w-full rounded-md border px-3 text-sm"
-                            @change="onFilterStatusChange"
-                        >
-                            <option value="">— Chọn trạng thái —</option>
-                            <option v-for="statusOption in statusOptions" :key="statusOption.value" :value="String(statusOption.value)">
-                                {{ statusOption.label }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2">
-                        <Button v-if="hasStatusFilter" variant="outline" type="button" class="h-11 sm:h-auto" @click="clearStatusFilter">
-                            Bỏ lọc trạng thái
-                        </Button>
-                        <Button variant="outline" type="button" class="h-11 sm:h-auto gap-2" @click="openFilterModal">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v4.586a1 1 0 01-.293.707L9 19.414A1 1 0 018 18.707V14.121a1 1 0 00-.293-.707L1.293 6.707A1 1 0 011 6V4z"/>
-                            </svg>
-                            Bộ lọc
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            <div
-                v-if="hasStatusFilter && activeFilterStatus && filterStatusTransitions.length > 0 && orderDetails.total > 0"
-                class="space-y-3"
-            >
-                <span class="text-sm text-gray-600">Đã chọn {{ selectedIds.length }} dòng.</span>
-                <div class="flex flex-wrap gap-2">
-                    <button
-                        v-for="t in filterStatusTransitions"
-                        :key="t.value"
+                    <Button
+                        variant="outline"
                         type="button"
-                        :disabled="selectedIds.length === 0"
-                        :class="[
-                            'min-h-11 sm:min-h-10 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40',
-                            transitionButtonClass(t.value),
-                        ]"
-                        @click="openBulkConfirm(t.value)"
+                        class="relative h-11 gap-2 px-3 transition-colors sm:h-10"
+                        :class="{
+                            'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm':
+                                hasActiveFilters,
+                        }"
+                        @click="openFilterModal"
                     >
-                        {{ t.label }}
+                        <Filter class="h-4 w-4" />
+                        <span class="hidden sm:inline">Bộ lọc</span>
+                        <div
+                            v-if="activeFiltersCount > 0"
+                            class="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white"
+                        >
+                            {{ activeFiltersCount }}
+                        </div>
+                    </Button>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            <TransitionGroup
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="transform -translate-y-2 opacity-0"
+                enter-to-class="transform translate-y-0 opacity-100"
+            >
+                <div
+                    v-if="
+                        page.props.flash?.success || page.props.flash?.message
+                    "
+                    key="success"
+                    class="rounded-2xl border border-green-100 bg-green-50 p-4 shadow-sm shadow-green-100/50"
+                >
+                    <p
+                        class="flex items-center gap-2 text-sm font-semibold text-green-800"
+                    >
+                        <span class="rounded-full bg-green-100 p-1"
+                            ><Check class="h-3 w-3"
+                        /></span>
+                        {{
+                            page.props.flash?.success ||
+                            page.props.flash?.message
+                        }}
+                    </p>
+                </div>
+                <div
+                    v-if="page.props.flash?.error"
+                    key="error"
+                    class="rounded-2xl border border-red-100 bg-red-50 p-4 shadow-sm shadow-red-100/50"
+                >
+                    <p
+                        class="flex items-center gap-2 text-sm font-semibold text-red-800"
+                    >
+                        <span class="rounded-full bg-red-100 p-1"
+                            ><X class="h-3 w-3"
+                        /></span>
+                        {{ page.props.flash.error }}
+                    </p>
+                </div>
+            </TransitionGroup>
+
+            <!-- Stats Bar -->
+            <div
+                class="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <p
+                    class="text-[11px] font-bold tracking-widest text-gray-500 uppercase"
+                >
+                    Tổng kết:
+                    <span class="font-bold text-gray-900">{{
+                        orderDetails.total
+                    }}</span>
+                    chi tiết đơn hàng
+                </p>
+                <div v-if="hasActiveFilters" class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 italic"
+                        >Đang áp dụng bộ lọc</span
+                    >
+                    <button
+                        @click="clearAllFilters"
+                        class="text-xs font-medium text-indigo-600 underline hover:text-indigo-800"
+                    >
+                        Xóa tất cả bộ lọc
                     </button>
                 </div>
             </div>
 
-
-            <!-- Luôn hiển thị bảng danh sách, không yêu cầu chọn trạng thái -->
-            <div>
-                <p v-if="activeFilterStatus" class="rounded-t-lg border border-b-0 bg-gray-50 px-3 sm:px-4 py-2 text-sm text-gray-700">
-                    Đang lọc theo trạng thái: <span class="font-semibold">{{ activeFilterStatus.label }}</span>
-                    <span class="text-gray-500">({{ orderDetails.total }} bản ghi)</span>
-                </p>
-                <p v-else-if="filters.filter_status && !activeFilterStatus" class="rounded-t-lg border border-b-0 bg-amber-50 px-3 sm:px-4 py-2 text-sm text-amber-900">
-                    Giá trị lọc trạng thái không hợp lệ. Chọn lại trạng thái khác.
-                </p>
-                <!-- Desktop Table View -->
-                <div class="hidden lg:block overflow-x-auto rounded-b-lg border bg-white">
-                    <table class="w-full min-w-[1200px] divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="w-10 px-4 py-2 text-left text-xs uppercase">
-                                    <input type="checkbox" :checked="allVisibleSelected" @change="toggleAllVisible" />
-                                </th>
-                                <th class="px-4 py-2 text-left text-xs uppercase">Sản phẩm</th>
-                                <th class="px-4 py-2 text-left text-xs uppercase">Khách hàng</th>
-                                <th class="px-4 py-2 text-right text-xs uppercase">SL</th>
-                                <th class="px-4 py-2 text-right text-xs uppercase">Giá</th>
-                                <th class="px-4 py-2 text-right text-xs uppercase">Tổng</th>
-                                <th class="px-4 py-2 text-left text-xs uppercase">Trạng thái</th>
-                                <th class="px-4 py-2 text-center text-xs uppercase">Chức năng</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-if="!orderDetails.data?.length">
-                                <td colspan="8" class="px-4 py-8 text-center text-sm text-gray-500">Không có chi tiết đơn hàng nào.</td>
-                            </tr>
-                            <tr
-                                v-for="detail in orderDetails.data"
-                                :key="detail.id"
-                                class="cursor-pointer hover:bg-gray-50"
-                                @click="viewDetail(detail.id)"
-                            >
-                                <td class="px-4 py-2 text-sm" @click.stop>
-                                    <input
-                                        type="checkbox"
-                                        :checked="selectedIds.includes(detail.id)"
-                                        @change="toggleSelected(detail.id)"
-                                    />
-                                </td>
-                                <td class="px-4 py-2 text-sm">
-                                    <div class="flex items-center gap-3">
-                                        <ProductThumbnailPreview
-                                            :src="detail.product_item.image"
-                                            :alt="detail.product.name"
-                                            size-class="h-12 w-12"
-                                        />
-                                        <div class="min-w-0 flex-1">
-                                            <div class="truncate font-medium">{{ detail.product.name }}</div>
-                                            <div class="text-xs text-gray-500">SKU: {{ detail.product_item.sku }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-2 text-sm">{{ detail.customer.name }}</td>
-                                <td class="px-4 py-2 text-right text-sm">{{ detail.qty }}</td>
-                                <td class="px-4 py-2 text-right text-sm">{{ formatVnd(detail.price) }}</td>
-                                <td class="px-4 py-2 text-right text-sm">{{ formatVnd(detail.total) }}</td>
-                                <td class="px-4 py-2 text-sm">
-                                    <div class="flex flex-col gap-1">
-                                        <Badge :class="getBadgeClass(detail.status_color)">{{ detail.status_label }}</Badge>
-                                        <Badge :class="getBadgeClass(detail.payment_status_color)">{{ detail.payment_status_label }}</Badge>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-2 text-center" @click.stop>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger as-child>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                class="h-8 w-8 p-0"
-                                            >
-                                                <TableOfContents
-                                                    class="h-4 w-4"
-                                                />
-                                                <span class="sr-only"
-                                                    >Thao tác</span
-                                                >
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem
-                                                @click="viewDetail(detail.id)"
-                                            >
-                                                <Eye class="mr-2 h-4 w-4" />
-                                                <span>Xem chi tiết</span>
-                                            </DropdownMenuItem>
-                                            <!-- Chỗ này có thể thêm Sửa/Xóa về sau nếu cần -->
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Card View -->
-                <div class="lg:hidden rounded-b-lg border bg-white">
-                    <div v-if="!orderDetails.data?.length" class="px-4 py-8 text-center text-sm text-gray-500">
-                        Không có chi tiết đơn hàng nào với bộ lọc hiện tại.
+            <!-- Bulk Actions Bar -->
+            <Transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="transform -translate-y-4 opacity-0"
+                enter-to-class="transform translate-y-0 opacity-100"
+            >
+                <div
+                    v-if="
+                        filters.filter_status &&
+                        activeFilterStatus &&
+                        filterStatusTransitions.length > 0 &&
+                        orderDetails.total > 0
+                    "
+                    class="rounded-2xl border border-indigo-100 bg-white p-4 shadow-lg shadow-indigo-100/50 lg:rounded-3xl lg:p-5"
+                >
+                    <div
+                        class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="flex items-center gap-3">
+                            <span class="relative flex h-3 w-3">
+                                <span
+                                    class="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"
+                                ></span>
+                                <span
+                                    class="relative inline-flex h-3 w-3 rounded-full bg-indigo-500"
+                                ></span>
+                            </span>
+                            <span class="text-sm font-bold text-gray-900">
+                                Cập nhật hàng loạt ({{ selectedIds.length }} mục
+                                đang chọn)
+                            </span>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            @click="toggleAllVisible"
+                            class="h-8 rounded-2xl px-3 text-[10px] font-semibold tracking-wider text-indigo-600 uppercase hover:bg-indigo-50 sm:px-4 lg:rounded-3xl lg:text-[11px]"
+                        >
+                            {{
+                                allVisibleSelected
+                                    ? 'Bỏ chọn tất cả'
+                                    : 'Chọn tất cả trang này'
+                            }}
+                        </Button>
                     </div>
-                    <div v-else>
-                        <!-- Mobile Select All Header -->
-                        <div class="border-b border-gray-100 p-3 sm:p-4">
-                            <label class="flex items-center gap-3 text-sm">
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            v-for="t in filterStatusTransitions"
+                            :key="t.value"
+                            type="button"
+                            :disabled="selectedIds.length === 0"
+                            :class="[
+                                'min-h-10 rounded-xl px-4 py-2 text-[9px] font-bold tracking-widest uppercase shadow transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-11 sm:rounded-2xl sm:px-6 sm:text-[10px] lg:shadow-lg',
+                                transitionButtonClass(t.value),
+                            ]"
+                            @click="openBulkConfirm(t.value)"
+                        >
+                            {{ t.label }}
+                        </button>
+                    </div>
+                </div>
+            </Transition>
+
+            <!-- Desktop Table View -->
+            <div
+                class="hidden overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg shadow-gray-100/25 lg:block lg:rounded-4xl lg:shadow-2xl lg:shadow-gray-100/50"
+            >
+                <table
+                    class="w-full min-w-[800px] border-separate border-spacing-0 divide-y divide-gray-50"
+                >
+                    <thead class="bg-gray-50/50">
+                        <tr>
+                            <th class="w-10 px-4 py-4 lg:px-6 lg:py-5">
                                 <input
                                     type="checkbox"
                                     :checked="allVisibleSelected"
                                     @change="toggleAllVisible"
-                                    class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    class="h-4 w-4 cursor-pointer rounded-lg border-gray-200 text-indigo-600 transition-all focus:ring-indigo-500"
                                 />
-                                <span class="font-medium text-gray-700">
-                                    Chọn tất cả ({{ orderDetails.data.length }} mục)
-                                </span>
-                                <span v-if="selectedIds.length > 0" class="text-xs text-gray-500">
-                                    - {{ selectedIds.length }} đã chọn
-                                </span>
-                            </label>
-                        </div>
-
-                        <!-- Mobile Cards -->
-                        <div class="divide-y divide-gray-100">
-                            <div
-                                v-for="detail in orderDetails.data"
-                                :key="detail.id"
-                                class="cursor-pointer p-3 hover:bg-gray-50 sm:p-4"
-                                @click="viewDetail(detail.id)"
+                            </th>
+                            <th
+                                class="px-3 py-4 text-left text-[9px] font-bold tracking-wider text-gray-400 uppercase lg:px-4 lg:py-5 lg:text-[10px]"
+                            >
+                                Sản phẩm
+                            </th>
+                            <th
+                                class="px-3 py-4 text-left text-[9px] font-bold tracking-wider text-gray-400 uppercase lg:px-4 lg:py-5 lg:text-[10px]"
+                            >
+                                Khách hàng
+                            </th>
+                            <th
+                                class="px-3 py-4 text-right text-[9px] font-bold tracking-wider text-gray-400 uppercase lg:px-4 lg:py-5 lg:text-[10px]"
+                            >
+                                SL
+                            </th>
+                            <th
+                                class="px-3 py-4 text-right text-[9px] font-bold tracking-wider text-gray-400 uppercase lg:px-4 lg:py-5 lg:text-[10px]"
+                            >
+                                Đơn giá
+                            </th>
+                            <th
+                                class="px-3 py-4 text-right text-[9px] font-bold tracking-wider text-gray-400 uppercase lg:px-4 lg:py-5 lg:text-[10px]"
+                            >
+                                Thành tiền
+                            </th>
+                            <th
+                                class="px-3 py-4 text-left text-[9px] font-bold tracking-wider text-gray-400 uppercase lg:px-4 lg:py-5 lg:text-[10px]"
+                            >
+                                Trạng thái
+                            </th>
+                            <th
+                                class="px-4 py-4 text-center text-[9px] font-bold tracking-wider text-gray-400 uppercase lg:px-6 lg:py-5 lg:text-[10px]"
+                            >
+                                Thao tác
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50/50">
+                        <tr v-if="!orderDetails.data?.length">
+                            <td
+                                colspan="8"
+                                class="px-6 py-16 text-center lg:py-24"
                             >
                                 <div
-                                    class="mb-3 flex items-center justify-between gap-3"
+                                    class="flex flex-col items-center gap-3 lg:gap-4"
                                 >
-                                    <div class="flex items-center gap-3">
-                                        <input
-                                            type="checkbox"
-                                            :checked="
-                                                selectedIds.includes(detail.id)
-                                            "
-                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                            @change="toggleSelected(detail.id)"
-                                            @click.stop
-                                        />
-                                        <div class="flex flex-wrap gap-1">
-                                            <Badge
-                                                :class="
-                                                    getBadgeClass(
-                                                        detail.status_color,
-                                                    )
-                                                "
-                                                class="text-[10px] sm:text-xs"
-                                                >{{ detail.status_label }}</Badge
-                                            >
-                                            <Badge
-                                                :class="
-                                                    getBadgeClass(
-                                                        detail.payment_status_color,
-                                                    )
-                                                "
-                                                class="text-[10px] sm:text-xs"
-                                                >{{
-                                                    detail.payment_status_label
-                                                }}</Badge
-                                            >
-                                        </div>
+                                    <div
+                                        class="rounded-full bg-gray-50 p-4 text-gray-300 lg:p-6"
+                                    >
+                                        <Search class="h-6 w-6 lg:h-8 lg:w-8" />
                                     </div>
-                                    <div @click.stop>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger as-child>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    class="h-8 w-8 p-0"
-                                                >
-                                                    <TableOfContents
-                                                        class="h-4 w-4"
-                                                    />
-                                                    <span class="sr-only"
-                                                        >Thao tác</span
-                                                    >
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem
-                                                    @click="
-                                                        viewDetail(detail.id)
-                                                    "
-                                                >
-                                                    <Eye class="mr-2 h-4 w-4" />
-                                                    <span>Xem chi tiết</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                    <p
+                                        class="text-xs font-semibold tracking-wider text-gray-400 uppercase lg:text-sm"
+                                    >
+                                        Không có dữ liệu phù hợp
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr
+                            v-for="detail in orderDetails.data"
+                            :key="detail.id"
+                            class="group transition-all duration-300 hover:bg-indigo-50/30"
+                        >
+                            <td class="px-4 py-4 lg:px-6 lg:py-5" @click.stop>
+                                <input
+                                    type="checkbox"
+                                    :checked="selectedIds.includes(detail.id)"
+                                    @change="toggleSelected(detail.id)"
+                                    class="h-4 w-4 cursor-pointer rounded-lg border-gray-200 text-indigo-600 transition-all focus:ring-indigo-500"
+                                />
+                            </td>
+                            <td
+                                class="px-3 py-4 font-medium text-gray-900 lg:px-4 lg:py-5"
+                            >
+                                <div class="flex items-center gap-3 lg:gap-5">
+                                    <ProductThumbnailPreview
+                                        :src="detail.product_item.image"
+                                        :alt="detail.product.name"
+                                        size-class="h-12 w-12"
+                                    />
+                                    <div
+                                        @click="viewDetail(detail.id)"
+                                        class="min-w-0 flex-1 cursor-pointer"
+                                    >
+                                        <div
+                                            class="truncate text-xs font-bold text-gray-900 transition-colors group-hover:text-indigo-600 lg:text-sm"
+                                        >
+                                            {{ detail.product.name }}
+                                        </div>
+                                        <div
+                                            class="mt-1 text-[9px] font-bold tracking-widest text-gray-400 uppercase lg:text-[10px]"
+                                        >
+                                            SKU: {{ detail.product_item.sku }}
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="space-y-3">
-                                    <!-- Product Info with Image -->
-                                    <div class="flex items-center gap-3">
-                                        <ProductThumbnailPreview
-                                            :src="detail.product_item.image"
-                                            :alt="detail.product.name"
-                                            size-class="h-16 w-16 sm:h-20 sm:w-20"
+                            </td>
+                            <td
+                                class="px-3 py-4 text-xs font-medium text-gray-700 lg:px-4 lg:py-5 lg:text-sm"
+                            >
+                                {{ detail.customer.name }}
+                            </td>
+                            <td
+                                class="px-3 py-4 text-right text-xs font-bold text-gray-900 lg:px-4 lg:py-5 lg:text-sm"
+                            >
+                                {{ detail.qty }}
+                            </td>
+                            <td
+                                class="px-3 py-4 text-right text-xs font-medium text-gray-400 lg:px-4 lg:py-5 lg:text-sm"
+                            >
+                                {{ formatVnd(detail.price) }}
+                            </td>
+                            <td
+                                class="px-3 py-4 text-right text-xs font-bold text-indigo-600 lg:px-4 lg:py-5 lg:text-sm"
+                            >
+                                {{ formatVnd(detail.total) }}
+                            </td>
+                            <td class="px-3 py-4 lg:px-4 lg:py-5">
+                                <div
+                                    class="flex flex-col items-start gap-1.5 lg:gap-2"
+                                >
+                                    <Badge
+                                        :class="
+                                            getBadgeClass(detail.status_color)
+                                        "
+                                        class="rounded px-2 py-0.5 text-[8px] font-bold tracking-wider uppercase lg:rounded-lg lg:px-3 lg:py-1 lg:text-[9px]"
+                                        >{{ detail.status_label }}</Badge
+                                    >
+                                    <Badge
+                                        :class="
+                                            getBadgeClass(
+                                                detail.payment_status_color,
+                                            )
+                                        "
+                                        class="rounded px-2 py-0.5 text-[8px] font-bold tracking-wider uppercase lg:rounded-lg lg:px-3 lg:py-1 lg:text-[9px]"
+                                        >{{
+                                            detail.payment_status_label
+                                        }}</Badge
+                                    >
+                                </div>
+                            </td>
+                            <td
+                                class="px-4 py-4 text-center lg:px-6 lg:py-5"
+                                @click.stop
+                            >
+                                <div
+                                    class="flex justify-center gap-1 transition-all duration-300"
+                                >
+                                    <Button
+                                        @click="viewDetail(detail.id)"
+                                        variant="ghost"
+                                        size="sm"
+                                        class="p-1.5 lg:p-2"
+                                        title="Xem chi tiết"
+                                    >
+                                        <Eye
+                                            class="h-3.5 w-3.5 lg:h-4 lg:w-4"
                                         />
-                                        <div class="min-w-0 flex-1">
-                                            <div
-                                                class="text-sm font-medium sm:text-base"
-                                            >
-                                                {{ detail.product.name }}
-                                            </div>
-                                            <div
-                                                class="mt-1 text-xs text-gray-500"
-                                            >
-                                                SKU: {{ detail.product_item.sku }}
-                                            </div>
-                                            <div
-                                                class="mt-1 text-xs text-gray-600"
-                                            >
-                                                Khách: {{ detail.customer.name }}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-                                    <!-- Order Details -->
-                                    <div class="grid grid-cols-3 gap-3 text-sm">
-                                        <div class="text-center">
-                                            <div class="text-xs text-gray-500">
-                                                Số lượng
-                                            </div>
-                                            <div class="font-medium">
-                                                {{ detail.qty }}
-                                            </div>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="text-xs text-gray-500">
-                                                Đơn giá
-                                            </div>
-                                            <div class="font-medium">
-                                                {{ formatVnd(detail.price) }}
-                                            </div>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="text-xs text-gray-500">
-                                                Tổng
-                                            </div>
-                                            <div class="font-medium">
-                                                {{ formatVnd(detail.total) }}
-                                            </div>
-                                        </div>
-                                    </div>
+            <!-- Mobile Card View -->
+            <div class="space-y-4 lg:hidden">
+                <div
+                    v-if="!orderDetails.data?.length"
+                    class="rounded-3xl border border-dashed border-gray-200 bg-white px-6 py-24 text-center shadow-inner"
+                >
+                    <div
+                        class="mx-auto mb-4 w-fit rounded-full bg-gray-50 p-6 text-gray-200"
+                    >
+                        <Search class="h-10 w-10" />
+                    </div>
+                    <p
+                        class="text-xs font-semibold tracking-wider text-gray-400 uppercase"
+                    >
+                        Không tìm thấy kết quả
+                    </p>
+                </div>
+                <div v-else class="space-y-3">
+                    <div
+                        v-for="detail in orderDetails.data"
+                        :key="detail.id"
+                        class="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.99]"
+                        @click="viewDetail(detail.id)"
+                    >
+                        <!-- Mobile Card Header -->
+                        <div class="mb-4 flex items-start justify-between">
+                            <div class="flex flex-1 items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    :checked="selectedIds.includes(detail.id)"
+                                    class="mt-1 h-4 w-4 rounded border-gray-200 text-indigo-600 transition-all focus:ring-indigo-500"
+                                    @change.stop="toggleSelected(detail.id)"
+                                    @click.stop
+                                />
+                                <div class="flex flex-wrap gap-1.5">
+                                    <Badge
+                                        :class="
+                                            getBadgeClass(detail.status_color)
+                                        "
+                                        class="rounded px-2 py-1 text-[8px] font-bold tracking-wider uppercase"
+                                        >{{ detail.status_label }}</Badge
+                                    >
+                                    <Badge
+                                        :class="
+                                            getBadgeClass(
+                                                detail.payment_status_color,
+                                            )
+                                        "
+                                        class="rounded px-2 py-1 text-[8px] font-bold tracking-wider uppercase"
+                                        >{{
+                                            detail.payment_status_label
+                                        }}</Badge
+                                    >
+                                </div>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                class="h-8 w-8 rounded-full p-0 text-gray-400 hover:bg-gray-50 hover:text-indigo-600"
+                                @click.stop="viewDetail(detail.id)"
+                            >
+                                <Eye class="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        <!-- Mobile Card Content -->
+                        <div class="flex gap-4">
+                            <ProductThumbnailPreview
+                                :src="detail.product_item.image"
+                                :alt="detail.product.name"
+                                size-class="h-16 w-16 rounded-xl shrink-0 object-cover ring-1 ring-gray-100 shadow-sm"
+                            />
+                            <div class="min-w-0 flex-1 space-y-2">
+                                <h4
+                                    class="line-clamp-2 text-sm leading-tight font-bold text-gray-900"
+                                >
+                                    {{ detail.product.name }}
+                                </h4>
+                                <p
+                                    class="text-[9px] font-bold tracking-widest text-gray-400 uppercase"
+                                >
+                                    SKU: {{ detail.product_item.sku }}
+                                </p>
+                                <p class="text-xs font-medium text-indigo-600">
+                                    {{ detail.customer.name }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Card Stats -->
+                        <div
+                            class="mt-4 grid grid-cols-3 gap-2 border-t border-gray-50 pt-4"
+                        >
+                            <div class="text-center">
+                                <div
+                                    class="text-[9px] font-medium tracking-wide text-gray-400 uppercase"
+                                >
+                                    Số lượng
+                                </div>
+                                <div
+                                    class="mt-1 text-sm font-bold text-gray-900"
+                                >
+                                    {{ detail.qty }}
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div
+                                    class="text-[9px] font-medium tracking-wide text-gray-400 uppercase"
+                                >
+                                    Đơn giá
+                                </div>
+                                <div
+                                    class="mt-1 text-[10px] font-medium text-gray-500"
+                                >
+                                    {{ formatVnd(detail.price) }}
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div
+                                    class="text-[9px] font-medium tracking-wide text-indigo-400 uppercase"
+                                >
+                                    Thành tiền
+                                </div>
+                                <div
+                                    class="mt-1 text-sm font-bold text-indigo-600"
+                                >
+                                    {{ formatVnd(detail.total) }}
                                 </div>
                             </div>
                         </div>
@@ -617,324 +823,253 @@ const confirmBulkUpdate = () => {
             </div>
 
             <!-- Pagination -->
-            <div v-if="orderDetails.total > orderDetails.per_page" class="mt-4 sm:mt-6">
-                <nav class="flex items-center justify-between">
-                    <!-- Mobile Pagination -->
-                    <div class="flex flex-col gap-3 w-full sm:hidden">
-                        <!-- Page Info -->
-                        <div class="text-center">
-                            <p class="text-xs text-gray-700">
-                                Trang {{ orderDetails.current_page }} / {{ orderDetails.last_page }}
-                                ({{ orderDetails.total }} bản ghi)
-                            </p>
-                        </div>
-                        <!-- Navigation Controls -->
-                        <div class="flex items-center justify-center gap-1">
-                            <!-- Previous Button -->
-                            <Link
-                                v-if="orderDetails.current_page > 1 && orderDetails.links[0].url"
-                                :href="orderDetails.links[0].url"
-                                class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 min-h-11"
-                            >
-                                ‹ Trước
-                            </Link>
-                            <span
-                                v-else
-                                class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-400 min-h-11"
-                            >
-                                ‹ Trước
-                            </span>
-
-                            <!-- Page Numbers (show current and adjacent pages) -->
-                            <template v-for="link in orderDetails.links.slice(1, -1)" :key="link.label">
-                                <Link
-                                    v-if="link.url && (parseInt(link.label) === orderDetails.current_page || Math.abs(parseInt(link.label) - orderDetails.current_page) <= 1)"
-                                    :href="link.url"
-                                    :class="[
-                                        'inline-flex items-center border px-3 py-2 text-sm font-medium min-h-11',
-                                        link.active
-                                            ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
-                                    ]"
-                                >
-                                    {{ link.label }}
-                                </Link>
-                                <span
-                                    v-else-if="!link.url && (parseInt(link.label) === orderDetails.current_page || Math.abs(parseInt(link.label) - orderDetails.current_page) <= 1)"
-                                    :class="[
-                                        'inline-flex items-center border px-3 py-2 text-sm font-medium min-h-11',
-                                        link.active
-                                            ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                            : 'bg-white border-gray-300 text-gray-500',
-                                    ]"
-                                >
-                                    {{ link.label }}
-                                </span>
-                                <!-- Show ellipsis for gaps -->
-                                <span
-                                    v-else-if="parseInt(link.label) === orderDetails.current_page + 2 && orderDetails.current_page < orderDetails.last_page - 2"
-                                    class="inline-flex items-center px-2 py-2 text-sm text-gray-500 min-h-11"
-                                >
-                                    ...
-                                </span>
-                            </template>
-
-                            <!-- Next Button -->
-                            <Link
-                                v-if="orderDetails.current_page < orderDetails.last_page && orderDetails.links[orderDetails.links.length - 1].url"
-                                :href="orderDetails.links[orderDetails.links.length - 1].url"
-                                class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 min-h-11"
-                            >
-                                Sau ›
-                            </Link>
-                            <span
-                                v-else
-                                class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-400 min-h-11"
-                            >
-                                Sau ›
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Desktop Pagination -->
-                    <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                        <div>
-                            <p class="text-xs sm:text-sm text-gray-700">
-                                Hiển thị từ
-                                <span class="font-medium">{{ (orderDetails.current_page - 1) * orderDetails.per_page + 1 }}</span>
-                                đến
-                                <span class="font-medium">{{ Math.min(orderDetails.current_page * orderDetails.per_page, orderDetails.total) }}</span>
-                                trong tổng số
-                                <span class="font-medium">{{ orderDetails.total }}</span>
-                                chi tiết đơn hàng
-                            </p>
-                        </div>
-                        <div>
-                            <nav class="relative z-0 inline-flex -space-x-px rounded-md shadow-sm">
-                                <template v-for="link in orderDetails.links" :key="link.label">
-                                    <Link
-                                        v-if="link.url"
-                                        :href="link.url"
-                                        :class="[
-                                            'relative inline-flex items-center border px-3 sm:px-4 py-2 text-sm font-medium min-h-10',
-                                            link.active
-                                                ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
-                                            link.label === 'Previous' || link.label.includes('Previous') || link.label.includes('Trước')
-                                                ? 'rounded-l-md'
-                                                : link.label === 'Next' || link.label.includes('Next') || link.label.includes('Sau')
-                                                ? 'rounded-r-md'
-                                                : '',
-                                        ]"
-                                    >
-                                        <span v-if="link.label === 'Previous' || link.label.includes('Previous')" class="sr-only">Trang trước</span>
-                                        <span v-else-if="link.label === 'Next' || link.label.includes('Next')" class="sr-only">Trang sau</span>
-                                        <span v-html="link.label.includes('Previous') ? '‹' : link.label.includes('Next') ? '›' : link.label"></span>
-                                    </Link>
-                                    <span
-                                        v-else
-                                        :class="[
-                                            'relative inline-flex items-center border px-3 sm:px-4 py-2 text-sm font-medium min-h-10',
-                                            link.active
-                                                ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                                : 'bg-white border-gray-300 text-gray-500',
-                                        ]"
-                                    >
-                                        <span v-html="link.label"></span>
-                                    </span>
-                                </template>
-                            </nav>
-                        </div>
-                    </div>
-                </nav>
-            </div>
+            <AppPagination
+                :meta="orderDetails"
+                label="chi tiết đơn hàng"
+                :onNavigate="handlePagination"
+            />
         </div>
 
-        <!-- Filter Drawer -->
+        <!-- Filter Drawer Backdrop -->
         <Transition
-            enter-active-class="transition-opacity duration-300"
-            enter-from-class="opacity-0"
+            enter-active-class="transition opacity-0 duration-300"
             enter-to-class="opacity-100"
-            leave-active-class="transition-opacity duration-300"
-            leave-from-class="opacity-100"
+            leave-active-class="transition opacity-100 duration-300"
             leave-to-class="opacity-0"
         >
-            <div v-if="showFilterModal" class="fixed inset-0 size-auto max-h-none max-w-none overflow-hidden bg-transparent z-50">
-                <!-- Backdrop -->
+            <div
+                v-if="showFilterModal"
+                class="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm"
+                @click="closeFilterModal"
+            ></div>
+        </Transition>
+
+        <!-- Filter Drawer Panel -->
+        <Transition
+            enter-active-class="transform transition ease-in-out duration-500"
+            enter-from-class="translate-x-full"
+            enter-to-class="translate-x-0"
+            leave-active-class="transform transition ease-in-out duration-500"
+            leave-from-class="translate-x-0"
+            leave-to-class="translate-x-full"
+        >
+            <div
+                v-if="showFilterModal"
+                class="pointer-events-auto fixed inset-y-0 right-0 z-60 flex w-full max-w-md flex-col bg-white shadow-2xl"
+            >
                 <div
-                    class="absolute inset-0 bg-gray-500/75 cursor-pointer"
-                    @click="closeFilterModal"
-                ></div>
-
-                <div class="absolute inset-0 pl-0 sm:pl-10 focus:outline-none lg:pl-16 pointer-events-none">
-                    <!-- Panel with Right-to-Left Animation -->
-                    <Transition
-                        enter-active-class="transition-transform duration-500 ease-in-out sm:duration-700"
-                        enter-from-class="translate-x-full"
-                        enter-to-class="translate-x-0"
-                        leave-active-class="transition-transform duration-500 ease-in-out sm:duration-700"
-                        leave-from-class="translate-x-0"
-                        leave-to-class="translate-x-full"
+                    class="flex items-center justify-between border-b bg-gray-50 px-6 py-4"
+                >
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">
+                            Bộ lọc nâng cao
+                        </h2>
+                        <p class="mt-0.5 text-xs text-gray-500">
+                            Thiết lập tiêu chí tìm kiếm chi tiết
+                        </p>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        @click="closeFilterModal"
+                        class="rounded-full hover:bg-gray-200"
                     >
-                        <div v-if="showFilterModal" class="relative ml-auto block size-full w-full sm:max-w-md pointer-events-auto">
-                            <!-- Close button -->
-                            <Transition
-                                enter-active-class="transition-opacity duration-500 ease-in-out delay-150"
-                                enter-from-class="opacity-0"
-                                enter-to-class="opacity-100"
-                                leave-active-class="transition-opacity duration-300 ease-in-out"
-                                leave-from-class="opacity-100"
-                                leave-to-class="opacity-0"
+                        <X class="h-6 w-6 text-gray-500" />
+                    </Button>
+                </div>
+                <div class="flex-1 space-y-8 overflow-y-auto p-6">
+                    <!-- Status Filter -->
+                    <div class="space-y-3">
+                        <label
+                            class="flex items-center gap-2 text-[10px] font-bold tracking-wider text-gray-400 uppercase"
+                        >
+                            Trạng thái chi tiết
+                        </label>
+                        <select
+                            v-model="filters.filter_status"
+                            class="h-12 w-full rounded-md border border-gray-200 bg-gray-50 px-3 text-sm transition-all outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="">Tất cả trạng thái</option>
+                            <option
+                                v-for="statusOption in statusOptions"
+                                :key="statusOption.value"
+                                :value="String(statusOption.value)"
                             >
-                                <div v-if="showFilterModal" class="absolute top-0 left-0 -ml-0 sm:-ml-8 lg:-ml-10 flex pt-4 pr-2 sm:pr-4">
-                                    <button
-                                        type="button"
-                                        @click="closeFilterModal"
-                                        class="relative rounded-md text-gray-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors sm:block hidden"
-                                    >
-                                        <span class="absolute -inset-2.5"></span>
-                                        <span class="sr-only">Đóng panel</span>
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-6">
-                                            <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
+                                {{ statusOption.label }}
+                            </option>
+                        </select>
+                    </div>
+                    <!-- Customer Filter -->
+                    <div class="space-y-3">
+                        <label
+                            class="flex items-center gap-2 text-[10px] font-bold tracking-wider text-gray-400 uppercase"
+                        >
+                            Khách hàng
+                        </label>
+                        <AppMultiselect
+                            :model-value="
+                                filterCustomerId
+                                    ? customerOptions.find(
+                                          (c) =>
+                                              String(c.id) ===
+                                              String(filterCustomerId),
+                                      )
+                                    : null
+                            "
+                            @update:model-value="
+                                (c: any) =>
+                                    c
+                                        ? selectCustomer(c)
+                                        : clearCustomerSelection()
+                            "
+                            :options="customerOptions"
+                            placeholder="Tìm tên / SĐT / Email..."
+                            label="name"
+                            track-by="id"
+                            :loading="isSearchingCustomers"
+                            :internal-search="false"
+                            @search-change="
+                                (query: string) => (customerSearch = query)
+                            "
+                            deselect-label="Xóa"
+                        >
+                            <template #option="{ option }">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-gray-900">{{
+                                        (option as any).name
+                                    }}</span>
+                                    <span class="text-xs text-gray-500">{{
+                                        (option as any).phone ||
+                                        (option as any).email ||
+                                        'N/A'
+                                    }}</span>
                                 </div>
-                            </Transition>
-
-                            <div class="relative flex h-full flex-col overflow-y-auto bg-white py-6 shadow-xl">
-                                <!-- Header with mobile close button -->
-                                <div class="px-4 sm:px-6">
-                                    <div class="flex items-center justify-between mb-2 sm:mb-0">
-                                        <div class="flex-1">
-                                            <h2 class="text-lg font-semibold text-gray-900">Bộ lọc nâng cao</h2>
-                                            <p class="text-sm text-gray-600 mt-1">Thiết lập các bộ lọc theo khách hàng và ngày tháng</p>
-                                        </div>
-                                        <!-- Mobile close button -->
-                                        <button
-                                            type="button"
-                                            @click="closeFilterModal"
-                                            class="sm:hidden rounded-md p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <span class="sr-only">Đóng panel</span>
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-6">
-                                                <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Content -->
-                                <div class="relative mt-6 flex-1 px-4 sm:px-6 space-y-4">
-                                    <!-- Customer Filter -->
-                                    <div>
-                                        <label class="mb-2 block text-sm font-medium text-gray-700">Khách hàng</label>
-                                        <div class="relative">
-                                            <Input
-                                                v-model="customerSearch"
-                                                type="text"
-                                                class="h-11 w-full"
-                                                placeholder="Tên / SĐT / email..."
-                                                @focus="openSuggestions"
-                                                @blur="closeSuggestionsBlur"
-                                            />
-                                            <div
-                                                v-if="isCustomerSuggestionsOpen && customerSearch.trim().length >= 2"
-                                                class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-white shadow-lg"
-                                            >
-                                                <div v-if="isSearchingCustomers" class="px-3 py-2 text-sm text-gray-500">Đang tìm...</div>
-                                                <button
-                                                    v-for="c in customerOptions"
-                                                    :key="c.id"
-                                                    type="button"
-                                                    class="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-gray-50 min-h-11"
-                                                    @mousedown.prevent="selectCustomer(c)"
-                                                >
-                                                    {{ orderSearchCustomerLabel(c) }}
-                                                </button>
-                                                <div v-if="!isSearchingCustomers && customerOptions.length === 0" class="px-3 py-2 text-sm text-gray-500">
-                                                    Không tìm thấy khách hàng.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Date Range -->
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-gray-700">Từ ngày</label>
-                                            <Input v-model="filters.date_from" type="date" class="h-11 w-full" />
-                                        </div>
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-gray-700">Đến ngày</label>
-                                            <Input v-model="filters.date_to" type="date" class="h-11 w-full" />
-                                        </div>
-                                    </div>
-
-                                    <!-- Current Filter Status -->
-                                    <div v-if="filters.date_from || filters.date_to || filterCustomerId.trim()" class="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                        <h4 class="text-sm font-medium text-blue-900 mb-2">Bộ lọc hiện tại:</h4>
-                                        <ul class="text-xs text-blue-800 space-y-1">
-                                            <li v-if="filterCustomerId.trim()">
-                                                <strong>Khách hàng:</strong> {{ customerSearch || 'Đã chọn' }}
-                                            </li>
-                                            <li v-if="filters.date_from">
-                                                <strong>Từ ngày:</strong> {{ filters.date_from }}
-                                            </li>
-                                            <li v-if="filters.date_to">
-                                                <strong>Đến ngày:</strong> {{ filters.date_to }}
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    <!-- Clear Filters -->
-                                    <div v-if="filters.date_from || filters.date_to || filterCustomerId.trim()" class="pt-4 border-t">
-                                        <Button
-                                            variant="ghost"
-                                            type="button"
-                                            @click="clearAllFilters"
-                                            class="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                            Xóa tất cả bộ lọc
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <!-- Footer -->
-                                <div class="mt-6 border-t pt-4 px-4 sm:px-6">
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <Button variant="outline" class="w-full min-h-11" @click="closeFilterModal">
-                                            Hủy
-                                        </Button>
-                                        <Button @click="applyAdvancedFilters" class="w-full min-h-11">
-                                            Áp dụng
-                                        </Button>
-                                    </div>
-                                </div>
+                            </template>
+                        </AppMultiselect>
+                    </div>
+                    <!-- Date Filter -->
+                    <div class="space-y-4">
+                        <label
+                            class="flex items-center gap-2 text-[10px] font-bold tracking-wider text-gray-400 uppercase"
+                        >
+                            Khoảng thời gian
+                        </label>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="space-y-1.5">
+                                <span class="ml-1 text-xs text-gray-500"
+                                    >Từ ngày</span
+                                >
+                                <Input
+                                    v-model="filters.date_from"
+                                    type="date"
+                                    class="h-12 bg-gray-50 shadow-none transition-all focus:bg-white"
+                                />
+                            </div>
+                            <div class="space-y-1.5">
+                                <span class="ml-1 text-xs text-gray-500"
+                                    >Đến ngày</span
+                                >
+                                <Input
+                                    v-model="filters.date_to"
+                                    type="date"
+                                    class="h-12 bg-gray-50 shadow-none transition-all focus:bg-white"
+                                />
                             </div>
                         </div>
-                    </Transition>
+                    </div>
+                    <!-- Per Page Filter -->
+                    <div class="space-y-3">
+                        <label
+                            class="flex items-center gap-2 text-[10px] font-bold tracking-wider text-gray-400 uppercase"
+                        >
+                            Số bản ghi mỗi trang
+                        </label>
+                        <select
+                            v-model.number="filters.per_page"
+                            class="h-12 w-full rounded-md border border-gray-200 bg-gray-50 px-3 text-sm transition-all outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option
+                                v-for="n in [50, 100, 200, 300, 400, 500]"
+                                :key="n"
+                                :value="n"
+                            >
+                                {{ n }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 border-t bg-white p-6">
+                    <Button
+                        variant="ghost"
+                        class="h-12 text-base font-semibold text-gray-600 hover:bg-gray-100"
+                        @click="clearAllFilters"
+                        >Xóa trắng</Button
+                    >
+                    <Button
+                        class="h-12 text-base font-bold shadow-lg shadow-indigo-200"
+                        @click="applyAdvancedFilters"
+                        >Áp dụng lọc</Button
+                    >
                 </div>
             </div>
         </Transition>
 
-        <Dialog :open="showBulkConfirmDialog" @update:open="(open: boolean) => !open && closeBulkConfirm()">
-            <DialogContent class="mx-4 sm:mx-0 sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle class="text-lg sm:text-xl">Xác nhận cập nhật trạng thái</DialogTitle>
-                    <DialogDescription class="text-sm sm:text-base">
-                        Bạn có chắc muốn cập nhật
-                        <span class="font-semibold">{{ selectedIds.length }}</span>
-                        chi tiết đã chọn sang trạng thái
-                        <span class="font-semibold">«{{ pendingBulkTarget?.label }}»</span>?
+        <!-- Bulk Change status modal -->
+        <Dialog
+            :open="showBulkConfirmDialog"
+            @update:open="(open: boolean) => !open && closeBulkConfirm()"
+        >
+            <DialogContent
+                class="relative mx-4 overflow-hidden rounded-[2.5rem] border-none p-10 shadow-2xl sm:mx-0 sm:max-w-lg"
+            >
+                <div
+                    class="absolute top-0 left-0 h-2 w-full bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500"
+                ></div>
+
+                <DialogHeader class="mb-8">
+                    <DialogTitle
+                        class="text-2xl font-bold tracking-tight text-gray-900"
+                        >Xác nhận chuyển trạng thái</DialogTitle
+                    >
+                    <DialogDescription
+                        class="pt-4 text-base leading-relaxed font-medium text-gray-500 italic"
+                    >
+                        Hệ thống sẽ thực hiện chuyển
+                        <span
+                            class="rounded-lg px-1 font-bold text-indigo-600 underline decoration-2 underline-offset-4 ring-2 ring-indigo-50"
+                            >{{ selectedIds.length }} mục</span
+                        >
+                        sang trạng thái mới:
+                        <div class="mt-4 flex justify-center">
+                            <span
+                                class="inline-flex items-center rounded-2xl bg-indigo-50 px-6 py-3 text-xs font-bold tracking-wider text-indigo-700 uppercase shadow-inner ring-1 ring-indigo-100"
+                            >
+                                {{ pendingBulkTarget?.label }}
+                            </span>
+                        </div>
                     </DialogDescription>
                 </DialogHeader>
-                <DialogFooter class="flex-col gap-2 sm:flex-row sm:gap-0">
-                    <Button variant="outline" type="button" :disabled="isBulkUpdating" @click="closeBulkConfirm" class="w-full sm:w-auto min-h-11 sm:min-h-auto">
-                        Hủy
+
+                <DialogFooter
+                    class="mt-4 flex flex-col-reverse gap-4 sm:flex-row"
+                >
+                    <Button
+                        variant="outline"
+                        type="button"
+                        :disabled="isBulkUpdating"
+                        @click="closeBulkConfirm"
+                        class="h-14 w-full rounded-2xl border-gray-100 bg-gray-50/50 text-[10px] font-bold tracking-wider uppercase transition-all hover:bg-white active:scale-95 sm:w-auto"
+                    >
+                        Không, quay lại
                     </Button>
-                    <Button type="button" :disabled="isBulkUpdating" @click="confirmBulkUpdate" class="w-full sm:w-auto min-h-11 sm:min-h-auto">
-                        <span v-if="isBulkUpdating">Đang cập nhật...</span>
-                        <span v-else>Cập nhật</span>
+                    <Button
+                        type="button"
+                        :disabled="isBulkUpdating"
+                        @click="confirmBulkUpdate"
+                        class="h-14 w-full flex-1 rounded-2xl bg-indigo-600 text-[10px] font-bold tracking-wider uppercase shadow-2xl shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95 sm:w-auto"
+                    >
+                        <span v-if="isBulkUpdating">Đang xử lý...</span>
+                        <span v-else>Đồng ý cập nhật</span>
                     </Button>
                 </DialogFooter>
             </DialogContent>

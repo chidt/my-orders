@@ -1,19 +1,13 @@
 <script setup lang="ts">
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowLeft, Save } from 'lucide-vue-next';
+
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import siteRoute from '@/routes/site';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Save } from 'lucide-vue-next';
 
 interface Site {
     id: number;
@@ -42,6 +36,37 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const page = usePage();
+
+const breadcrumbs = [
+    {
+        title: props.site.name,
+        href: siteRoute.dashboard.url(props.site.slug),
+        current: false,
+    },
+    {
+        title: 'Quản lý kho',
+        href: siteRoute.warehouses.index.url(props.site.slug),
+        current: false,
+    },
+    {
+        title: props.warehouse.name,
+        href: siteRoute.warehouses.locations.index.url([
+            props.site.slug,
+            props.warehouse.id,
+        ]),
+        current: false,
+    },
+    {
+        title: `Chỉnh sửa ${props.location.name}`,
+        href: siteRoute.warehouses.locations.edit.url([
+            props.site.slug,
+            props.warehouse.id,
+            props.location.id,
+        ]),
+        current: true,
+    },
+];
 
 // Form setup
 const form = useForm({
@@ -65,330 +90,250 @@ function submit() {
         },
     );
 }
-
-// Navigation
-function goBack() {
-    window.history.back();
-}
 </script>
 
 <template>
-    <Head>
-        <title>
-            Chỉnh sửa vị trí - {{ location.name }} - {{ warehouse.name }} -
-            {{ site.name }}
-        </title>
-    </Head>
+    <Head
+        :title="`Chỉnh sửa vị trí - ${location.name} - ${warehouse.name} - ${site.name}`"
+    />
 
-    <AppLayout>
-        <div class="py-12">
-            <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                <!-- Header -->
-                <div class="mb-6">
-                    <nav class="mb-4 flex" aria-label="Breadcrumb">
-                        <ol
-                            class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse"
-                        >
-                            <li class="inline-flex items-center">
-                                <Link
-                                    :href="siteRoute.dashboard.url(site.slug)"
-                                    class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-                                >
-                                    {{ site.name }}
-                                </Link>
-                            </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <span class="mx-2 text-gray-400">/</span>
-                                    <Link
-                                        :href="
-                                            siteRoute.warehouses.index.url(
-                                                site.slug,
-                                            )
-                                        "
-                                        class="text-sm font-medium text-gray-700 hover:text-blue-600"
-                                    >
-                                        Kho hàng
-                                    </Link>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <span class="mx-2 text-gray-400">/</span>
-                                    <Link
-                                        :href="
-                                            siteRoute.warehouses.show.url([
-                                                site.slug,
-                                                warehouse.id,
-                                            ])
-                                        "
-                                        class="text-sm font-medium text-gray-700 hover:text-blue-600"
-                                    >
-                                        {{ warehouse.name }}
-                                    </Link>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <span class="mx-2 text-gray-400">/</span>
-                                    <Link
-                                        :href="
-                                            siteRoute.warehouses.locations.index.url(
-                                                [site.slug, warehouse.id],
-                                            )
-                                        "
-                                        class="text-sm font-medium text-gray-700 hover:text-blue-600"
-                                    >
-                                        Vị trí
-                                    </Link>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <span class="mx-2 text-gray-400">/</span>
-                                    <Link
-                                        :href="
-                                            siteRoute.warehouses.locations.show.url(
-                                                [
-                                                    site.slug,
-                                                    warehouse.id,
-                                                    location.id,
-                                                ],
-                                            )
-                                        "
-                                        class="text-sm font-medium text-gray-700 hover:text-blue-600"
-                                    >
-                                        {{ location.name }}
-                                    </Link>
-                                </div>
-                            </li>
-                            <li aria-current="page">
-                                <div class="flex items-center">
-                                    <span class="mx-2 text-gray-400">/</span>
-                                    <span
-                                        class="text-sm font-medium text-gray-500"
-                                        >Chỉnh sửa</span
-                                    >
-                                </div>
-                            </li>
-                        </ol>
-                    </nav>
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div class="space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+            <!-- Header with Back Button and Title -->
+            <div class="flex items-center gap-4">
+                <Link
+                    :href="
+                        siteRoute.warehouses.locations.show.url([
+                            site.slug,
+                            warehouse.id,
+                            location.id,
+                        ])
+                    "
+                    class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                    title="Quay lại"
+                >
+                    <ArrowLeft class="h-5 w-5" />
+                </Link>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 sm:text-2xl">
+                        Chỉnh sửa vị trí
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500">
+                        {{ location.name }} - {{ location.code }}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                        {{ warehouse.name }} - {{ warehouse.address }}
+                    </p>
+                </div>
+            </div>
 
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-900">
-                                Chỉnh sửa vị trí
-                            </h1>
-                            <p class="mt-2 text-gray-600">
-                                {{ location.name }} - {{ location.code }}
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                {{ warehouse.name }} - {{ warehouse.address }}
-                            </p>
-                        </div>
+            <!-- Flash Messages -->
+            <div
+                v-if="
+                    (page.props.flash as any)?.success ||
+                    (page.props.flash as any)?.message
+                "
+                class="rounded-md border border-green-200 bg-green-50 px-4 py-3"
+            >
+                <p class="text-sm font-medium text-green-800">
+                    {{
+                        (page.props.flash as any)?.success ||
+                        (page.props.flash as any)?.message
+                    }}
+                </p>
+            </div>
+            <div
+                v-if="(page.props.flash as any)?.error"
+                class="rounded-md border border-red-200 bg-red-50 px-4 py-3"
+            >
+                <p class="text-sm font-medium text-red-800">
+                    {{ (page.props.flash as any).error }}
+                </p>
+            </div>
 
-                        <Button
-                            variant="outline"
-                            @click="goBack"
-                            class="flex items-center gap-2"
-                        >
-                            <ArrowLeft class="h-4 w-4" />
-                            Quay lại
-                        </Button>
-                    </div>
+            <!-- Form -->
+            <div class="overflow-hidden rounded-lg border bg-white shadow-sm">
+                <div class="border-b bg-gray-50 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Thông tin vị trí
+                    </h3>
+                    <p class="text-sm text-gray-500">
+                        Cập nhật thông tin cho vị trí {{ location.name }} trong
+                        kho {{ warehouse.name }}.
+                    </p>
                 </div>
 
-                <!-- Form -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Thông tin vị trí</CardTitle>
-                        <CardDescription>
-                            Cập nhật thông tin cho vị trí
-                            {{ location.name }} trong kho {{ warehouse.name }}.
-                        </CardDescription>
-                    </CardHeader>
+                <form @submit.prevent="submit" class="space-y-6 p-6">
+                    <!-- Code -->
+                    <div class="space-y-2">
+                        <Label for="code">
+                            Mã vị trí
+                            <span class="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            id="code"
+                            v-model="form.code"
+                            type="text"
+                            placeholder="Ví dụ: A01, B-15, ZONE-1"
+                            :class="{
+                                'border-red-500': form.errors.code,
+                            }"
+                            maxlength="50"
+                            required
+                        />
+                        <p v-if="form.errors.code" class="text-sm text-red-600">
+                            {{ form.errors.code }}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Mã vị trí phải duy nhất trong kho này. Chỉ sử dụng
+                            chữ cái in hoa, số và dấu gạch ngang.
+                        </p>
+                    </div>
 
-                    <CardContent>
-                        <form @submit.prevent="submit" class="space-y-6">
-                            <!-- Code -->
-                            <div class="space-y-2">
-                                <Label for="code">
-                                    Mã vị trí
-                                    <span class="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="code"
-                                    v-model="form.code"
-                                    type="text"
-                                    placeholder="Ví dụ: A01, B-15, ZONE-1"
-                                    :class="{
-                                        'border-red-500': form.errors.code,
-                                    }"
-                                    maxlength="50"
-                                    required
-                                />
-                                <p
-                                    v-if="form.errors.code"
-                                    class="text-sm text-red-600"
-                                >
-                                    {{ form.errors.code }}
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    Mã vị trí phải duy nhất trong kho này. Chỉ
-                                    sử dụng chữ cái in hoa, số và dấu gạch
-                                    ngang.
-                                </p>
-                            </div>
+                    <!-- Name -->
+                    <div class="space-y-2">
+                        <Label for="name">
+                            Tên vị trí
+                            <span class="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            type="text"
+                            placeholder="Ví dụ: Kệ A01, Vùng lưu trữ B, Khu vực đặc biệt"
+                            :class="{
+                                'border-red-500': form.errors.name,
+                            }"
+                            maxlength="255"
+                            required
+                        />
+                        <p v-if="form.errors.name" class="text-sm text-red-600">
+                            {{ form.errors.name }}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Tên mô tả chi tiết về vị trí này.
+                        </p>
+                    </div>
 
-                            <!-- Name -->
-                            <div class="space-y-2">
-                                <Label for="name">
-                                    Tên vị trí
-                                    <span class="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="name"
-                                    v-model="form.name"
-                                    type="text"
-                                    placeholder="Ví dụ: Kệ A01, Vùng lưu trữ B, Khu vực đặc biệt"
-                                    :class="{
-                                        'border-red-500': form.errors.name,
-                                    }"
-                                    maxlength="255"
-                                    required
-                                />
-                                <p
-                                    v-if="form.errors.name"
-                                    class="text-sm text-red-600"
-                                >
-                                    {{ form.errors.name }}
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    Tên mô tả chi tiết về vị trí này.
-                                </p>
-                            </div>
-
-                            <!-- Is Default -->
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="is_default"
-                                        v-model:checked="form.is_default"
-                                    />
-                                    <Label
-                                        for="is_default"
-                                        class="text-sm font-medium"
-                                    >
-                                        Đặt làm vị trí mặc định
-                                    </Label>
-                                </div>
-                                <p
-                                    v-if="form.errors.is_default"
-                                    class="text-sm text-red-600"
-                                >
-                                    {{ form.errors.is_default }}
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    Vị trí mặc định sẽ được sử dụng khi không
-                                    chỉ định vị trí cụ thể. Mỗi kho chỉ có một
-                                    vị trí mặc định.
-                                </p>
-                                <div
-                                    v-if="
-                                        location.is_default && !form.is_default
-                                    "
-                                    class="rounded-md border border-yellow-200 bg-yellow-50 p-3"
-                                >
-                                    <p class="text-sm text-yellow-800">
-                                        <strong>Lưu ý:</strong> Nếu bỏ đặt vị
-                                        trí này làm mặc định, một vị trí khác
-                                        trong kho sẽ tự động trở thành mặc định.
-                                    </p>
-                                </div>
-                                <div
-                                    v-if="
-                                        !location.is_default && form.is_default
-                                    "
-                                    class="rounded-md border border-blue-200 bg-blue-50 p-3"
-                                >
-                                    <p class="text-sm text-blue-800">
-                                        <strong>Lưu ý:</strong> Đặt vị trí này
-                                        làm mặc định sẽ loại bỏ trạng thái mặc
-                                        định của vị trí hiện tại.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Submit Buttons -->
-                            <div
-                                class="flex justify-end space-x-4 border-t pt-6"
-                            >
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    @click="goBack"
-                                    :disabled="form.processing"
-                                >
-                                    Hủy
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    :disabled="form.processing"
-                                    class="flex items-center gap-2"
-                                >
-                                    <Save class="h-4 w-4" />
-                                    {{
-                                        form.processing
-                                            ? 'Đang lưu...'
-                                            : 'Cập nhật vị trí'
-                                    }}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                <!-- Help Section -->
-                <Card class="mt-6">
-                    <CardHeader>
-                        <CardTitle class="text-lg">Hướng dẫn</CardTitle>
-                    </CardHeader>
-                    <CardContent class="space-y-4 text-sm text-gray-600">
-                        <div>
-                            <h4 class="mb-2 font-semibold text-gray-900">
-                                Quy tắc đặt mã vị trí:
-                            </h4>
-                            <ul class="list-inside list-disc space-y-1">
-                                <li>Mã vị trí phải duy nhất trong kho này</li>
-                                <li>
-                                    Chỉ sử dụng chữ cái in hoa (A-Z), số (0-9)
-                                    và dấu gạch ngang (-)
-                                </li>
-                                <li>Tối đa 50 ký tự</li>
-                                <li>Ví dụ: A01, B-15, ZONE-1, SPECIAL-AREA</li>
-                            </ul>
+                    <!-- Is Default -->
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <Checkbox
+                                id="is_default"
+                                v-model:checked="form.is_default"
+                            />
+                            <Label for="is_default" class="text-sm font-medium">
+                                Đặt làm vị trí mặc định
+                            </Label>
                         </div>
-
-                        <div>
-                            <h4 class="mb-2 font-semibold text-gray-900">
-                                Về vị trí mặc định:
-                            </h4>
-                            <ul class="list-inside list-disc space-y-1">
-                                <li>
-                                    Mỗi kho phải có ít nhất một vị trí mặc định
-                                </li>
-                                <li>
-                                    Khi thay đổi vị trí mặc định, hệ thống sẽ tự
-                                    động cập nhật
-                                </li>
-                                <li>
-                                    Bạn không thể bỏ trạng thái mặc định nếu đây
-                                    là vị trí duy nhất trong kho
-                                </li>
-                            </ul>
+                        <p
+                            v-if="form.errors.is_default"
+                            class="text-sm text-red-600"
+                        >
+                            {{ form.errors.is_default }}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Vị trí mặc định sẽ được sử dụng khi không chỉ định
+                            vị trí cụ thể. Mỗi kho chỉ có một vị trí mặc định.
+                        </p>
+                        <div
+                            v-if="location.is_default && !form.is_default"
+                            class="rounded-md border border-yellow-200 bg-yellow-50 p-3"
+                        >
+                            <p class="text-sm text-yellow-800">
+                                <strong>Lưu ý:</strong> Nếu bỏ đặt vị trí này
+                                làm mặc định, một vị trí khác trong kho sẽ tự
+                                động trở thành mặc định.
+                            </p>
                         </div>
-                    </CardContent>
-                </Card>
+                        <div
+                            v-if="!location.is_default && form.is_default"
+                            class="rounded-md border border-blue-200 bg-blue-50 p-3"
+                        >
+                            <p class="text-sm text-blue-800">
+                                <strong>Lưu ý:</strong> Đặt vị trí này làm mặc
+                                định sẽ loại bỏ trạng thái mặc định của vị trí
+                                hiện tại.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div
+                        class="flex justify-end gap-4 border-t border-gray-200 pt-6"
+                    >
+                        <Button
+                            type="button"
+                            variant="outline"
+                            :as="Link"
+                            :href="
+                                siteRoute.warehouses.locations.show.url([
+                                    site.slug,
+                                    warehouse.id,
+                                    location.id,
+                                ])
+                            "
+                            :disabled="form.processing"
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="submit"
+                            :disabled="form.processing"
+                            class="flex items-center gap-2"
+                        >
+                            <Save class="h-4 w-4" />
+                            {{
+                                form.processing
+                                    ? 'Đang lưu...'
+                                    : 'Cập nhật vị trí'
+                            }}
+                        </Button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Help Section -->
+            <div class="rounded-lg border border-indigo-200 bg-indigo-50 p-6">
+                <h3 class="mb-4 text-lg font-semibold text-indigo-900">
+                    💡 Hướng dẫn
+                </h3>
+
+                <div class="space-y-4 text-sm text-indigo-800">
+                    <div>
+                        <h4 class="mb-2 font-semibold text-indigo-900">
+                            Quy tắc đặt mã vị trí:
+                        </h4>
+                        <ul class="list-inside list-disc space-y-1">
+                            <li>• Mã vị trí phải duy nhất trong kho này</li>
+                            <li>
+                                • Chỉ sử dụng chữ cái in hoa (A-Z), số (0-9) và
+                                dấu gạch ngang (-)
+                            </li>
+                            <li>• Tối đa 50 ký tự</li>
+                            <li>• Ví dụ: A01, B-15, ZONE-1, SPECIAL-AREA</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="mb-2 font-semibold text-indigo-900">
+                            Về vị trí mặc định:
+                        </h4>
+                        <ul class="list-inside list-disc space-y-1">
+                            <li>
+                                • Mỗi kho phải có ít nhất một vị trí mặc định
+                            </li>
+                            <li>
+                                • Khi thay đổi vị trí mặc định, hệ thống sẽ tự
+                                động cập nhật
+                            </li>
+                            <li>
+                                • Bạn không thể bỏ trạng thái mặc định nếu đây
+                                là vị trí duy nhất trong kho
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>

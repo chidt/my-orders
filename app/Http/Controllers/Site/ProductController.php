@@ -6,8 +6,8 @@ use App\Actions\Product\DestroyProduct;
 use App\Actions\Product\StoreProduct;
 use App\Actions\Product\UpdateProduct;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Product\SyncChildProductsRequest;
 use App\Http\Requests\Product\StoreProductRequest;
+use App\Http\Requests\Product\SyncChildProductsRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Models\Attribute;
 use App\Models\Category;
@@ -32,14 +32,16 @@ class ProductController extends Controller
     {
         Gate::authorize('viewAny', Product::class);
 
+        $siteId = auth()->user()->site_id;
         $query = Product::query()
-            ->where('site_id', auth()->user()->site_id)
+            ->where('site_id', $siteId)
             ->with([
                 'category:id,name',
                 'supplier:id,name',
                 'unit:id,name',
-                'productType:id,name',
+                'productType:id,name,color',
                 'media',
+                'tags' => fn ($q) => $q->where('site_id', $siteId),
             ])
             ->withCount('productItems')
             ->latest('id');
@@ -50,6 +52,25 @@ class ProductController extends Controller
                 $q->where('name', 'like', '%'.$search.'%')
                     ->orWhere('code', 'like', '%'.$search.'%')
                     ->orWhere('supplier_code', 'like', '%'.$search.'%');
+            });
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->integer('category_id'));
+        }
+
+        if ($request->filled('product_type_id')) {
+            $query->where('product_type_id', $request->integer('product_type_id'));
+        }
+
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->integer('supplier_id'));
+        }
+
+        if ($request->filled('tag_id')) {
+            $tagId = $request->integer('tag_id');
+            $query->whereHas('tags', function ($q) use ($tagId) {
+                $q->where('tags.id', $tagId);
             });
         }
 
@@ -78,15 +99,23 @@ class ProductController extends Controller
                         ? ['id' => $product->unit->id, 'name' => $product->unit->name]
                         : null,
                     'product_type' => $product->productType
-                        ? ['id' => $product->productType->id, 'name' => $product->productType->name]
+                        ? ['id' => $product->productType->id,
+                            'name' => $product->productType->name,
+                            'color' => $product->productType->color]
                         : null,
                 ];
             });
 
+        $formOptions = $this->getProductFormOptions($siteId);
+
         return Inertia::render('Products/Index', [
             'site' => auth()->user()->site,
             'products' => $products,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'category_id', 'product_type_id', 'supplier_id', 'tag_id']),
+            'categories' => $formOptions['categories'],
+            'suppliers' => $formOptions['suppliers'],
+            'productTypes' => $formOptions['productTypes'],
+            'tags' => $formOptions['tags'],
         ]);
     }
 
