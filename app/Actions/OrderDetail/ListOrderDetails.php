@@ -65,6 +65,11 @@ class ListOrderDetails
             $query->whereHas('productItem.product', fn ($productQ) => $productQ->where('product_type_id', $productTypeId));
         }
 
+        if ($request->filled('supplier_id')) {
+            $supplierId = (int) $request->input('supplier_id');
+            $query->whereHas('productItem.product', fn ($productQ) => $productQ->where('supplier_id', $supplierId));
+        }
+
         if ($request->filled('payment_statuses')) {
             $paymentStatuses = array_filter(array_map('intval', (array) $request->input('payment_statuses')));
             if (count($paymentStatuses) > 0) {
@@ -80,6 +85,9 @@ class ListOrderDetails
             $query->whereDate('order_date', '<=', $request->date('date_to'));
         }
 
-        return $query->paginate(20)->withQueryString();
+        $perPage = (int) $request->input('per_page', 50); // Default to 50 if not provided
+        $perPage = in_array($perPage, [50, 100, 200, 300, 400, 500]) ? $perPage : 50; // Validate allowed values
+
+        return $query->paginate($perPage)->withQueryString();
     }
 }

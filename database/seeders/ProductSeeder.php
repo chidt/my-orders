@@ -366,7 +366,7 @@ class ProductSeeder extends Seeder
     {
         $values = collect($combination)->pluck('value')->toArray();
 
-        return $productName.' - '.implode(' / ', $values);
+        return $productName.' - '.implode(' - ', $values);
     }
 
     private function calculateVariantPrices(Product $product, array $combination): array
