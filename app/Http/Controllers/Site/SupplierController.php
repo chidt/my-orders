@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Site;
 
 use App\Actions\Supplier\DeleteSupplier;
+use App\Actions\Supplier\ListSuppliers;
 use App\Actions\Supplier\StoreSupplier;
 use App\Actions\Supplier\UpdateSupplier;
 use App\Http\Controllers\Controller;
@@ -18,61 +19,28 @@ use Inertia\Response;
 
 class SupplierController extends Controller
 {
-    /**
-     * Display a listing of the suppliers for the site.
-     */
-    public function index(Request $request, Site $site): Response
+    public function index(Request $request, Site $site, ListSuppliers $action): Response
     {
         Gate::authorize('viewAny', [Supplier::class, $site]);
 
-        $search = (string) $request->query('search', '');
-        $sortBy = (string) $request->query('sort_by', 'name');
-        $sortDirection = (string) $request->query('sort_direction', 'asc');
-
-        $query = Supplier::query()
-            ->where('site_id', $site->id)
-            ->withCount('products');
-
-        if ($search !== '') {
-            $query->where(function ($subQuery) use ($search): void {
-                $subQuery
-                    ->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('phone', 'like', '%'.$search.'%')
-                    ->orWhere('person_in_charge', 'like', '%'.$search.'%');
-            });
-        }
-
-        if (in_array($sortBy, ['name', 'products_count', 'created_at'], true)) {
-            if ($sortBy === 'products_count') {
-                $query->orderBy('products_count', $sortDirection === 'desc' ? 'desc' : 'asc');
-            } else {
-                $query->orderBy($sortBy, $sortDirection === 'desc' ? 'desc' : 'asc');
-            }
-        } else {
-            $query->orderBy('name');
-        }
-
-        $suppliers = $query->paginate(20)->withQueryString();
-
-        $statistics = [
-            'total' => Supplier::query()->where('site_id', $site->id)->count(),
+        $filters = [
+            'search' => (string) $request->query('search', ''),
+            'sort_by' => (string) $request->query('sort_by', 'name'),
+            'sort_direction' => (string) $request->query('sort_direction', 'asc'),
         ];
+
+        $suppliers = $action->execute($site, $filters);
 
         return Inertia::render('site/suppliers/Index', [
             'site' => $site->only(['id', 'name', 'slug']),
             'suppliers' => $suppliers,
-            'statistics' => $statistics,
-            'filters' => [
-                'search' => $search,
-                'sort_by' => $sortBy,
-                'sort_direction' => $sortDirection,
+            'statistics' => [
+                'total' => Supplier::query()->where('site_id', $site->id)->count(),
             ],
+            'filters' => $filters,
         ]);
     }
 
-    /**
-     * Show the form for creating a new supplier.
-     */
     public function create(Site $site): Response
     {
         Gate::authorize('create', [Supplier::class, $site]);
@@ -82,9 +50,6 @@ class SupplierController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created supplier in storage.
-     */
     public function store(StoreSupplierRequest $request, Site $site, StoreSupplier $action): RedirectResponse
     {
         Gate::authorize('create', [Supplier::class, $site]);
@@ -96,9 +61,6 @@ class SupplierController extends Controller
             ->with('success', 'Nhà cung cấp đã được tạo thành công.');
     }
 
-    /**
-     * Show the form for editing the specified supplier.
-     */
     public function edit(Site $site, Supplier $supplier): Response
     {
         Gate::authorize('update', $supplier);
@@ -116,9 +78,6 @@ class SupplierController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified supplier in storage.
-     */
     public function update(UpdateSupplierRequest $request, Site $site, Supplier $supplier, UpdateSupplier $action): RedirectResponse
     {
         Gate::authorize('update', $supplier);
@@ -130,9 +89,6 @@ class SupplierController extends Controller
             ->with('success', 'Nhà cung cấp đã được cập nhật thành công.');
     }
 
-    /**
-     * Remove the specified supplier from storage.
-     */
     public function destroy(Site $site, Supplier $supplier, DeleteSupplier $action): RedirectResponse
     {
         Gate::authorize('delete', $supplier);

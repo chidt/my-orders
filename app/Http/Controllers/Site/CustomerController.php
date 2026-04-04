@@ -4,18 +4,24 @@ namespace App\Http\Controllers\Site;
 
 use App\Actions\Customer\DeleteCustomer;
 use App\Actions\Customer\ListCustomers;
+use App\Actions\Customer\SearchCustomers;
 use App\Actions\Customer\StoreCustomer;
 use App\Actions\Customer\UpdateCustomer;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Customer\QuickStoreCustomerRequest;
 use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Customer;
+use App\Models\Order;
 use App\Models\Province;
 use App\Models\Site;
 use App\Models\Ward;
+use App\Support\OrderCustomerPayload;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -148,5 +154,37 @@ class CustomerController extends Controller
                 ->route('site.customers.index', $site)
                 ->with('error', $exception->getMessage());
         }
+    }
+
+    public function search(Site $site, Request $request, SearchCustomers $action): JsonResponse
+    {
+        Gate::authorize('viewAny', [Order::class, $site]);
+
+        $customers = $action->execute($site, $request);
+
+        return response()->json([
+            'data' => $customers->map(fn (Customer $customer) => OrderCustomerPayload::forSearch($customer))->values()->all(),
+        ]);
+    }
+
+    public function quickStoreForOrders(QuickStoreCustomerRequest $request, Site $site, StoreCustomer $action): JsonResponse
+    {
+        Gate::authorize('viewAny', [Order::class, $site]);
+
+        try {
+            $customer = $action->execute($request->validated(), $site);
+            $customer->load(['addresses.ward.province']);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Khách hàng đã được tạo thành công.',
+            'customer' => OrderCustomerPayload::forSearch($customer),
+        ], 201);
     }
 }

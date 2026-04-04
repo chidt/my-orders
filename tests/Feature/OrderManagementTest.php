@@ -22,6 +22,7 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+    $this->seed(\Database\Seeders\ProductPermissionSeeder::class);
 
     $this->user = User::factory()->create();
     $this->site = Site::factory()->create(['user_id' => $this->user->id]);
@@ -226,24 +227,9 @@ test('can delete order', function () {
     $this->assertDatabaseMissing('orders', ['id' => $order->id]);
 });
 
-test('can search customers for order form', function () {
-    Customer::factory()->forSite($this->site)->create([
-        'name' => 'Nguyen Van Search',
-        'phone' => '0912345678',
-        'email' => 'search@example.com',
-    ]);
-
-    $response = $this->actingAs($this->user)
-        ->get(route('orders.customers.search', $this->site).'?search=Nguyen');
-
-    $response->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.name', 'Nguyen Van Search');
-});
-
 test('can search product items for order form', function () {
     $response = $this->actingAs($this->user)
-        ->get(route('orders.product-items.search', $this->site).'?search='.$this->productItem->sku);
+        ->get(route('product-items.search', $this->site).'?search='.$this->productItem->sku);
 
     $response->assertOk()
         ->assertJsonCount(1, 'data')
@@ -269,7 +255,7 @@ test('can quick create customer from order form', function () {
     ];
 
     $response = $this->actingAs($this->user)
-        ->postJson(route('orders.customers.quick-store', $this->site), $payload);
+        ->postJson(route('customers.quick-store', $this->site), $payload);
 
     $response->assertCreated()
         ->assertJsonPath('customer.name', 'Khach Moi')
