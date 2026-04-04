@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Site;
 
 use App\Actions\Warehouse\DeleteWarehouse;
+use App\Actions\Warehouse\ListWarehouses;
 use App\Actions\Warehouse\StoreWarehouse;
 use App\Actions\Warehouse\UpdateWarehouse;
 use App\Http\Controllers\Controller;
@@ -22,14 +23,11 @@ class WarehouseController extends Controller
     /**
      * Display a listing of the warehouses for the site.
      */
-    public function index(Site $site): Response
+    public function index(Site $site, ListWarehouses $action): Response
     {
         $this->authorize('viewAny', [Warehouse::class, $site]);
 
-        $warehouses = $site->warehouses()
-            ->withLocationsCount()
-            ->orderBy('name')
-            ->paginate(15);
+        $warehouses = $action->execute($site);
 
         return Inertia::render('site/warehouses/Index', [
             'site' => $site->only(['id', 'name', 'slug']),

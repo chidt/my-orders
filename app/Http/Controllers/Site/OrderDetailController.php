@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers\Site;
 
+use App\Actions\OrderDetail\BuildOrderDetailFilterOptions;
+use App\Actions\OrderDetail\BuildOrderDetailFiltersPayload;
+use App\Actions\OrderDetail\BuildOrderDetailShowPayload;
+use App\Actions\OrderDetail\BulkUpdateOrderDetailStatus;
 use App\Actions\OrderDetail\ListOrderDetails;
+use App\Actions\OrderDetail\MapOrderDetailListItem;
 use App\Actions\OrderDetail\UpdateOrderDetailPaymentStatus;
 use App\Actions\OrderDetail\UpdateOrderDetailStatus;
 use App\Enums\OrderStatus;
@@ -14,9 +19,6 @@ use App\Http\Requests\Order\UpdateOrderDetailStatusRequest;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderDetail;
-use App\Models\Product;
-use App\Models\ProductItem;
-use App\Models\ProductType;
 use App\Models\Site;
 use App\Support\OrderCustomerPayload;
 use Illuminate\Http\RedirectResponse;
@@ -35,87 +37,20 @@ class OrderDetailController extends Controller
             ->with('success', $successMessage);
     }
 
-    public function index(Site $site, Request $request, ListOrderDetails $action): Response
-    {
+    public function index(
+        Site $site,
+        Request $request,
+        ListOrderDetails $action,
+        BuildOrderDetailFiltersPayload $buildFiltersPayload,
+        MapOrderDetailListItem $mapOrderDetailListItem,
+        BuildOrderDetailFilterOptions $buildFilterOptions
+    ): Response {
         Gate::authorize('viewAny', [Order::class, $site]);
 
-        $activeFilterStatus = null;
-        $filterStatusTransitions = [];
-        $fs = null;
-        if ($request->filled('filter_status')) {
-            try {
-                $fs = OrderStatus::from((int) $request->input('filter_status'));
-                $activeFilterStatus = [
-                    'value' => $fs->value,
-                    'label' => $fs->label(),
-                ];
-                if (! $fs->isFinal()) {
-                    $filterStatusTransitions = collect($fs->transitions())
-                        ->map(fn (OrderStatus $s) => [
-                            'value' => $s->value,
-                            'label' => $s->label(),
-                        ])
-                        ->values()
-                        ->all();
-                }
-            } catch (\ValueError) {
-                // Nếu filter_status không hợp lệ thì không set activeFilterStatus
-            }
-        }
+        $filtersPayload = $buildFiltersPayload->execute($request);
 
         $orderDetails = $action->execute($site, $request)
-            ->through(function (OrderDetail $detail) {
-                $status = $detail->status;
-                $paymentStatus = $detail->payment_status;
-
-                return [
-                    'id' => $detail->id,
-                    'qty' => (int) $detail->qty,
-                    'price' => (float) $detail->price,
-                    'discount' => (float) $detail->discount,
-                    'total' => (float) $detail->total,
-                    'order_date' => $detail->order_date?->format('Y-m-d H:i:s'),
-                    'status' => $status->value,
-                    'status_label' => $status->label(),
-                    'status_color' => $status->color(),
-                    'payment_status' => $paymentStatus->value,
-                    'payment_status_label' => $paymentStatus->label(),
-                    'payment_status_color' => $paymentStatus->color(),
-                    'payment_request_detail_id' => $detail->payment_request_detail_id !== null
-                        ? (int) $detail->payment_request_detail_id
-                        : null,
-                    'order' => [
-                        'id' => $detail->order?->id,
-                        'order_number' => $detail->order?->order_number,
-                    ],
-                    'customer' => [
-                        'id' => $detail->order?->customer?->id,
-                        'name' => $detail->order?->customer?->name,
-                    ],
-                    'product' => [
-                        'id' => $detail->productItem?->product?->id,
-                        'name' => $detail->productItem?->product?->name,
-                    ],
-                    'product_item' => [
-                        'id' => $detail->productItem?->id,
-                        'name' => $detail->productItem?->name,
-                        'sku' => $detail->productItem?->sku,
-                        'image' => $detail->productItem?->image,
-                    ],
-                    'product_type' => [
-                        'id' => $detail->productItem?->product?->productType?->id,
-                        'name' => $detail->productItem?->product?->productType?->name,
-                        'color' => $detail->productItem?->product?->productType?->color,
-                    ],
-                    'can_update_status' => ! $status->isFinal(),
-                    'allowed_status_values' => collect($status->transitions())
-                        ->prepend($status)
-                        ->map(fn (OrderStatus $allowedStatus) => $allowedStatus->value)
-                        ->values(),
-                ];
-            });
-
-        // ...existing code...
+            ->through(fn (OrderDetail $detail) => $mapOrderDetailListItem->execute($detail));
 
         $filterCustomer = null;
         if ($request->filled('customer_id')) {
@@ -129,33 +64,18 @@ class OrderDetailController extends Controller
 
         return Inertia::render('Orders/Details/Index', [
             'site' => $site,
-            'filters' => [
-                'search' => $request->string('search')->toString(),
-                'customer_id' => $request->string('customer_id')->toString(),
-                'product_id' => $request->string('product_id')->toString(),
-                'product_item_id' => $request->string('product_item_id')->toString(),
-                'product_type_id' => $request->string('product_type_id')->toString(),
-                'supplier_id' => $request->string('supplier_id')->toString(),
-                'filter_status' => $request->filled('filter_status') ? (string) $request->input('filter_status') : '',
-                'payment_statuses' => $request->input('payment_statuses', []),
-                'date_from' => $request->string('date_from')->toString(),
-                'date_to' => $request->string('date_to')->toString(),
-                'per_page' => (int) $request->input('per_page', 50),
-            ],
-            'activeFilterStatus' => $activeFilterStatus,
-            'filterStatusTransitions' => $filterStatusTransitions,
+            'filters' => $filtersPayload['filters'],
+            'activeFilterStatus' => $filtersPayload['activeFilterStatus'],
+            'filterStatusTransitions' => $filtersPayload['filterStatusTransitions'],
             'orderDetails' => $orderDetails,
             'statusOptions' => OrderStatus::options(),
             'paymentStatusOptions' => PaymentStatus::options(),
             'filterCustomer' => $filterCustomer,
-            'products' => Product::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name']),
-            'productItems' => ProductItem::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name', 'sku', 'product_id']),
-            'productTypes' => ProductType::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name', 'color']),
-            'suppliers' => \App\Models\Supplier::query()->where('site_id', $site->id)->orderBy('name')->get(['id', 'name']),
+            ...$buildFilterOptions->execute($site),
         ]);
     }
 
-    public function show(Site $site, OrderDetail $orderDetail): Response
+    public function show(Site $site, OrderDetail $orderDetail, BuildOrderDetailShowPayload $buildShowPayload): Response
     {
         $orderDetail->loadMissing('order');
         abort_if(! $orderDetail->order, 404);
@@ -167,91 +87,9 @@ class OrderDetailController extends Controller
             'productItem.product.productType',
         ]);
 
-        $status = $orderDetail->status;
-        $paymentStatus = $orderDetail->payment_status;
-
-        $statusHistory = collect([
-            [
-                'title' => 'Tạo chi tiết đơn hàng',
-                'status' => $status->label(),
-                'note' => $orderDetail->note,
-                'at' => $orderDetail->created_at?->format('Y-m-d H:i:s'),
-            ],
-            [
-                'title' => 'Cập nhật gần nhất',
-                'status' => $status->label(),
-                'note' => $orderDetail->note,
-                'at' => $orderDetail->updated_at?->format('Y-m-d H:i:s'),
-            ],
-        ])->filter(fn ($item) => ! empty($item['at']))->values();
-
         return Inertia::render('Orders/Details/Show', [
             'site' => $site,
-            'orderDetail' => [
-                'id' => $orderDetail->id,
-                'order' => [
-                    'id' => $orderDetail->order?->id,
-                    'order_number' => $orderDetail->order?->order_number,
-                    'order_date' => $orderDetail->order?->order_date?->format('Y-m-d H:i:s'),
-                    'status' => $orderDetail->order?->status->label(),
-                ],
-                'customer' => [
-                    'id' => $orderDetail->order?->customer?->id,
-                    'name' => $orderDetail->order?->customer?->name,
-                    'phone' => $orderDetail->order?->customer?->phone,
-                    'email' => $orderDetail->order?->customer?->email,
-                ],
-                'shipping_address' => $orderDetail->order?->shippingAddress
-                    ? [
-                        'address' => $orderDetail->order->shippingAddress->address,
-                        'ward' => $orderDetail->order->shippingAddress->ward?->name,
-                        'province' => $orderDetail->order->shippingAddress->ward?->province?->name,
-                    ]
-                    : null,
-                'product' => [
-                    'id' => $orderDetail->productItem?->product?->id,
-                    'name' => $orderDetail->productItem?->product?->name,
-                    'type' => $orderDetail->productItem?->product?->productType?->name,
-                    'type_color' => $orderDetail->productItem?->product?->productType?->color,
-                ],
-                'product_item' => [
-                    'id' => $orderDetail->productItem?->id,
-                    'name' => $orderDetail->productItem?->name,
-                    'sku' => $orderDetail->productItem?->sku,
-                    'image' => $orderDetail->productItem?->image,
-                ],
-                'pricing' => [
-                    'qty' => (int) $orderDetail->qty,
-                    'price' => (float) $orderDetail->price,
-                    'discount' => (float) $orderDetail->discount,
-                    'addition_price' => (float) $orderDetail->addition_price,
-                    'total' => (float) $orderDetail->total,
-                ],
-                'status' => [
-                    'value' => $status->value,
-                    'label' => $status->label(),
-                    'color' => $status->color(),
-                    'can_update' => ! $status->isFinal(),
-                    'allowed_status_values' => collect($status->transitions())
-                        ->prepend($status)
-                        ->map(fn (OrderStatus $allowedStatus) => $allowedStatus->value)
-                        ->values(),
-                ],
-                'payment_status' => [
-                    'value' => $paymentStatus->value,
-                    'label' => $paymentStatus->label(),
-                    'color' => $paymentStatus->color(),
-                ],
-                'payment_request_detail_id' => $orderDetail->payment_request_detail_id !== null
-                    ? (int) $orderDetail->payment_request_detail_id
-                    : null,
-                'notes' => [
-                    'order_detail_note' => $orderDetail->note,
-                    'order_note' => $orderDetail->order?->order_note,
-                    'shipping_note' => $orderDetail->order?->shipping_note,
-                ],
-                'status_history' => $statusHistory,
-            ],
+            'orderDetail' => $buildShowPayload->execute($orderDetail),
             'statusOptions' => OrderStatus::options(),
             'paymentStatusOptions' => PaymentStatus::options(),
         ]);
@@ -337,80 +175,24 @@ class OrderDetailController extends Controller
     public function bulkUpdateStatus(
         BulkUpdateOrderDetailStatusRequest $request,
         Site $site,
-        UpdateOrderDetailStatus $action
+        BulkUpdateOrderDetailStatus $action,
+        UpdateOrderDetailStatus $updateOrderDetailStatus
     ): RedirectResponse {
         Gate::authorize('viewAny', [Order::class, $site]);
 
-        $targetStatus = OrderStatus::from((int) $request->integer('status'));
-        $note = $request->string('note')->toString() ?: null;
+        $result = $action->execute(
+            $site,
+            (int) $request->integer('status'),
+            $request->filled('filter_status') ? (int) $request->integer('filter_status') : null,
+            (array) $request->input('order_detail_ids', []),
+            $request->string('note')->toString() ?: null,
+            $updateOrderDetailStatus,
+        );
 
-        $successCount = 0;
-        $failed = [];
-
-        $ids = array_values(array_filter(array_map('intval', (array) $request->input('order_detail_ids', []))));
-
-        if (count($ids) > 0) {
-            $orderDetails = OrderDetail::query()
-                ->where('site_id', $site->id)
-                ->whereIn('id', $ids)
-                ->with('order')
-                ->get();
-        } else {
-            $filterStatus = OrderStatus::from((int) $request->integer('filter_status'));
-            $orderDetails = OrderDetail::query()
-                ->where('site_id', $site->id)
-                ->where('status', $filterStatus->value)
-                ->with('order')
-                ->get();
+        if (count($result['failed']) > 0) {
+            return back()->with('error', "Bulk update: {$result['success_count']} thành công, ".count($result['failed']).' thất bại. '.implode(' | ', $result['failed']));
         }
 
-        $targetStatusValue = $targetStatus->value;
-
-        foreach ($orderDetails as $detail) {
-            $currentStatus = $detail->status;
-            if ($currentStatus->isFinal()) {
-                $failed[] = "#{$detail->id}: trạng thái hiện tại là final";
-
-                continue;
-            }
-
-            $allowedNextValues = array_map(
-                fn (OrderStatus $s) => $s->value,
-                $currentStatus->transitions(),
-            );
-            if (! in_array($targetStatusValue, $allowedNextValues, true)) {
-                $failed[] = "#{$detail->id}: transition không hợp lệ";
-
-                continue;
-            }
-
-            $order = $detail->order;
-            if (! $order) {
-                $failed[] = "#{$detail->id}: không tìm thấy đơn hàng";
-
-                continue;
-            }
-
-            $orderStatus = $order->status;
-            if ($orderStatus->isFinal()) {
-                $failed[] = "#{$detail->id}: order đã final";
-
-                continue;
-            }
-
-            try {
-                $action->execute($order, $detail, $targetStatus->value, $note);
-                $successCount++;
-            } catch (\Exception $e) {
-                Log::error($e->getMessage());
-                $failed[] = "#{$detail->id}: lỗi hệ thống khi cập nhật";
-            }
-        }
-
-        if (count($failed) > 0) {
-            return back()->with('error', "Bulk update: {$successCount} thành công, ".count($failed).' thất bại. '.implode(' | ', $failed));
-        }
-
-        return back()->with('success', "OrderDetails đã được cập nhật thành công: {$successCount}.");
+        return back()->with('success', "OrderDetails đã được cập nhật thành công: {$result['success_count']}.");
     }
 }

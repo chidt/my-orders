@@ -117,7 +117,7 @@ const searchCustomers = async (search: string = '') => {
     isSearchingCustomers.value = true;
     try {
         const response = await fetch(
-            `/${props.site.slug}/orders/customers/search?search=${encodeURIComponent(search.trim())}`,
+            `/${props.site.slug}/customers/search?search=${encodeURIComponent(search.trim())}`,
             {
                 headers: {
                     Accept: 'application/json',
@@ -197,7 +197,7 @@ const searchProductItems = async (search: string = '') => {
     isSearchingProductItems.value = true;
     try {
         const response = await fetch(
-            `/${props.site.slug}/orders/product-items/search?search=${encodeURIComponent(search.trim())}`,
+            `/${props.site.slug}/product-items/search?search=${encodeURIComponent(search.trim())}`,
             {
                 headers: {
                     Accept: 'application/json',

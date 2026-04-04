@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Edit, Plus, Search, Tag, Trash2, TrendingUp } from 'lucide-vue-next';
+import {
+    Edit,
+    Filter,
+    Plus,
+    Search,
+    Tag,
+    Trash2,
+    TrendingUp,
+    X,
+} from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -86,6 +95,7 @@ const { can } = usePermissions();
 // State
 const showDeleteDialog = ref(false);
 const showBulkDeleteDialog = ref(false);
+const showFilterModal = ref(false);
 const tagToDelete = ref<Tag | null>(null);
 const searchQuery = ref(props.filters.search || '');
 const selectedUsage = ref(props.filters.usage || 'all');
@@ -93,6 +103,16 @@ const selectedSort = ref(props.filters.sort_by || 'name');
 
 // Computed
 const canManageTags = computed(() => can('manage_tags') || can('create_tags'));
+
+const activeFiltersCount = computed(() => {
+    let count = 0;
+    if (searchQuery.value.trim()) count++;
+    if (selectedUsage.value && selectedUsage.value !== 'all') count++;
+    if (selectedSort.value && selectedSort.value !== 'name') count++;
+    return count;
+});
+
+const hasActiveFilters = computed(() => activeFiltersCount.value > 0);
 
 // Methods
 const confirmDelete = (tag: Tag) => {
@@ -162,6 +182,15 @@ const clearFilters = () => {
     selectedUsage.value = 'all';
     selectedSort.value = 'name';
     performSearch();
+};
+
+const closeFilterModal = () => {
+    showFilterModal.value = false;
+};
+
+const applyAdvancedFilters = () => {
+    performSearch();
+    closeFilterModal();
 };
 
 const getUsageBadgeVariant = (count: number) => {
@@ -308,68 +337,235 @@ const getUsageBadgeVariant = (count: number) => {
                 </div>
             </div>
 
-            <!-- Filters -->
-            <div class="mb-8 rounded-lg border border-gray-200 bg-white p-4">
+            <!-- Search + Filter Bar -->
+            <div
+                class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <div
-                    class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+                    class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:gap-2"
                 >
-                    <div>
+                    <div class="relative flex-1 sm:w-80">
+                        <Search
+                            class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
+                        />
                         <Input
                             v-model="searchQuery"
                             placeholder="Tìm kiếm thẻ..."
+                            class="h-11 pr-10 pl-9"
                             @keyup.enter="performSearch"
+                        />
+                        <button
+                            v-if="searchQuery"
+                            type="button"
+                            @click="
+                                searchQuery = '';
+                                performSearch();
+                            "
+                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                         >
-                            <template #prefix>
-                                <Search class="h-4 w-4 text-gray-400" />
-                            </template>
-                        </Input>
+                            <X class="h-4 w-4" />
+                        </button>
                     </div>
-                    <div>
-                        <Select v-model="selectedUsage">
-                            <SelectTrigger>
-                                <SelectValue placeholder="Trạng thái sử dụng" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Tất cả</SelectItem>
-                                <SelectItem value="used"
-                                    >Đang sử dụng</SelectItem
-                                >
-                                <SelectItem value="unused"
-                                    >Chưa sử dụng</SelectItem
-                                >
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Select v-model="selectedSort">
-                            <SelectTrigger>
-                                <SelectValue placeholder="Sắp xếp theo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="name">Tên</SelectItem>
-                                <SelectItem value="products_count"
-                                    >Số lần sử dụng</SelectItem
-                                >
-                                <SelectItem value="created_at"
-                                    >Ngày tạo</SelectItem
-                                >
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div class="flex gap-2">
-                        <Button @click="performSearch" class="flex-1">
-                            Lọc
-                        </Button>
+
+                    <div class="flex items-center gap-2">
                         <Button
-                            @click="clearFilters"
                             variant="outline"
-                            class="flex-1"
+                            class="h-11 px-3"
+                            @click="showFilterModal = true"
                         >
-                            Xóa bộ lọc
+                            <Filter class="h-4 w-4" />
+                            <span class="ml-1">Bộ lọc</span>
+                            <span
+                                v-if="activeFiltersCount > 0"
+                                class="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-indigo-600 px-2 text-xs font-bold text-white"
+                            >
+                                {{ activeFiltersCount }}
+                            </span>
                         </Button>
                     </div>
                 </div>
             </div>
+
+            <!-- Advanced Filters Modal -->
+            <Transition
+                enter-active-class="transition-opacity duration-300"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-300"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div
+                    v-if="showFilterModal"
+                    class="fixed inset-0 z-50 size-auto max-h-none max-w-none overflow-hidden bg-transparent"
+                >
+                    <div
+                        class="absolute inset-0 cursor-pointer bg-gray-500/75"
+                        @click="closeFilterModal"
+                    ></div>
+
+                    <div
+                        class="pointer-events-none absolute inset-0 pl-0 focus:outline-none sm:pl-10 lg:pl-16"
+                    >
+                        <Transition
+                            enter-active-class="transition-transform duration-500 ease-in-out sm:duration-700"
+                            enter-from-class="translate-x-full"
+                            enter-to-class="translate-x-0"
+                            leave-active-class="transition-transform duration-500 ease-in-out sm:duration-700"
+                            leave-from-class="translate-x-0"
+                            leave-to-class="translate-x-full"
+                        >
+                            <div
+                                v-if="showFilterModal"
+                                class="pointer-events-auto relative ml-auto block size-full w-full sm:max-w-md"
+                            >
+                                <div
+                                    class="relative flex h-full flex-col overflow-y-auto bg-white py-6 shadow-xl"
+                                >
+                                    <div class="px-4 sm:px-6">
+                                        <div
+                                            class="mb-2 flex items-center justify-between sm:mb-0"
+                                        >
+                                            <div class="flex-1">
+                                                <h2
+                                                    class="text-xl font-bold text-gray-900"
+                                                >
+                                                    Bộ lọc nâng cao
+                                                </h2>
+                                                <p
+                                                    class="mt-0.5 text-xs text-gray-500"
+                                                >
+                                                    Thiết lập tiêu chí tìm kiếm
+                                                    chi tiết
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                @click="closeFilterModal"
+                                                class="rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                                            >
+                                                <span class="sr-only"
+                                                    >Đóng panel</span
+                                                >
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.5"
+                                                    aria-hidden="true"
+                                                    class="size-6"
+                                                >
+                                                    <path
+                                                        d="M6 18 18 6M6 6l12 12"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex-1 space-y-8 overflow-y-auto p-6"
+                                    >
+                                        <div class="space-y-3">
+                                            <label
+                                                class="flex items-center gap-2 text-sm font-bold tracking-wider text-gray-700 uppercase"
+                                            >
+                                                <span
+                                                    class="h-1.5 w-1.5 rounded-full bg-indigo-500"
+                                                ></span>
+                                                Trạng thái sử dụng
+                                            </label>
+                                            <Select v-model="selectedUsage">
+                                                <SelectTrigger
+                                                    class="h-12 w-full bg-gray-50 transition-colors focus:bg-white"
+                                                >
+                                                    <SelectValue
+                                                        placeholder="Chọn trạng thái"
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all"
+                                                        >Tất cả</SelectItem
+                                                    >
+                                                    <SelectItem value="used"
+                                                        >Đang sử
+                                                        dụng</SelectItem
+                                                    >
+                                                    <SelectItem value="unused"
+                                                        >Chưa sử
+                                                        dụng</SelectItem
+                                                    >
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div class="space-y-3">
+                                            <label
+                                                class="flex items-center gap-2 text-sm font-bold tracking-wider text-gray-700 uppercase"
+                                            >
+                                                <span
+                                                    class="h-1.5 w-1.5 rounded-full bg-indigo-500"
+                                                ></span>
+                                                Sắp xếp
+                                            </label>
+                                            <Select v-model="selectedSort">
+                                                <SelectTrigger
+                                                    class="h-12 w-full bg-gray-50 transition-colors focus:bg-white"
+                                                >
+                                                    <SelectValue
+                                                        placeholder="Chọn trường sắp xếp"
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="name"
+                                                        >Tên</SelectItem
+                                                    >
+                                                    <SelectItem
+                                                        value="products_count"
+                                                        >Số lần sử
+                                                        dụng</SelectItem
+                                                    >
+                                                    <SelectItem
+                                                        value="created_at"
+                                                        >Ngày tạo</SelectItem
+                                                    >
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex flex-shrink-0 items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-4"
+                                    >
+                                        <button
+                                            type="button"
+                                            class="text-sm font-medium text-gray-500 underline hover:text-gray-700"
+                                            @click="clearFilters"
+                                        >
+                                            Xóa tất cả
+                                        </button>
+
+                                        <div class="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                @click="closeFilterModal"
+                                                >Hủy</Button
+                                            >
+                                            <Button
+                                                @click="applyAdvancedFilters"
+                                                class="px-8 shadow-sm"
+                                                >Áp dụng</Button
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Transition>
+                    </div>
+                </div>
+            </Transition>
 
             <!-- Summary -->
             <div class="mb-6">
@@ -408,7 +604,7 @@ const getUsageBadgeVariant = (count: number) => {
 
             <!-- Desktop Table -->
             <div
-                v-else
+                v-if="tags.data.length > 0"
                 class="hidden overflow-hidden rounded-lg border border-gray-200 bg-white md:block"
             >
                 <table class="min-w-full divide-y divide-gray-200">

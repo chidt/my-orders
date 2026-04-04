@@ -128,7 +128,7 @@ async function submit(): Promise<void> {
 
     try {
         const response = await fetch(
-            `/${props.siteSlug}/orders/customers/quick-store`,
+            `/${props.siteSlug}/customers/quick-store`,
             {
                 method: 'POST',
                 headers: {

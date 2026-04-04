@@ -232,7 +232,7 @@ const groupedPermissions = computed(() => {
 
     props.permissions.forEach((permission) => {
         const parts = permission.name.split(' ');
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         const _ = parts[0]; // view, create, edit, delete, manage, access
         const resource = parts.slice(1).join(' '); // users, roles, sites, etc.
 

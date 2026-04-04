@@ -74,6 +74,26 @@ describe('Tag Index', function () {
             );
     });
 
+    it('passes search and sorting filters to the page', function () {
+        Tag::factory()->forSite($this->site)->create(['name' => 'Premium']);
+        Tag::factory()->forSite($this->site)->create(['name' => 'Sale']);
+
+        $response = $this->get(route('tags.index', [
+            'site' => $this->site->slug,
+            'search' => 'Premium',
+            'usage' => 'unused',
+            'sort_by' => 'products_count',
+        ]));
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Products/Tags/Index')
+                ->where('filters.search', 'Premium')
+                ->where('filters.usage', 'unused')
+                ->where('filters.sort_by', 'products_count')
+            );
+    });
+
     it('enforces site isolation', function () {
         $otherSite = Site::factory()->create();
         Tag::factory()->forSite($otherSite)->create(['name' => 'Other Site Tag']);

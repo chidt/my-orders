@@ -73,9 +73,9 @@ class UpdateProductRequest extends FormRequest
 
             'qty_in_stock' => ['nullable', 'integer', 'min:0'],
             'weight' => ['nullable', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'gt:0'],
-            'partner_price' => ['nullable', 'numeric', 'min:0', 'lte:price'],
-            'purchase_price' => ['required', 'numeric', 'gt:0'],
+            'price' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
+            'partner_price' => ['nullable', 'numeric', 'min:0', 'lte:price', 'max:99999999.99'],
+            'purchase_price' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
             'order_closing_date' => ['nullable', 'date'],
             'extra_attributes' => ['nullable', 'array'],
 

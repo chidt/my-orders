@@ -52,9 +52,30 @@ test('site admin can create product type', function () {
     $this->assertDatabaseHas('product_types', [
         'name' => 'Electronics',
         'site_id' => $this->site->id,
-        'order' => 10,
-        'show_on_front' => true,
+        'show_on_front' => 1,
         'color' => '#ff0000',
+    ]);
+});
+
+test('creating product type does not require slug column and ignores slug input', function () {
+    $productTypeData = [
+        'name' => 'Office Supplies',
+        'order' => 5,
+        'show_on_front' => false,
+        'color' => '#00ff00',
+        'slug' => 'office-supplies',
+    ];
+
+    $response = $this->actingAs($this->user)
+        ->post(route('product-types.store', ['site' => $this->site->slug]), $productTypeData);
+
+    $response->assertRedirect(route('product-types.index', ['site' => $this->site->slug]))
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseHas('product_types', [
+        'name' => 'Office Supplies',
+        'site_id' => $this->site->id,
+        'color' => '#00ff00',
     ]);
 });
 

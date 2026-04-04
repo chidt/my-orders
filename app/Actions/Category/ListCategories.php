@@ -146,8 +146,14 @@ class ListCategories
     protected function getParentCategories(int $siteId)
     {
         return Category::forSite($siteId)
-            ->roots()
+            ->where(function ($query) {
+                $query->roots()
+                    ->orWhereHas('parent', function ($q) {
+                        $q->roots();
+                    });
+            })
+            ->with('parent')
             ->ordered()
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'parent_id']);
     }
 }
