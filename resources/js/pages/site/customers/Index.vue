@@ -8,7 +8,6 @@ import {
     Search,
     Trash2,
     UserRound,
-
 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cn } from '@/lib/utils';
 import siteRoute from '@/routes/site';
 import type { CustomerListProps } from '@/types/customer';
 
