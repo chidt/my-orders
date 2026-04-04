@@ -2,25 +2,16 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import {
-    CheckIcon,
-    ChevronsUpDownIcon,
     ContactRound,
     Edit,
-    Plus,
+    Filter,
     Search,
     Trash2,
     UserRound,
+
 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
 import {
     Dialog,
     DialogContent,
@@ -30,18 +21,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
@@ -95,7 +74,7 @@ watch(
     async (newValue) => {
         if (newValue === 'all') {
             wardId.value = 'all';
-            await loadWards(newValue);
+            wards.value = [];
             return;
         }
 
@@ -119,6 +98,18 @@ const customerToDelete = ref<
 
 const showSummary = computed(() => props.customers.total > 0);
 
+const activeFiltersCount = computed(() => {
+    let count = 0;
+    if (search.value) count++;
+    if (type.value !== 'all') count++;
+    if (provinceId.value !== 'all') count++;
+    if (wardId.value !== 'all') count++;
+    if (sortBy.value && sortBy.value !== 'name') count++;
+    return count;
+});
+
+const showFilterModal = ref(false);
+
 const applyFilters = () => {
     router.get(
         `/${props.site.slug}/customers`,
@@ -139,6 +130,15 @@ const applyFilters = () => {
     );
 };
 
+const closeFilterModal = () => {
+    showFilterModal.value = false;
+};
+
+const applyAdvancedFilters = () => {
+    applyFilters();
+    closeFilterModal();
+};
+
 const clearFilters = () => {
     search.value = '';
     type.value = 'all';
@@ -146,6 +146,7 @@ const clearFilters = () => {
     wardId.value = 'all';
     sortBy.value = 'name';
     applyFilters();
+    closeFilterModal();
 };
 
 const openDeleteDialog = (
@@ -196,9 +197,7 @@ const formatDate = (value: string) => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="px-4 py-8 sm:px-6 lg:px-8">
-            <div
-                class="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between"
-            >
+            <div class="mb-6 space-y-4 sm:mb-8">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">
                         Quản lý khách hàng
@@ -207,15 +206,6 @@ const formatDate = (value: string) => {
                         Quản lý danh sách khách hàng cho {{ site.name }}
                     </p>
                 </div>
-                <Button
-                    v-if="can('create_customers')"
-                    :as="Link"
-                    :href="`/${site.slug}/customers/create`"
-                    class="w-full cursor-pointer sm:w-auto"
-                >
-                    <Plus class="mr-2 h-4 w-4" />
-                    Thêm khách hàng mới
-                </Button>
             </div>
 
             <div
@@ -232,7 +222,7 @@ const formatDate = (value: string) => {
                 <div
                     class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
                 >
-                    <p class="text-sm text-gray-500">Khách hàng cá nhân</p>
+                    <p class="text-sm text-gray-500">Cá nhân</p>
                     <p class="mt-1 text-2xl font-semibold text-gray-900">
                         {{ statistics.individual }}
                     </p>
@@ -240,7 +230,7 @@ const formatDate = (value: string) => {
                 <div
                     class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
                 >
-                    <p class="text-sm text-gray-500">Khách hàng doanh nghiệp</p>
+                    <p class="text-sm text-gray-500">Cộng tác viên</p>
                     <p class="mt-1 text-2xl font-semibold text-gray-900">
                         {{ statistics.business }}
                     </p>
@@ -248,198 +238,50 @@ const formatDate = (value: string) => {
             </div>
 
             <div
-                class="mb-6 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4"
+                class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
             >
-                <div
-                    class="grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2 xl:grid-cols-6"
-                >
-                    <div class="md:col-span-2 xl:col-span-2">
+                <div class="w-full sm:max-w-md">
+                    <div class="relative">
                         <Input
                             v-model="search"
-                            placeholder="Tìm theo tên, email, SĐT, địa chỉ"
-                            class="h-11 text-sm placeholder:text-sm"
+                            placeholder="Tìm kiếm tên, email, SĐT..."
+                            class="h-11 pr-10"
+                            @input="applyFilters"
                             @keyup.enter="applyFilters"
-                        >
-                            <template #prefix>
-                                <Search class="h-4 w-4 text-gray-400" />
-                            </template>
-                        </Input>
-                    </div>
-
-                    <Select v-model="type">
-                        <SelectTrigger class="h-11 w-full">
-                            <SelectValue placeholder="Loại khách hàng" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Tất cả loại</SelectItem>
-                            <SelectItem
-                                v-for="(label, key) in customerTypes"
-                                :key="key"
-                                :value="String(key)"
-                                >{{ label }}</SelectItem
-                            >
-                        </SelectContent>
-                    </Select>
-
-                    <Popover v-model:open="open">
-                        <PopoverTrigger as-child>
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                :aria-expanded="open"
-                                class="w-full justify-between font-normal"
-                            >
-                                {{
-                                    provinceId
-                                        ? provinces.find(
-                                              (p) =>
-                                                  String(p.id) === provinceId,
-                                          )?.name
-                                        : 'Chọn tỉnh/thành phố'
-                                }}
-                                <ChevronsUpDownIcon
-                                    class="ml-2 h-4 w-4 shrink-0 opacity-50"
-                                />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                            class="w-[--radix-popover-trigger-width] p-0"
-                        >
-                            <Command>
-                                <CommandInput placeholder="Tìm kiếm tỉnh..." />
-                                <CommandList>
-                                    <CommandEmpty
-                                        >Không tìm thấy kết quả.</CommandEmpty
-                                    >
-                                    <CommandGroup>
-                                        <CommandItem
-                                            v-for="province in provinces"
-                                            :key="province.id"
-                                            :value="province.name"
-                                            @select="
-                                                () => {
-                                                    provinceId =
-                                                        provinceId ===
-                                                        String(province.id)
-                                                            ? ''
-                                                            : String(
-                                                                  province.id,
-                                                              );
-                                                    open = false;
-                                                }
-                                            "
-                                        >
-                                            <CheckIcon
-                                                :class="
-                                                    cn(
-                                                        'mr-2 h-4 w-4',
-                                                        provinceId ===
-                                                            String(province.id)
-                                                            ? 'opacity-100'
-                                                            : 'opacity-0',
-                                                    )
-                                                "
-                                            />
-                                            {{ province.name }}
-                                        </CommandItem>
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
-
-                    <Popover v-model:open="openWard">
-                        <PopoverTrigger as-child>
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                :aria-expanded="openWard"
-                                class="w-full justify-between font-normal"
-                            >
-                                {{
-                                    wardId != 'all'
-                                        ? wards.find(
-                                              (w) => String(w.id) === wardId,
-                                          )?.name
-                                        : 'Chọn phường/xã'
-                                }}
-                                <ChevronsUpDownIcon
-                                    class="ml-2 h-4 w-4 shrink-0 opacity-50"
-                                />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                            class="w-[--radix-popover-trigger-width] p-0"
-                        >
-                            <Command>
-                                <CommandInput
-                                    placeholder="Tìm kiếm phường/xã..."
-                                />
-                                <CommandList>
-                                    <CommandEmpty
-                                        >Không tìm thấy kết quả.</CommandEmpty
-                                    >
-                                    <CommandGroup>
-                                        <CommandItem
-                                            v-for="ward in wards"
-                                            :key="ward.id"
-                                            :value="ward.name"
-                                            @select="
-                                                () => {
-                                                    wardId =
-                                                        wardId ===
-                                                        String(ward.id)
-                                                            ? ''
-                                                            : String(ward.id);
-                                                    openWard = false;
-                                                }
-                                            "
-                                        >
-                                            <CheckIcon
-                                                :class="
-                                                    cn(
-                                                        'mr-2 h-4 w-4',
-                                                        wardId ===
-                                                            String(ward.id)
-                                                            ? 'opacity-100'
-                                                            : 'opacity-0',
-                                                    )
-                                                "
-                                            />
-                                            {{ ward.name }}
-                                        </CommandItem>
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
-
-                    <Select v-model="sortBy">
-                        <SelectTrigger class="h-11 w-full">
-                            <SelectValue placeholder="Sắp xếp" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="name">Tên</SelectItem>
-                            <SelectItem value="type">Loại</SelectItem>
-                            <SelectItem value="created_at">Ngày tạo</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <div
-                        class="grid grid-cols-2 gap-2 pt-1 md:col-span-2 xl:col-span-6"
-                    >
-                        <Button
-                            class="h-11 w-full cursor-pointer"
+                        />
+                        <button
+                            type="button"
                             @click="applyFilters"
-                            >Lọc</Button
+                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                         >
-                        <Button
-                            class="h-11 w-full cursor-pointer"
-                            variant="outline"
-                            @click="clearFilters"
-                            >Xóa lọc</Button
-                        >
+                            <Search class="h-4 w-4" />
+                        </button>
                     </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2">
+                    <Button
+                        variant="outline"
+                        class="h-11 px-3"
+                        @click="showFilterModal = true"
+                    >
+                        <Filter class="h-4 w-4" />
+                        <span class="ml-1">Bộ lọc</span>
+                        <span
+                            v-if="activeFiltersCount > 0"
+                            class="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-indigo-600 px-2 text-xs font-bold text-white"
+                        >
+                            {{ activeFiltersCount }}
+                        </span>
+                    </Button>
+                    <Button
+                        v-if="can('create_customers')"
+                        :as="Link"
+                        :href="`/${site.slug}/customers/create`"
+                        class="h-11"
+                    >
+                        Tạo khách hàng mới
+                    </Button>
                 </div>
             </div>
 

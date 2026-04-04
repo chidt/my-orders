@@ -36,10 +36,11 @@ class Customer extends Model
 
     public static function typeOptions(): array
     {
-        return [
-            CustomerType::INDIVIDUAL->value => 'Cá nhân',
-            CustomerType::BUSINESS->value => 'Doanh nghiệp',
-        ];
+        return collect(CustomerType::options())
+            ->mapWithKeys(fn (array $option) => [
+                $option['value'] => $option['label'],
+            ])
+            ->all();
     }
 
     public function user(): HasOne

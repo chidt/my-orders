@@ -1,15 +1,4 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import {
-    Edit,
-    Phone,
-    Plus,
-    Search,
-    Trash2,
-    UserRoundCog,
-    X,
-} from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -31,6 +20,18 @@ import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import siteRoute from '@/routes/site';
 import type { SupplierListProps } from '@/types/supplier';
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    Edit,
+    Filter,
+    Phone,
+    Plus,
+    Search,
+    Trash2,
+    UserRoundCog,
+    X,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 const props = defineProps<SupplierListProps>();
 const { can } = usePermissions();
@@ -52,6 +53,7 @@ const search = ref(props.filters.search ?? '');
 const sortBy = ref(props.filters.sort_by ?? 'name');
 const isDeleting = ref<number | null>(null);
 const showDeleteDialog = ref(false);
+const showFilterDrawer = ref(false);
 const supplierToDelete = ref<
     null | SupplierListProps['suppliers']['data'][number]
 >(null);
@@ -78,6 +80,15 @@ const clearFilters = () => {
     search.value = '';
     sortBy.value = 'name';
     applyFilters();
+};
+
+const closeFilterDrawer = () => {
+    showFilterDrawer.value = false;
+};
+
+const applyAndCloseFilters = () => {
+    applyFilters();
+    closeFilterDrawer();
 };
 
 const openDeleteDialog = (
@@ -133,30 +144,59 @@ const translatePaginationLabel = (label: string) => {
                         Quản lý danh sách nhà cung cấp cho {{ site.name }}
                     </p>
                 </div>
-                <div class="w-full sm:w-80">
-                    <div class="relative">
-                        <Search
-                            class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
-                        />
-                        <Input
-                            v-model="search"
-                            placeholder="Tìm tên, người phụ trách, điện thoại..."
-                            class="h-11 pl-9 text-sm sm:h-10"
-                            @keyup.enter="applyFilters"
-                        />
-                        <button
-                            v-if="search"
-                            class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            type="button"
-                            @click="
-                                search = '';
-                                applyFilters();
-                            "
-                        >
-                            <X class="h-4 w-4" />
-                        </button>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div class="w-full sm:w-72">
+                        <div class="relative">
+                            <Search
+                                class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
+                            />
+                            <Input
+                                v-model="search"
+                                placeholder="Tìm tên, người phụ trách, điện thoại..."
+                                class="h-11 pl-9 text-sm sm:h-10"
+                                @keyup.enter="applyFilters"
+                            />
+                            <button
+                                v-if="search"
+                                class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                type="button"
+                                @click="
+                                    search = '';
+                                    applyFilters();
+                                "
+                            >
+                                <X class="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
+                    <Button
+                        variant="outline"
+                        type="button"
+                        class="h-11 sm:h-10"
+                        @click="showFilterDrawer = true"
+                    >
+                        <Filter class="mr-1 h-4 w-4" />
+                        Bộ lọc
+                        <span
+                            v-if="activeFiltersCount > 0"
+                            class="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-indigo-600 px-2 text-xs font-bold text-white"
+                        >
+                            {{ activeFiltersCount }}
+                        </span>
+                    </Button>
                 </div>
+            </div>
+
+            <div class="mt-3 flex justify-end">
+                <Button
+                    v-if="can('create_suppliers')"
+                    :as="Link"
+                    :href="siteRoute.suppliers.create.url(site.slug)"
+                    class="h-11 sm:h-10"
+                >
+                    <Plus class="mr-2 h-4 w-4" />
+                    Thêm mới
+                </Button>
             </div>
 
             <div
@@ -201,56 +241,145 @@ const translatePaginationLabel = (label: string) => {
                         </p>
                     </div>
                 </div>
+            </div>
 
-                <p class="text-sm font-medium text-gray-700">
-                    Bộ lọc và sắp xếp
-                </p>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                    <div class="w-full sm:min-w-50 sm:flex-1">
-                        <Select v-model="sortBy">
-                            <SelectTrigger class="h-11 sm:h-10">
-                                <SelectValue placeholder="Sắp xếp theo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="name">Tên</SelectItem>
-                                <SelectItem value="products_count"
-                                    >Số sản phẩm</SelectItem
+            <Transition
+                enter-active-class="transition-opacity duration-300"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-300"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div
+                    v-if="showFilterDrawer"
+                    class="fixed inset-0 z-50 overflow-hidden"
+                >
+                    <div
+                        class="absolute inset-0 cursor-pointer bg-gray-500/75"
+                        @click="closeFilterDrawer"
+                    ></div>
+
+                    <div
+                        class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full"
+                    >
+                        <Transition
+                            enter-active-class="transform transition ease-in-out duration-500 sm:duration-700"
+                            enter-from-class="translate-x-full"
+                            enter-to-class="translate-x-0"
+                            leave-active-class="transform transition ease-in-out duration-500 sm:duration-700"
+                            leave-from-class="translate-x-0"
+                            leave-to-class="translate-x-full"
+                        >
+                            <div
+                                v-if="showFilterDrawer"
+                                class="pointer-events-auto w-screen max-w-md"
+                            >
+                                <div
+                                    class="flex h-full flex-col overflow-y-auto bg-white py-6 shadow-xl"
                                 >
-                                <SelectItem value="created_at"
-                                    >Ngày tạo</SelectItem
-                                >
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div class="flex gap-2">
-                        <Button
-                            variant="outline"
-                            type="button"
-                            class="h-11 flex-1 sm:h-10 sm:flex-none"
-                            @click="applyFilters"
-                        >
-                            Lọc
-                        </Button>
-                        <Button
-                            variant="outline"
-                            type="button"
-                            class="h-11 flex-1 sm:h-10 sm:flex-none"
-                            @click="clearFilters"
-                        >
-                            Xóa lọc
-                        </Button>
-                        <Button
-                            v-if="can('create_suppliers')"
-                            :as="Link"
-                            :href="siteRoute.suppliers.create.url(site.slug)"
-                            class="h-11 flex-1 sm:h-10 sm:flex-none"
-                        >
-                            <Plus class="mr-2 h-4 w-4" />
-                            Thêm mới
-                        </Button>
+                                    <div class="px-4 sm:px-6">
+                                        <div
+                                            class="flex items-center justify-between border-b border-gray-100 pb-4"
+                                        >
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                <Filter
+                                                    class="h-5 w-5 text-gray-500"
+                                                />
+                                                <div>
+                                                    <h2
+                                                        class="text-xl font-semibold text-gray-900"
+                                                    >
+                                                        Bộ lọc nhà cung cấp
+                                                    </h2>
+                                                    <p
+                                                        class="mt-1 text-sm text-gray-500"
+                                                    >
+                                                        Lọc nhanh theo tên và
+                                                        sắp xếp
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                class="rounded-md text-gray-400 hover:text-gray-500"
+                                                @click="closeFilterDrawer"
+                                            >
+                                                <X class="h-6 w-6" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="relative mt-6 flex-1 space-y-6 px-4 sm:px-6"
+                                    >
+                                        <div class="w-full">
+                                            <label
+                                                class="mb-2 block text-[10px] font-black tracking-wider text-gray-400 uppercase"
+                                                >Sắp xếp</label
+                                            >
+                                            <Select
+                                                v-model="sortBy"
+                                                class="w-full"
+                                            >
+                                                <SelectTrigger
+                                                    class="h-11 w-full"
+                                                >
+                                                    <SelectValue
+                                                        placeholder="Sắp xếp theo"
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="name"
+                                                        >Tên</SelectItem
+                                                    >
+                                                    <SelectItem
+                                                        value="products_count"
+                                                        >Số sản phẩm</SelectItem
+                                                    >
+                                                    <SelectItem
+                                                        value="created_at"
+                                                        >Ngày tạo</SelectItem
+                                                    >
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex flex-shrink-0 items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-4"
+                                    >
+                                        <button
+                                            type="button"
+                                            class="text-sm font-medium text-gray-500 underline hover:text-gray-700"
+                                            @click="clearFilters"
+                                        >
+                                            Xóa tất cả
+                                        </button>
+
+                                        <div class="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                @click="closeFilterDrawer"
+                                            >
+                                                Hủy
+                                            </Button>
+                                            <Button
+                                                @click="applyAndCloseFilters"
+                                                class="px-8 shadow-sm"
+                                            >
+                                                Áp dụng
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Transition>
                     </div>
                 </div>
-            </div>
+            </Transition>
 
             <div v-if="showSummary" class="text-sm text-gray-600">
                 Hiển thị {{ suppliers.data.length }} trong tổng số

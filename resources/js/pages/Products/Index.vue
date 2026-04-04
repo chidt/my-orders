@@ -276,6 +276,29 @@ const getProductTypeBadgeStyle = (product: Product) => {
                 </Button>
             </div>
 
+            <div
+                v-if="
+                    ($page.props.flash as any)?.success ||
+                    ($page.props.flash as any)?.message
+                "
+                class="rounded-md border border-green-200 bg-green-50 px-4 py-4"
+            >
+                <p class="text-sm font-medium text-green-800">
+                    {{
+                        ($page.props.flash as any)?.success ||
+                        ($page.props.flash as any)?.message
+                    }}
+                </p>
+            </div>
+            <div
+                v-if="($page.props.flash as any)?.error"
+                class="rounded-md border border-red-200 bg-red-50 px-4 py-4"
+            >
+                <p class="text-sm font-medium text-red-800">
+                    {{ ($page.props.flash as any).error }}
+                </p>
+            </div>
+
             <div class="mb-6 flex items-center justify-between">
                 <p class="text-sm text-gray-600">
                     Tổng cộng

@@ -98,12 +98,13 @@ Route::prefix('{site:slug}')->group(function () {
         'update' => 'orders.update',
         'destroy' => 'orders.destroy',
     ]);
-    Route::get('orders/customers/search', [OrderController::class, 'searchCustomers'])
-        ->name('orders.customers.search');
-    Route::get('orders/product-items/search', [OrderController::class, 'searchProductItems'])
-        ->name('orders.product-items.search');
-    Route::post('orders/customers/quick-store', [OrderController::class, 'quickStoreCustomer'])
-        ->name('orders.customers.quick-store');
+    Route::get('customers/search', [CustomerController::class, 'search'])
+        ->name('customers.search');
+    Route::get('product-items/search', [ProductController::class, 'searchItems'])
+        ->name('product-items.search');
+    Route::post('customers/quick-store', [CustomerController::class, 'quickStoreForOrders'])
+        ->name('customers.quick-store');
+
     Route::patch('orders/{order}/details/{detail}/status', [OrderController::class, 'updateDetailStatus'])
         ->name('orders.details.status.update');
 

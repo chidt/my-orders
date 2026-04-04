@@ -69,7 +69,7 @@ export function useOrderCustomerSearchFilter(options: {
         isSearchingCustomers.value = true;
         try {
             const response = await fetch(
-                `/${options.siteSlug()}/orders/customers/search?search=${encodeURIComponent(search.trim())}`,
+                `/${options.siteSlug()}/customers/search?search=${encodeURIComponent(search.trim())}`,
                 {
                     headers: { Accept: 'application/json' },
                     credentials: 'same-origin',

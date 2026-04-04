@@ -338,13 +338,6 @@ watch(viewMode, (newMode) => {
     }
 });
 
-// Watch for filter changes and refetch all categories if in tree view
-watch([searchQuery, selectedParent, selectedStatus], () => {
-    if (viewMode.value === 'tree') {
-        fetchAllCategories();
-    }
-});
-
 // Fetch all categories on component mount if starting in tree view
 onMounted(() => {
     if (viewMode.value === 'tree') {

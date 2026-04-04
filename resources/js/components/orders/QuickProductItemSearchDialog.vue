@@ -42,7 +42,7 @@ const fetchOptions = async (keyword: string) => {
     searching.value = true;
     try {
         const response = await fetch(
-            `/${props.siteSlug}/orders/product-items/search?search=${encodeURIComponent(keyword.trim())}`,
+            `/${props.siteSlug}/product-items/search?search=${encodeURIComponent(keyword.trim())}`,
             {
                 headers: {
                     Accept: 'application/json',
