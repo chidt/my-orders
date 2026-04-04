@@ -434,8 +434,12 @@ const getProductTypeBadgeStyle = (product: Product) => {
                                         <Badge
                                             v-if="product.product_type?.name"
                                             variant="outline"
-                                            class="text-[10px] font-bold uppercase border"
-                                            :style="getProductTypeBadgeStyle(product)"
+                                            class="border text-[10px] font-bold uppercase"
+                                            :style="
+                                                getProductTypeBadgeStyle(
+                                                    product,
+                                                )
+                                            "
                                         >
                                             {{ product.product_type.name }}
                                         </Badge>
@@ -566,7 +570,7 @@ const getProductTypeBadgeStyle = (product: Product) => {
                                 <Badge
                                     v-if="product.product_type?.name"
                                     variant="outline"
-                                    class="text-[10px] font-bold uppercase border"
+                                    class="border text-[10px] font-bold uppercase"
                                     :style="getProductTypeBadgeStyle(product)"
                                 >
                                     {{ product.product_type.name }}

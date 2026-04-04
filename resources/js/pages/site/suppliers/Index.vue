@@ -1,4 +1,16 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    Edit,
+    Filter,
+    Phone,
+    Plus,
+    Search,
+    Trash2,
+    UserRoundCog,
+    X,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -20,18 +32,6 @@ import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import siteRoute from '@/routes/site';
 import type { SupplierListProps } from '@/types/supplier';
-import { Head, Link, router } from '@inertiajs/vue3';
-import {
-    Edit,
-    Filter,
-    Phone,
-    Plus,
-    Search,
-    Trash2,
-    UserRoundCog,
-    X,
-} from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 
 const props = defineProps<SupplierListProps>();
 const { can } = usePermissions();

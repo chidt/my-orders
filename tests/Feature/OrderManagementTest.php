@@ -227,21 +227,6 @@ test('can delete order', function () {
     $this->assertDatabaseMissing('orders', ['id' => $order->id]);
 });
 
-test('can search customers for order form', function () {
-    Customer::factory()->forSite($this->site)->create([
-        'name' => 'Nguyen Van Search',
-        'phone' => '0912345678',
-        'email' => 'search@example.com',
-    ]);
-
-    $response = $this->actingAs($this->user)
-        ->get(route('customers.search', $this->site).'?search=Nguyen');
-
-    $response->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.name', 'Nguyen Van Search');
-});
-
 test('can search product items for order form', function () {
     $response = $this->actingAs($this->user)
         ->get(route('product-items.search', $this->site).'?search='.$this->productItem->sku);

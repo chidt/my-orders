@@ -41,17 +41,23 @@ const hasImage = computed(() => Boolean(props.src));
                 />
             </button>
         </DialogTrigger>
-        <DialogContent class="max-w-5xl border-none bg-transparent p-0 shadow-2xl">
+        <DialogContent
+            class="max-w-5xl border-none bg-transparent p-0 shadow-2xl"
+        >
             <DialogTitle class="sr-only">{{ alt }}</DialogTitle>
 
             <!-- Close Button using DialogClose -->
-            <DialogClose class="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/70 focus:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white/50">
+            <DialogClose
+                class="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/70 focus:bg-black/70 focus:ring-2 focus:ring-white/50 focus:outline-none"
+            >
                 <X class="h-5 w-5" />
                 <span class="sr-only">Đóng</span>
             </DialogClose>
 
             <!-- Image container with proper spacing -->
-            <div class="relative flex min-h-[50vh] max-h-[90vh] items-center justify-center bg-white/95 backdrop-blur-sm rounded-2xl p-6">
+            <div
+                class="relative flex max-h-[90vh] min-h-[50vh] items-center justify-center rounded-2xl bg-white/95 p-6 backdrop-blur-sm"
+            >
                 <img
                     :src="src ?? ''"
                     :alt="alt"
@@ -67,8 +73,18 @@ const hasImage = computed(() => Boolean(props.src));
         :class="sizeClass"
     >
         <div class="text-center">
-            <svg class="mx-auto h-4 w-4 mb-1 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+                class="mx-auto mb-1 h-4 w-4 opacity-50"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
             </svg>
             <span class="text-[9px]">Không có ảnh</span>
         </div>
