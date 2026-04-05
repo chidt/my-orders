@@ -30,7 +30,7 @@ beforeEach(function () {
 
 describe('Location Management', function () {
     test('authenticated user can view location list for their warehouse', function () {
-        $locations = Location::factory()->count(3)->for($this->warehouse)->create();
+        $locations = Location::factory()->count(3)->forWarehouse($this->warehouse)->create();
 
         $response = $this->actingAs($this->user)
             ->get(route('site.warehouses.locations.index', [$this->site, $this->warehouse]));

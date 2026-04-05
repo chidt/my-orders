@@ -30,11 +30,7 @@ class LocationFactory extends Factory
      */
     private function generateLocationCode(): string
     {
-        $letters = ['A', 'B', 'C', 'D', 'E'];
-        $letter = $this->faker->randomElement($letters);
-        $number = $this->faker->numberBetween(1, 99);
-
-        return $letter.str_pad($number, 2, '0', STR_PAD_LEFT);
+        return strtoupper($this->faker->unique()->bothify('?##'));
     }
 
     /**

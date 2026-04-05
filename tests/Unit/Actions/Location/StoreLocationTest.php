@@ -60,7 +60,7 @@ describe('StoreLocation Action', function () {
 
     test('creates a default location and removes default from others', function () {
         // Create existing default location
-        $existingDefault = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
+        $existingDefault = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => true]);
 
         $data = [
             'code' => 'A02',
