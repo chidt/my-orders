@@ -41,7 +41,7 @@ test('delete warehouse uses database transaction', function () {
 
 test('delete warehouse respects business rules', function () {
     // Create multiple locations
-    Location::factory()->count(3)->create(['warehouse_id' => $this->warehouse->id]);
+    Location::factory()->count(3)->forWarehouse($this->warehouse)->create();
 
     expect(fn () => $this->action->execute($this->warehouse))
         ->toThrow(Exception::class);

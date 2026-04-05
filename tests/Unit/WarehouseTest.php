@@ -19,7 +19,7 @@ test('warehouse belongs to site', function () {
 
 test('warehouse has many locations', function () {
     $warehouse = Warehouse::factory()->create();
-    Location::factory()->count(3)->create(['warehouse_id' => $warehouse->id]);
+    Location::factory()->count(3)->forWarehouse($warehouse)->create();
 
     expect($warehouse->locations)->toHaveCount(3)
         ->and($warehouse->locations->first())->toBeInstanceOf(Location::class);
@@ -43,7 +43,7 @@ test('warehouse scope for site filters correctly', function () {
 
 test('warehouse scope with locations count works', function () {
     $warehouse = Warehouse::factory()->create();
-    Location::factory()->count(5)->create(['warehouse_id' => $warehouse->id]);
+    Location::factory()->count(5)->forWarehouse($warehouse)->create();
 
     $warehouseWithCount = Warehouse::withLocationsCount()->find($warehouse->id);
 
@@ -57,8 +57,7 @@ test('warehouse gets default location correctly', function () {
         'warehouse_id' => $warehouse->id,
         'is_default' => true,
     ]);
-    Location::factory()->count(2)->create([
-        'warehouse_id' => $warehouse->id,
+    Location::factory()->count(2)->forWarehouse($warehouse)->create([
         'is_default' => false,
     ]);
 

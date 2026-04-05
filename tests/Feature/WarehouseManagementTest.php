@@ -238,7 +238,7 @@ test('user cannot access warehouse of different site', function () {
 
 test('warehouse list includes locations count', function () {
     $warehouse = Warehouse::factory()->forSite($this->site)->create();
-    Location::factory()->count(3)->create(['warehouse_id' => $warehouse->id]);
+    Location::factory()->count(3)->forWarehouse($warehouse)->create();
 
     $response = $this->actingAs($this->user)
         ->get(route('site.warehouses.index', $this->site->slug));

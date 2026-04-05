@@ -19,8 +19,8 @@ beforeEach(function () {
 
 describe('DeleteLocation Action', function () {
     test('can delete a regular location successfully', function () {
-        $defaultLocation = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
-        $regularLocation = Location::factory()->for($this->warehouse)->create(['is_default' => false]);
+        $defaultLocation = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => true]);
+        $regularLocation = Location::factory()->for($this->warehouse)->withCode('A02')->create(['is_default' => false]);
 
         $this->action->execute($regularLocation);
 
@@ -29,8 +29,8 @@ describe('DeleteLocation Action', function () {
     });
 
     test('can delete a default location when other locations exist', function () {
-        $defaultLocation = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
-        $otherLocation = Location::factory()->for($this->warehouse)->create(['is_default' => false]);
+        $defaultLocation = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => true]);
+        $otherLocation = Location::factory()->for($this->warehouse)->withCode('A02')->create(['is_default' => false]);
 
         $this->action->execute($defaultLocation);
 
@@ -49,7 +49,7 @@ describe('DeleteLocation Action', function () {
     });
 
     test('throws exception when trying to delete only default location', function () {
-        $onlyLocation = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
+        $onlyLocation = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => true]);
 
         expect(fn () => $this->action->execute($onlyLocation))
             ->toThrow(Exception::class, 'Không thể xóa vị trí mặc định duy nhất của kho.');
@@ -57,8 +57,8 @@ describe('DeleteLocation Action', function () {
 
     test('executes deletion within database transaction', function () {
         // Create another location first so we can delete the default one
-        $otherLocation = Location::factory()->for($this->warehouse)->create(['is_default' => false]);
-        $defaultLocation = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
+        $otherLocation = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => false]);
+        $defaultLocation = Location::factory()->for($this->warehouse)->withCode('A02')->create(['is_default' => true]);
 
         // Mock the DefaultLocationManager to throw an exception during handleDefaultLocationDeletion
         $mockService = $this->mock(DefaultLocationManager::class);
@@ -77,9 +77,9 @@ describe('DeleteLocation Action', function () {
     });
 
     test('handles default location reassignment after deletion', function () {
-        $defaultLocation = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
-        $location2 = Location::factory()->for($this->warehouse)->create(['is_default' => false]);
-        $location3 = Location::factory()->for($this->warehouse)->create(['is_default' => false]);
+        $defaultLocation = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => true]);
+        $location2 = Location::factory()->for($this->warehouse)->withCode('A02')->create(['is_default' => false]);
+        $location3 = Location::factory()->for($this->warehouse)->withCode('A03')->create(['is_default' => false]);
 
         $this->action->execute($defaultLocation);
 
@@ -94,7 +94,7 @@ describe('DeleteLocation Action', function () {
 
     test('validates business rules before deletion', function () {
         // Test that both canBeDeleted and validateDefaultLocationDeletion are checked
-        $location = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
+        $location = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => true]);
 
         // Mock location to return false for canBeDeleted
         $mockLocation = $this->mock(Location::class);
@@ -106,8 +106,8 @@ describe('DeleteLocation Action', function () {
     });
 
     test('properly calls service methods in correct order', function () {
-        $location = Location::factory()->for($this->warehouse)->create(['is_default' => true]);
-        $otherLocation = Location::factory()->for($this->warehouse)->create(['is_default' => false]);
+        $location = Location::factory()->for($this->warehouse)->withCode('A01')->create(['is_default' => true]);
+        $otherLocation = Location::factory()->for($this->warehouse)->withCode('A02')->create(['is_default' => false]);
 
         // Create a spy to verify method calls
         $serviceSpy = $this->spy(DefaultLocationManager::class);
